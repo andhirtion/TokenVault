@@ -9,7 +9,7 @@
 | --- | --- | --- |
 | 在线网页版（GitHub Pages） | [`docs/`](docs/) | **打开就用** <https://andhirtion.github.io/TokenVault/> |
 | Web 版 PWA（本地） | [`web/`](web/) | 源码；`docs/` 是它的发布副本 |
-| 原生安卓 App | [`android/`](android/) | Kotlin + Jetpack Compose，**已编译出成品包**：[`dist/TokenVault-1.1.0.apk`](dist/)（2.2 MB） |
+| 原生安卓 App | [`android/`](android/) | Kotlin + Jetpack Compose，**已编译出成品包**：[`dist/TokenVault-1.1.1.apk`](dist/)（2.2 MB） |
 
 > **v1.1.0 新增：四条「自动获取密钥」通道** —— 相机扫码 / 登录账号后自动抓取 / 相册图片识别 / 剪贴板粘贴。
 > 详见[第四节](#四怎么把已有令牌搬进来)。令牌本体仍是本地 AES-256-GCM 加密，从不上传。**网页版同样支持扫码 / 图片 / 粘贴 / Google 迁移串。**
@@ -56,8 +56,8 @@ python tools/serve.py 8777
 ### 直接装（最快）
 
 ```
-TokenVault/dist/TokenVault-1.1.0.apk      # 2.2 MB，正式包名 com.yg.tokenvault
-TokenVault/dist/TokenVault-1.1.0-debug.apk # 26 MB，debug 版（带日志，排查用）
+TokenVault/dist/TokenVault-1.1.1.apk      # 2.2 MB，正式包名 com.yg.tokenvault
+TokenVault/dist/TokenVault-1.1.1-debug.apk # 20 MB，debug 版（带日志，排查用）
 ```
 
 把 APK 传到手机（数据线 / 微信文件传输 / 网盘）→ 点开 → 允许「安装未知来源应用」→ 装完打开。
@@ -66,8 +66,8 @@ TokenVault/dist/TokenVault-1.1.0-debug.apk # 26 MB，debug 版（带日志，排
 - 用的是 debug 证书签名，Play 商店上不了，自己用完全没问题
 - 装之前**先联网同步一次手机时间** —— TOTP 严格依赖系统时间
 
-> `TokenVault-1.1.0.apk` 经过 R8 压缩混淆（2.2 MB）。万一在你的机型上启动闪退，
-> 换 `TokenVault-1.1.0-debug.apk`（26 MB，未混淆）—— 两者功能完全一致，只是后者带调试符号。
+> `TokenVault-1.1.1.apk` 经过 R8 压缩混淆（2.2 MB）。万一在你的机型上启动闪退，
+> 换 `TokenVault-1.1.1-debug.apk`（20 MB，未混淆）—— 两者功能完全一致，只是后者带调试符号。
 
 ### 用 Android Studio 改代码
 
