@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 保险库内容绝不允许被系统备份带走 -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="tokenvault_store_v1.xml" />
+    <exclude domain="sharedpref" path="tokenvault_settings.xml" />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+</full-backup-content>

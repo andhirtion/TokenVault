@@ -1,0 +1,28 @@
+{
+  "name": "令牌库 · TokenVault",
+  "short_name": "令牌库",
+  "description": "本地加密的两步验证令牌管理器，支持 Google、Microsoft、GitHub、Steam 等平台",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07080c",
+  "theme_color": "#08090d",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["utilities", "security"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#08090d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="令牌库">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<title>令牌库 · TokenVault</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ══════════════ 启动/解锁层 ══════════════ -->
+<div id="lockScreen" class="lock-screen">
+  <div class="lock-aura"></div>
+  <div class="lock-inner">
+    <div class="brand-mark" id="brandMark">
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="bg1" x1="0" y1="0" x2="48" y2="48">
+            <stop offset="0" stop-color="#8b5cf6"/>
+            <stop offset="1" stop-color="#38bdf8"/>
+          </linearGradient>
+        </defs>
+        <path d="M24 4 6 11.5v11.2C6 33.1 13.6 41.6 24 44c10.4-2.4 18-10.9 18-21.3V11.5L24 4Z"
+              stroke="url(#bg1)" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M17 24.2l4.8 4.8L31.5 19" stroke="url(#bg1)" stroke-width="2.6"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <h1 class="lock-title" id="lockTitle">令牌库</h1>
+    <p class="lock-sub" id="lockSub">输入访问密码</p>
+
+    <div class="pin-dots" id="pinDots">
+      <i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+
+    <div class="keypad" id="keypad">
+      <button data-k="1">1</button>
+      <button data-k="2">2<em>ABC</em></button>
+      <button data-k="3">3<em>DEF</em></button>
+      <button data-k="4">4<em>GHI</em></button>
+      <button data-k="5">5<em>JKL</em></button>
+      <button data-k="6">6<em>MNO</em></button>
+      <button data-k="7">7<em>PQRS</em></button>
+      <button data-k="8">8<em>TUV</em></button>
+      <button data-k="9">9<em>WXYZ</em></button>
+      <button data-k="bio" class="key-ghost" id="bioBtn" hidden>指纹</button>
+      <button data-k="0" data-zero>0</button>
+      <button data-k="del" class="key-ghost">⌫</button>
+    </div>
+    <p class="lock-foot">数据仅加密保存在本机 · 不联网同步</p>
+  </div>
+</div>
+
+<!-- ══════════════ 主应用 ══════════════ -->
+<div id="app" class="app" hidden>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-row">
+      <div class="topbar-title">
+        <span class="eyebrow" id="eyebrow">全部令牌</span>
+        <h1 id="pageTitle">令牌库<span class="count" id="vaultCount">0</span></h1>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="searchBtn" aria-label="搜索">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" aria-label="设置">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/>
+            <path d="M19.4 14.2a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.84 2.84l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.84-2.84l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.7 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.84-2.84l.06.06a1.7 1.7 0 0 0 1.87.34H9.1a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.84 2.84l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="searchbar" id="searchbar" hidden>
+      <svg class="sb-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      <input id="searchInput" type="search" placeholder="搜索平台或账号…" autocomplete="off" spellcheck="false">
+      <button class="sb-clear" id="searchClear">取消</button>
+    </div>
+
+    <div class="chips" id="filterChips">
+      <button class="chip is-on" data-filter="all">全部</button>
+      <button class="chip" data-filter="favorite">收藏</button>
+      <button class="chip" data-filter="code">动态码</button>
+      <button class="chip" data-filter="note">密钥本</button>
+    </div>
+  </header>
+
+  <main class="list" id="list"></main>
+
+  <div class="empty" id="emptyState" hidden>
+    <div class="empty-art">
+      <svg viewBox="0 0 120 120" fill="none">
+        <circle cx="60" cy="60" r="46" stroke="rgba(255,255,255,.07)" stroke-width="1.5"/>
+        <circle cx="60" cy="60" r="32" stroke="rgba(255,255,255,.05)" stroke-width="1.5" stroke-dasharray="4 6"/>
+        <rect x="42" y="52" width="36" height="30" rx="8" stroke="rgba(139,92,246,.55)" stroke-width="2"/>
+        <path d="M50 52v-6a10 10 0 0 1 20 0v6" stroke="rgba(56,189,248,.6)" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="60" cy="66" r="3" fill="rgba(139,92,246,.8)"/>
+      </svg>
+    </div>
+    <h2 id="emptyTitle">还没有令牌</h2>
+    <p id="emptyDesc">点击右下角 + 添加你的第一个验证器</p>
+  </div>
+
+  <button class="fab" id="fab" aria-label="添加令牌">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab is-on" data-tab="vault">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="4"/><path d="M7.5 10h9M7.5 14.5h5.5"/></svg>
+      <span>令牌</span>
+    </button>
+    <button class="tab" data-tab="generator">
+      <svg viewBox="0 0 24 24"><path d="M12 3.5 4 7v5.5c0 4.6 3.4 8.3 8 9.5 4.6-1.2 8-4.9 8-9.5V7l-8-3.5Z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg>
+      <span>安全</span>
+    </button>
+    <button class="tab" data-tab="settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/></svg>
+      <span>设置</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ══════════════ 详情面板 ══════════════ -->
+<div class="sheet-scrim" id="detailScrim" hidden></div>
+<section class="sheet sheet-detail" id="detailSheet" hidden>
+  <div class="sheet-grab"></div>
+  <div class="detail-head">
+    <div class="detail-icon" id="detailIcon"></div>
+    <div class="detail-meta">
+      <h2 id="detailName">—</h2>
+      <p id="detailAccount">—</p>
+    </div>
+    <button class="icon-btn" id="detailClose" aria-label="关闭">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="detail-code-wrap" id="detailCodeWrap">
+    <div class="detail-code" id="detailCode">000 000</div>
+    <div class="detail-ring" id="detailRing">
+      <svg viewBox="0 0 44 44">
+        <circle class="ring-bg" cx="22" cy="22" r="18"/>
+        <circle class="ring-fg" cx="22" cy="22" r="18" id="detailRingFg"/>
+      </svg>
+      <span id="detailRemain">30</span>
+    </div>
+  </div>
+  <div class="detail-progress"><i id="detailBar"></i></div>
+  <p class="detail-hint" id="detailHint">轻点验证码复制</p>
+
+  <div class="detail-rows" id="detailRows"></div>
+
+  <div class="detail-actions">
+    <button class="btn btn-ghost" id="detailCopySecret">复制密钥</button>
+    <button class="btn btn-ghost" id="detailEdit">编辑</button>
+    <button class="btn btn-danger-ghost" id="detailDelete">删除</button>
+  </div>
+</section>
+
+<!-- ══════════════ 添加/编辑面板 ══════════════ -->
+<div class="sheet-scrim" id="editorScrim" hidden></div>
+<section class="sheet sheet-editor" id="editorSheet" hidden>
+  <div class="sheet-grab"></div>
+  <div class="editor-head">
+    <button class="text-btn" id="editorCancel">取消</button>
+    <h2 id="editorTitle">添加令牌</h2>
+    <button class="text-btn accent" id="editorSave">保存</button>
+  </div>
+
+  <div class="editor-scroll">
+    <div class="seg" id="editorSeg">
+      <button class="is-on" data-kind="code">动态验证码</button>
+      <button data-kind="note">密钥笔记</button>
+    </div>
+
+    <label class="field-label">选择平台</label>
+    <div class="platform-grid" id="platformGrid"></div>
+
+    <div class="field">
+      <label>名称 / 平台</label>
+      <input id="fName" type="text" placeholder="例如 Google" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>账号</label>
+      <input id="fAccount" type="text" placeholder="you@example.com" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="field" id="secretField">
+      <label>密钥 <em id="secretHint">Base32，空格自动忽略</em></label>
+      <div class="input-with-btn">
+        <input id="fSecret" type="text" placeholder="JBSWY3DPEHPK3PXP" autocomplete="off"
+               spellcheck="false" autocapitalize="characters">
+        <button class="mini-btn" id="pasteSecret">粘贴</button>
+      </div>
+    </div>
+
+    <div class="field" id="noteField" hidden>
+      <label>内容</label>
+      <textarea id="fNote" rows="6" placeholder="API Key / 恢复码 / 备注…" spellcheck="false"></textarea>
+    </div>
+
+    <button class="adv-toggle" id="advToggle">
+      <span>高级参数</span>
+      <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="adv-body" id="advBody" hidden>
+      <div class="adv-grid">
+        <div class="field">
+          <label>位数</label>
+          <select id="fDigits">
+            <option value="6">6 位</option>
+            <option value="8">8 位</option>
+            <option value="5">5 位（Steam）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>周期（秒）</label>
+          <select id="fPeriod">
+            <option value="30">30 秒</option>
+            <option value="60">60 秒</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>算法</label>
+        <select id="fAlgo">
+          <option value="SHA1">SHA-1（默认）</option>
+          <option value="SHA256">SHA-256</option>
+          <option value="SHA512">SHA-512</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 设置面板 ══════════════ -->
+<div class="modal-scrim" id="modalScrim" hidden>
+  <div class="modal" id="modal">
+    <h3 id="modalTitle">标题</h3>
+    <p id="modalBody">内容</p>
+    <div class="modal-input-wrap" id="modalInputWrap" hidden>
+      <input id="modalInput" type="password" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalCancel">取消</button>
+      <button class="btn btn-primary" id="modalOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="app.js"></script>
+<script>
+  // 仅在 https/localhost 下注册离线缓存（file:// 不支持 SW）
+  if ('serviceWorker' in navigator && window.isSecureContext && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

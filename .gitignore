@@ -1,0 +1,41 @@
+# ── 本地工具链与构建产物（体积大、可完全重建）────────────────
+.toolchain/
+.gradle/
+build/
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/.android/
+captures/
+
+# ── 签名材料：绝不能进仓库 ─────────────────────────────────
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.apk.idsig
+debug.keystore
+
+# ── 安装包：走 GitHub Releases，不进仓库 ────────────────────
+dist/*.apk
+
+# ── 系统与编辑器 ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ── Python ─────────────────────────────────────────────
+__pycache__/
+*.pyc
+.venv/
+
+# ── 可能含个人令牌的本地文件 ────────────────────────────────
+*.local
+.env
+.env.*

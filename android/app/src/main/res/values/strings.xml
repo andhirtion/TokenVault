@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TokenVault</string>
+    <string name="app_name_debug">TokenVault Debug</string>
+    <string name="lock_title">解锁保险库</string>
+    <string name="lock_subtitle">输入 PIN 继续</string>
+</resources>
