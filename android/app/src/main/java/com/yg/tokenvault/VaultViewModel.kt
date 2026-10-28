@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.yg.tokenvault.data.EntryType
+import com.yg.tokenvault.data.OtpImporter
 import com.yg.tokenvault.data.Platforms
 import com.yg.tokenvault.data.TokenEntry
 import com.yg.tokenvault.data.Totp
@@ -237,6 +238,38 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
         refresh()
         toast("已导入 $added 条")
     }
+
+    /**
+     * 从扫码 / 网页抓取 / 相册图片 / 剪贴板拿到的一批密钥入库。
+     * 返回真正新增的条数（已存在的会被 mergeAll 去重）。
+     */
+    fun importItems(items: List<OtpImporter.Item>): Int {
+        if (!_state.value.unlocked) {
+            toast("请先解锁再导入")
+            return 0
+        }
+        if (items.isEmpty()) {
+            toast("没识别到有效密钥")
+            return 0
+        }
+        val entries = items.map { OtpImporter.toEntry(it.parsed) }
+        val added = repo.mergeAll(entries)
+        refresh()
+        toast(
+            when {
+                added == 0 -> "这些密钥已经在库里了"
+                entries.size == 1 -> "已添加「${entries.first().name.ifBlank { "新令牌" }}」"
+                else -> "已添加 $added 条密钥"
+            }
+        )
+        return added
+    }
+
+    /** 把任意文本解析后入库，origin 只影响提示文案 */
+    fun importAnyText(
+        text: String,
+        origin: OtpImporter.Origin = OtpImporter.Origin.LINK
+    ): Int = importItems(OtpImporter.parse(text, origin))
 
     // ── 工具 ─────────────────────────────────────────────────
 

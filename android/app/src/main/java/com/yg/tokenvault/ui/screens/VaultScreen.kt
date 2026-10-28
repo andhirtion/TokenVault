@@ -80,6 +80,7 @@ fun VaultScreen(
     onOpen: (String) -> Unit,
     onToggleFav: (String) -> Unit,
     onAdd: () -> Unit,
+    onImport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val pal = LocalPalette.current
@@ -107,6 +108,22 @@ fun VaultScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = pal.text3
                     )
+                }
+                if (!searching) {
+                    Text(
+                        text = "获取",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = pal.accent,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(pal.accent.copy(alpha = 0.14f))
+                            .androidClickable(onImport)
+                            .padding(horizontal = 13.dp, vertical = 7.dp)
+                    )
+                    Spacer(Modifier.width(7.dp))
                 }
                 IconGhostButton(
                     onClick = { searching = !searching; if (!searching) onSearch("") },

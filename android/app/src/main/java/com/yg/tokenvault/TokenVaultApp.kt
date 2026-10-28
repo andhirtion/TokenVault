@@ -46,11 +46,15 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.yg.tokenvault.data.OtpImporter
 import com.yg.tokenvault.data.TokenEntry
 import com.yg.tokenvault.ui.components.AppLogo
 import com.yg.tokenvault.ui.screens.DetailSheet
 import com.yg.tokenvault.ui.screens.EditorSheet
+import com.yg.tokenvault.ui.screens.ImportSheet
 import com.yg.tokenvault.ui.screens.LockScreen
+import com.yg.tokenvault.ui.screens.LoginScreen
+import com.yg.tokenvault.ui.screens.ScanScreen
 import com.yg.tokenvault.ui.screens.SettingsScreen
 import com.yg.tokenvault.ui.screens.ToolsScreen
 import com.yg.tokenvault.ui.screens.VaultScreen
@@ -74,6 +78,11 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
     var detailId by remember { mutableStateOf<String?>(null) }
     var editorId by remember { mutableStateOf<String?>(null) }
     var toastText by remember { mutableStateOf<String?>(null) }
+
+    // 获取密钥链路
+    var showImport by remember { mutableStateOf(false) }
+    var showScan by remember { mutableStateOf(false) }
+    var showLogin by remember { mutableStateOf(false) }
 
     // 消息流 → 轻提示
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -139,10 +148,13 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 onFilter = vm::setFilter,
                                 onOpen = { id -> detailId = id },
                                 onToggleFav = vm::toggleFavorite,
-                                onAdd = { editorId = NEW_ENTRY }
+                                onAdd = { editorId = NEW_ENTRY },
+                                onImport = { showImport = true }
                             )
 
-                            VaultViewModel.Tab.TOOLS -> ToolsScreen()
+                            VaultViewModel.Tab.TOOLS -> ToolsScreen(
+                                onImport = { showImport = true }
+                            )
 
                             VaultViewModel.Tab.SETTINGS -> SettingsScreen(
                                 state = state,
@@ -194,6 +206,38 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                     )
                 }
             }
+        }
+
+        // ── 获取密钥：选择方式 → 扫码 / 登录 ───────────
+        if (showImport) {
+            ImportSheet(
+                onDismiss = { showImport = false },
+                onText = { text -> vm.importAnyText(text, OtpImporter.Origin.LINK) },
+                onScan = { showScan = true },
+                onWebLogin = { showLogin = true },
+                onToast = { msg -> vm.toast(msg) }
+            )
+        }
+
+        if (showScan) {
+            ScanScreen(
+                onDismiss = { showScan = false },
+                onDecoded = { text ->
+                    showScan = false
+                    vm.importAnyText(text, OtpImporter.Origin.QR_CODE)
+                }
+            )
+        }
+
+        if (showLogin) {
+            LoginScreen(
+                startUrl = null,
+                onDismiss = { showLogin = false },
+                onFound = { items ->
+                    showLogin = false
+                    vm.importItems(items)
+                }
+            )
         }
 
         // ── 详情 ────────────────────────────────

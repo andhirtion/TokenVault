@@ -1,11 +1,14 @@
 # TokenVault · 令牌保险库
 
-一个**纯离线**的两步验证（TOTP）令牌管理器，同时提供两套实现：
+一个**本地加密、离线生成**的两步验证（TOTP）令牌管理器，同时提供两套实现：
 
 | 交付 | 目录 | 状态 |
 | --- | --- | --- |
 | Web 版 PWA | [`web/`](web/) | 可直接用，手机浏览器「添加到主屏幕」即装即用 |
-| 原生安卓 App | [`android/`](android/) | Kotlin + Jetpack Compose，**已编译出成品包**：[`dist/TokenVault-1.0.0.apk`](dist/)（1.7 MB） |
+| 原生安卓 App | [`android/`](android/) | Kotlin + Jetpack Compose，**已编译出成品包**：[`dist/TokenVault-1.1.0.apk`](dist/)（2.2 MB） |
+
+> **v1.1.0 新增：四条「自动获取密钥」通道** —— 相机扫码 / 登录账号后自动抓取 / 相册图片识别 / 剪贴板粘贴。
+> 详见[第四节](#四怎么把已有令牌搬进来)。令牌本体仍是本地 AES-256-GCM 加密，从不上传。
 
 支持 26 个平台（Google / Microsoft / GitHub / Steam / Apple / Discord / X / Amazon / Dropbox /
 Facebook / GitLab / LinkedIn / Slack / Telegram / Twitter / Reddit / Twitch / Spotify / Binance /
@@ -38,8 +41,8 @@ python tools/serve.py 8777
 ### 直接装（最快）
 
 ```
-TokenVault/dist/TokenVault-1.0.0.apk      # 1.7 MB，正式包名 com.yg.tokenvault
-TokenVault/dist/TokenVault-1.0.0-debug.apk # 19 MB，debug 版（带日志，排查用）
+TokenVault/dist/TokenVault-1.1.0.apk      # 2.2 MB，正式包名 com.yg.tokenvault
+TokenVault/dist/TokenVault-1.1.0-debug.apk # 26 MB，debug 版（带日志，排查用）
 ```
 
 把 APK 传到手机（数据线 / 微信文件传输 / 网盘）→ 点开 → 允许「安装未知来源应用」→ 装完打开。
@@ -48,8 +51,8 @@ TokenVault/dist/TokenVault-1.0.0-debug.apk # 19 MB，debug 版（带日志，排
 - 用的是 debug 证书签名，Play 商店上不了，自己用完全没问题
 - 装之前**先联网同步一次手机时间** —— TOTP 严格依赖系统时间
 
-> `TokenVault-1.0.0.apk` 经过 R8 压缩混淆（1.7 MB）。万一在你的机型上启动闪退，
-> 换 `TokenVault-1.0.0-debug.apk`（19 MB，未混淆）—— 两者功能完全一致，只是后者带调试符号。
+> `TokenVault-1.1.0.apk` 经过 R8 压缩混淆（2.2 MB）。万一在你的机型上启动闪退，
+> 换 `TokenVault-1.1.0-debug.apk`（26 MB，未混淆）—— 两者功能完全一致，只是后者带调试符号。
 
 ### 用 Android Studio 改代码
 
@@ -91,13 +94,25 @@ bash tools/build_apk.sh test       # 跑 18 项 JVM 单元测试（TOTP 算法�
 - 「隐藏验证码」模式：列表只显圆点，点开详情才显示
 - 搜索（名称/账号/备注）+ 平台筛选
 
+**获取密钥（v1.1.0 新增，安卓版）**
+- 相机扫码：CameraX + ZXing，对着 `otpauth://` 二维码即入库
+- 登录账号自动获取：内置浏览器登录平台 2FA 设置页，自动识别页面里的 otpauth 链接、
+  密钥文本和二维码图片，底部一键全部导入
+- 相册图片识别：截图也能读，纯本地解码
+- 剪贴板粘贴：`otpauth://`、`otpauth-migration://`、裸 Base32 都认
+- Google Authenticator 导出的一整条 `otpauth-migration://offline?data=...` 原生解析，
+  一次导入全部账号（手写 protobuf，不引第三方库）
+- 浏览器里点 `otpauth://` 链接直接跳进 App 导入
+
 **安全**
 - 主密码 / PIN 经 **PBKDF2-HMAC-SHA256（25 万次迭代）** 派生 256 位密钥
 - 全部令牌用 **AES-256-GCM** 加密后落盘（认证加密，密文被改即解不开）
 - 换 PIN 时重新生成随机盐、整体重加密
 - 自动锁定（1/3/5 分钟，切到后台开始计时）
 - 「立即锁定」清空内存中的密钥
-- **零网络权限**：安卓清单里没有 `INTERNET`，物理上不可能外传
+- **令牌从不上传**：所有加密、解密、验证码计算都在本机完成，没有任何服务端
+- **`INTERNET` 权限的唯一用途**：内置浏览器页面。v1.1.0 的「登录账号自动获取」需要打开
+  平台官网的 2FA 设置页，这个页面本身要联网；抓到的密钥立刻落到本地加密库，不回传
 - 系统备份 / 设备迁移全部排除，密钥不会被云备份带走
 
 **数据**
@@ -114,6 +129,21 @@ bash tools/build_apk.sh test       # 跑 18 项 JVM 单元测试（TOTP 算法�
 
 ## 四、怎么把已有令牌搬进来
 
+安卓版点列表页右上角 **「获取」**（或工具箱第一张卡），会弹出四种方式：
+
+| 方式 | 适用场景 | 怎么做 |
+| --- | --- | --- |
+| **扫二维码** | 正在给某个账号开启两步验证 | 网站显示二维码时，点「扫二维码」对准它，一秒入库，平台/账号/参数全自动填好 |
+| **登录账号自动获取** | 想让 App 自己把密钥抓回来 | 点进去选平台（Google/微软/GitHub/Steam/Dropbox/Amazon/Epic/Discord），在 App 内置浏览器里正常登录，走到 2FA 设置页，页面上的二维码和密钥文本会被自动识别，底部出现「已捕获 N 条密钥 → 全部导入」 |
+| **从图片识别** | 二维码已经截图存在相册里 | 选图片，本地解码，不上传任何图像 |
+| **从剪贴板粘贴** | 手上已经有 `otpauth://` 链接或 Base32 密钥 | 复制后点这一项，自动拆出平台、账号、算法、位数、周期 |
+
+> **关于「能不能把已经开着的 2FA 密钥直接读回来」**：这是各平台自己的限制，不是本 App 的
+> 限制——Google / 微软 / GitHub 的安全设置里只会显示「已开启」，密钥本身在开启那一刻之后
+> 就不再展示（GitHub 只在 setup 页给一次 secret；Steam 要走官方手机令牌流程）。所以任何
+> 验证器 App（含 Authy、1Password）都拿不到「事后读取」，只能在那一次 setup 时把二维码/密钥
+> 抄下来。本 App 的做法是把这一步做到最省事：**扫码**或**内置浏览器登录**，剩下的全自动。
+
 **方式 A：二维码 / 密钥文本（最通用）**
 
 在 Google、GitHub、微软等网站的安全设置里打开两步验证，选择「无法扫描二维码」，
@@ -126,13 +156,15 @@ bash tools/build_apk.sh test       # 跑 18 项 JVM 单元测试（TOTP 算法�
 
 任何形如
 `otpauth://totp/GitHub:me@mail.com?secret=XXXX&issuer=GitHub&digits=6&period=30`
-的链接，粘进导入框可一次批量导入多行。
+的链接，粘进导入框可一次批量导入多行。安卓版还注册了 `otpauth` 与 `otpauth-migration`
+两个 URL scheme，在浏览器里点这种链接会直接跳进 App 导入。
 
 **方式 C：从别的验证器迁移**
 
-大部分验证器（Authy、Aegis、2FAS 等）支持「导出」为 `otpauth-migration://` 或
-明文 `otpauth://` 列表。本应用接受明文列表；迁移用的 protobuf 格式请先用对方 App
-导出成链接/二维码再逐条录入。
+Google Authenticator 的「导出账号」生成的是
+`otpauth-migration://offline?data=<base64>`，本应用**原生解析这个 protobuf**，一条链接可
+一次导入全部令牌（含 issuer、账号、算法、位数）。Authy、Aegis、2FAS 等支持导出明文
+`otpauth://` 列表的，直接粘贴也行。
 
 > Steam 的密钥在 Steam 手机令牌里是通过「添加验证器」流程给出的，注意 Steam 用的是
 > 5 位字母码，本应用会自动按 Steam 规则生成，不需要你改任何参数。
@@ -154,7 +186,15 @@ Web 版点「设置 → 导出加密备份」，把文本存到网盘；新机�
 没有找回通道。这是设计取舍：能找回就等于能被别人找回。请务必先导出一份加密备份。
 
 **能不能云端同步？**
-不做。App 没有网络权限，同步只能靠手动导出/导入。
+不做。令牌本体不上云，同步只能靠手动导出/导入加密备份。
+（v1.1.0 起 App 有 `INTERNET` 权限，但它只服务于「登录账号自动获取密钥」的内置浏览器页面，
+不会把库里任何数据发出去——代码里没有任何上传逻辑。）
+
+**「登录账号自动获取」抓不到东西？**
+1. 要走到 **2FA 设置页**，而不是登录页或首页——密钥只在这个页面出现；
+2. 有些平台在已开启状态下只显示「已启用」，不会重新给密钥。此时只能先「移除」再「重新开启」，
+   在重新开启的那一次把二维码扫进来；
+3. 抓取是每 1.8 秒扫一次页面，页面加载慢就多点几次右上角「抓取」。
 
 ---
 
@@ -162,7 +202,7 @@ Web 版点「设置 → 导出加密备份」，把文本存到网盘；新机�
 
 ```
 TokenVault/
-├─ dist/                      # 成品 APK（release 1.7 MB + debug 19 MB）
+├─ dist/                      # 成品 APK（release 2.2 MB + debug 26 MB）
 ├─ web/                      # PWA，零依赖零构建
 │  ├─ index.html
 │  ├─ styles.css             # 设计系统：深色 #07080c / 紫青渐变
@@ -173,13 +213,17 @@ TokenVault/
 ├─ android/
 │  ├─ app/src/main/java/com/yg/tokenvault/
 │  │  ├─ data/               # Platforms / TokenEntry / Totp / VaultRepository
+│  │  │                      # + OtpImporter（统一导入）/ OtpMigration（protobuf 解析）
 │  │  ├─ security/           # VaultCrypto（PBKDF2 + AES-GCM）
+│  │  ├─ util/               # Base32 / QrDecoder（zxing 封装）
 │  │  ├─ ui/theme/           # 配色、字体、深浅主题
 │  │  ├─ ui/components/      # BrandTile / TokenCard / RingProgress / PinPad / AppLogo
 │  │  ├─ ui/screens/         # Lock / Vault / Editor / Detail / Settings / Tools
+│  │  │                      # + ImportSheet（四选一）/ ScanScreen（CameraX 扫码）
+│  │  │                      # + LoginScreen（内置浏览器登录抓取）
 │  │  ├─ VaultViewModel.kt
 │  │  ├─ TokenVaultApp.kt
-│  │  └─ MainActivity.kt
+│  │  └─ MainActivity.kt     # 含 otpauth:// 外链导入
 │  ├─ app/src/test/java/com/yg/tokenvault/CoreLogicTest.kt   # 18 项算法单测
 │  └─ app/src/main/res/      # 品牌图标、自适应启动图标、字符串、备份排除规则
 ├─ tools/

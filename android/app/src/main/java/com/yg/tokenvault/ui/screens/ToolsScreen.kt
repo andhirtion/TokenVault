@@ -56,6 +56,7 @@ import java.security.SecureRandom
  */
 @Composable
 fun ToolsScreen(
+    onImport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val pal = LocalPalette.current
@@ -108,6 +109,19 @@ fun ToolsScreen(
         )
 
         Spacer(Modifier.height(20.dp))
+
+        // ── 获取密钥 ────────────────────────────
+        ToolCard("获取密钥") {
+            Text(
+                text = "扫码 / 登录账号 / 相册图片 / 剪贴板，四种方式把已有的两步验证密钥搬进来",
+                style = MaterialTheme.typography.bodyMedium,
+                color = pal.text2
+            )
+            Spacer(Modifier.height(13.dp))
+            PrimaryButton("选择获取方式") { onImport() }
+        }
+
+        Spacer(Modifier.height(14.dp))
 
         // ── 随机口令 ────────────────────────────
         ToolCard("随机口令") {
