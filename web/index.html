@@ -72,6 +72,7 @@
         <h1 id="pageTitle">令牌库<span class="count" id="vaultCount">0</span></h1>
       </div>
       <div class="topbar-actions">
+        <button class="grab-btn" id="grabBtn">获取</button>
         <button class="icon-btn" id="searchBtn" aria-label="搜索">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
         </button>
@@ -262,6 +263,20 @@
 </div>
 
 <div class="toast-stack" id="toastStack"></div>
+
+<!-- 扫码取景：全屏 -->
+<div class="scan" id="scanOverlay" hidden>
+  <video id="scanVideo" playsinline muted autoplay></video>
+  <div class="scan-frame">
+    <i></i><i></i><i></i><i></i>
+    <div class="scan-line"></div>
+  </div>
+  <div class="scan-foot">
+    <div class="scan-hint" id="scanHint">把二维码放进取景框</div>
+    <button class="scan-close" id="scanClose">关闭</button>
+  </div>
+</div>
+<input type="file" id="scanFile" accept="image/*" hidden>
 
 <script src="app.js"></script>
 <script>

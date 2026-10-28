@@ -226,6 +226,232 @@ function parseOtpAuth(uri) {
   } catch (_) { return null; }
 }
 
+/* ───────────────── 解析 otpauth-migration（Google Authenticator 导出）───────────────── */
+/* Base32 编码：migration 里的 secret 是原始字节 */
+function b32encode(bytes) {
+  let bits = 0, value = 0, out = '';
+  for (let i = 0; i < bytes.length; i++) {
+    value = (value << 8) | bytes[i];
+    bits += 8;
+    while (bits >= 5) {
+      out += B32_ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += B32_ALPHABET[(value << (5 - bits)) & 31];
+  return out;
+}
+
+/* 极简 protobuf 读取器 */
+function _pbReader(buf) {
+  let pos = 0;
+  return {
+    more: () => pos < buf.length,
+    varint() {
+      let r = 0, shift = 0;
+      while (pos < buf.length) {
+        const b = buf[pos++];
+        r += (b & 0x7f) * Math.pow(2, shift);
+        if ((b & 0x80) === 0) return r;
+        shift += 7;
+        if (shift > 63) return r;
+      }
+      return r;
+    },
+    bytes(n) {
+      const end = Math.min(pos + Math.max(0, n), buf.length);
+      const out = buf.subarray(pos, end);
+      pos = end;
+      return out;
+    },
+    skip(wire) {
+      if (wire === 0) this.varint();
+      else if (wire === 1) pos += 8;
+      else if (wire === 2) pos += this.varint();
+      else if (wire === 5) pos += 4;
+      else pos = buf.length;
+      if (pos < 0 || pos > buf.length) pos = buf.length;
+    }
+  };
+}
+
+function _b64UrlBytes(input) {
+  try {
+    let s = String(input).replace(/-/g, '+').replace(/_/g, '/').replace(/[^A-Za-z0-9+/=]/g, '');
+    if (!s) return null;
+    s += '='.repeat((4 - (s.length % 4)) % 4);
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  } catch (_) { return null; }
+}
+
+/* 平台别名：issuer 里常见的非品牌名 */
+const PLATFORM_ALIASES = {
+  google:     ['gmail', 'googlemail', 'youtube', 'workspace', 'gsuite'],
+  microsoft:  ['outlook', 'hotmail', 'office365', 'office 365', 'azure', 'onedrive', 'skype', 'msn', 'live.com'],
+  apple:      ['icloud', 'appleid', 'apple id'],
+  amazon:     ['aws', 'amazon web'],
+  proton:     ['protonmail'],
+  facebook:   ['meta', 'fb'],
+  x:          ['twitter'],
+  epic:       ['epicgames', 'epic games'],
+  xbox:       ['xbox live'],
+  dropbox:    ['dropbox'],
+  binance:    ['binance']
+};
+
+function _guessPlatform(hay) {
+  const raw = String(hay || '').trim();
+  const s = raw.toLowerCase();
+  if (!s) return 'custom';
+  if (PLATFORMS[s]) return s;                        // key 精确命中
+  for (const k of Object.keys(PLATFORMS)) {
+    if (k === 'custom' || k.length < 3) continue;    // 单字符 key（x）不走模糊匹配
+    const label = String(PLATFORMS[k].label || '').toLowerCase();
+    if (s.includes(k) || (label.length >= 3 && s.includes(label))) return k;
+  }
+  for (const k of Object.keys(PLATFORM_ALIASES)) {
+    if (PLATFORM_ALIASES[k].some(w => s.includes(w))) return k;
+  }
+  if (s.includes('steam')) return 'steam';
+  return 'custom';
+}
+
+function _readOtpParams(b) {
+  let secret = null, name = '', issuer = '', algo = 1, digits = 1, type = 2;
+  const r = _pbReader(b);
+  const dec = new TextDecoder();
+  while (r.more()) {
+    const key = r.varint();
+    const wire = key & 7, field = key >>> 3;
+    if (wire === 2) {
+      const v = r.bytes(r.varint());
+      if (field === 1) secret = v;
+      else if (field === 2) name = dec.decode(v);
+      else if (field === 3) issuer = dec.decode(v);
+    } else if (wire === 0) {
+      const v = r.varint();
+      if (field === 4) algo = v;
+      else if (field === 5) digits = v;
+      else if (field === 6) type = v;
+    } else {
+      r.skip(wire);
+    }
+  }
+  if (!secret || !secret.length) return null;
+  if (type === 1) return null;            // HOTP 是计数器型，本应用只做 TOTP
+  const secretB32 = b32encode(secret);
+  if (!isValidSecret(secretB32)) return null;
+
+  const platform = _guessPlatform(issuer + ' ' + name);
+  const isSteam = platform === 'steam';
+  const algoName = algo === 2 ? 'SHA256' : algo === 3 ? 'SHA512' : 'SHA1';
+  return {
+    platform,
+    issuer: (issuer || PLATFORMS[platform].label).trim(),
+    account: (name.includes(':') ? name.split(':').slice(1).join(':') : name).trim(),
+    secret: secretB32,
+    digits: isSteam ? 5 : (digits === 2 ? 8 : 6),
+    period: isSteam ? 30 : (PLATFORMS[platform].period || 30),
+    algo: isSteam ? 'SHA1' : algoName,
+    charset: isSteam ? 'steam' : 'numeric'
+  };
+}
+
+function parseOtpMigration(uri) {
+  const t = String(uri).trim();
+  if (!/^otpauth-migration:\/\//i.test(t)) return [];
+  const qi = t.indexOf('?');
+  if (qi < 0) return [];
+  let data = '';
+  for (const pair of t.slice(qi + 1).split('&')) {
+    const i = pair.indexOf('=');
+    if (i <= 0) continue;
+    if (pair.slice(0, i).toLowerCase() === 'data') { data = pair.slice(i + 1); break; }
+  }
+  if (!data) return [];
+  const bytes = _b64UrlBytes(data);
+  if (!bytes) return [];
+
+  const out = [];
+  const rd = _pbReader(bytes);
+  while (rd.more()) {
+    const key = rd.varint();
+    const wire = key & 7, field = key >>> 3;
+    if (wire === 2) {
+      const payload = rd.bytes(rd.varint());
+      if (field === 1) {
+        const p = _readOtpParams(payload);
+        if (p) out.push(p);
+      }
+    } else {
+      rd.skip(wire);
+    }
+  }
+  return out;
+}
+
+/* 统一解析：migration 串 / otpauth 链接 / 裸 Base32，按 secret 去重 */
+function parseAnyOtp(text) {
+  const out = [], seen = new Set();
+  const push = p => {
+    if (!p || !p.secret) return;
+    const k = String(p.secret).toUpperCase();
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push(p);
+  };
+  let s = String(text || '');
+  s = s.replace(/&amp;/g, '&').replace(/&#38;/g, '&').replace(/&quot;/g, '"').replace(/\\\//g, '/');
+
+  for (const m of s.match(/otpauth-migration:\/\/[^\s"'<>\\]+/gi) || []) {
+    for (const p of parseOtpMigration(m)) push(p);
+  }
+  for (const m of s.match(/otpauth:\/\/[^\s"'<>\\]+/gi) || []) {
+    push(parseOtpAuth(m));
+  }
+  if (!out.length) {
+    const cand = s.replace(/[\s\-=]/g, '').toUpperCase();
+    if (/^[A-Z2-7]{16,128}$/.test(cand) && /[A-Z]/.test(cand) && isValidSecret(cand)) {
+      push({
+        platform: 'custom', issuer: '自定义', account: '', secret: cand,
+        digits: 6, period: 30, algo: 'SHA1', charset: 'numeric'
+      });
+    }
+  }
+  return out;
+}
+
+/* 把解析结果去重入库 */
+async function addParsedTokens(list) {
+  if (!Array.isArray(list) || !list.length) { toast('没识别到有效密钥', 'err'); return 0; }
+  let added = 0;
+  for (const p of list) {
+    const key = String(p.secret).toUpperCase();
+    if (state.entries.some(x => x.type === 'code' && x.secret && x.secret.toUpperCase() === key)) continue;
+    state.entries.push(normalizeEntry({
+      id: uid(), type: 'code',
+      platform: p.platform || 'custom',
+      name: (p.issuer || PLATFORMS[p.platform]?.label || '自定义'),
+      account: p.account || '',
+      secret: p.secret,
+      digits: p.digits || 6,
+      period: p.period || 30,
+      algo: p.algo || 'SHA1',
+      charset: p.charset || 'numeric',
+      createdAt: Date.now()
+    }));
+    added++;
+  }
+  await persist();
+  renderList();
+  haptic(12);
+  toast(added ? `已导入 ${added} 个令牌` : '这些令牌已经在库里了', added ? 'ok' : 'info');
+  return added;
+}
+
 /* ───────────────── 加密存储 ───────────────── */
 const DB_KEY   = 'tokenvault_v1';
 const CFG_KEY  = 'tokenvault_cfg_v1';
@@ -1100,6 +1326,8 @@ function syncTopbar(tab) {
   $('#vaultCount').hidden = !isVault;
   $('#filterChips').hidden = !isVault;
   $('#searchBtn').hidden = !isVault;
+  const gb = $('#grabBtn');
+  if (gb) gb.hidden = !isVault;
   if (!isVault) $('#searchbar').hidden = true;
   if (!isVault) $('#eyebrow').textContent = tab === 'generator' ? '离线生成' : '偏好设置';
 }
@@ -1390,6 +1618,179 @@ async function importBackupFile(ev) {
   }
 }
 
+/* ───────────────── 获取令牌：扫码 / 图片 / 粘贴 ───────────────── */
+let _scanStream = null, _scanTimer = null;
+
+/** 底部选择面板，返回选中项的 key，取消返回 null */
+function showChoice({ title, body = '', options }) {
+  return new Promise(resolve => {
+    const scrim = el('div', 'grab-scrim');
+    const sheet = el('div', 'grab-sheet');
+
+    const head = el('div', 'grab-head');
+    const h = el('div', 'grab-title');
+    h.textContent = title;
+    head.appendChild(h);
+    if (body) {
+      const b = el('div', 'grab-body');
+      b.textContent = body;
+      head.appendChild(b);
+    }
+    sheet.appendChild(head);
+
+    const list = el('div', 'grab-list');
+    options.forEach(o => {
+      const row = el('button', 'grab-row');
+      const left = el('div', 'grab-row-txt');
+      const t = el('b'); t.textContent = o.title; left.appendChild(t);
+      if (o.desc) { const d = el('em'); d.textContent = o.desc; left.appendChild(d); }
+      row.appendChild(left);
+      const arrow = el('span', 'grab-arrow', '›');
+      row.appendChild(arrow);
+      row.onclick = () => done(o.key);
+      list.appendChild(row);
+    });
+    sheet.appendChild(list);
+
+    const cancel = el('button', 'grab-cancel', '取消');
+    cancel.onclick = () => done(null);
+    sheet.appendChild(cancel);
+
+    scrim.appendChild(sheet);
+    scrim.addEventListener('click', e => { if (e.target === scrim) done(null); });
+    document.body.appendChild(scrim);
+    requestAnimationFrame(() => scrim.classList.add('is-on'));
+
+    function done(v) {
+      if (!scrim.isConnected) return;
+      scrim.classList.remove('is-on');
+      setTimeout(() => scrim.remove(), 240);
+      resolve(v);
+    }
+  });
+}
+
+function scanSupported() {
+  return typeof window.BarcodeDetector === 'function';
+}
+
+async function openScanner() {
+  if (!scanSupported()) {
+    toast('这个浏览器不支持实时扫码，改用「从图片识别」', 'err');
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast('当前环境拿不到摄像头，改用「从图片识别」', 'err');
+    return;
+  }
+  const overlay = $('#scanOverlay'), video = $('#scanVideo'), hint = $('#scanHint');
+  try {
+    _scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } }, audio: false
+    });
+  } catch (e) {
+    toast('摄像头没打开：' + (e && e.name === 'NotAllowedError' ? '权限被拒绝' : '不可用'), 'err');
+    return;
+  }
+  video.srcObject = _scanStream;
+  overlay.hidden = false;
+  if (hint) hint.textContent = '把二维码放进取景框';
+  try { await video.play(); } catch (_) {}
+
+  let detector = null;
+  try { detector = new window.BarcodeDetector({ formats: ['qr_code'] }); }
+  catch (_) { detector = new window.BarcodeDetector(); }
+
+  const tick = async () => {
+    if (overlay.hidden) return;
+    try {
+      const codes = await detector.detect(video);
+      if (codes && codes.length) {
+        const raw = codes[0].rawValue || '';
+        if (/^otpauth/i.test(raw)) {
+          stopScanner();
+          await addParsedTokens(parseAnyOtp(raw));
+          return;
+        }
+        if (hint) hint.textContent = '这不是两步验证二维码，换个码试试';
+      }
+    } catch (_) {}
+    _scanTimer = setTimeout(tick, 260);
+  };
+  _scanTimer = setTimeout(tick, 320);
+}
+
+function stopScanner() {
+  if (_scanTimer) { clearTimeout(_scanTimer); _scanTimer = null; }
+  if (_scanStream) {
+    try { _scanStream.getTracks().forEach(t => t.stop()); } catch (_) {}
+    _scanStream = null;
+  }
+  const v = $('#scanVideo');
+  if (v) { try { v.pause(); } catch (_) {} v.srcObject = null; }
+  const o = $('#scanOverlay');
+  if (o) o.hidden = true;
+}
+
+function pickImageForScan() {
+  const inp = $('#scanFile');
+  if (!inp) return;
+  inp.value = '';
+  inp.onchange = async ev => {
+    const f = ev.target.files && ev.target.files[0];
+    inp.value = '';
+    if (!f) return;
+    if (!scanSupported()) { toast('此浏览器不支持图片识别，改用粘贴', 'err'); return; }
+    try {
+      const bmp = await createImageBitmap(f);
+      const det = new window.BarcodeDetector({ formats: ['qr_code'] });
+      const codes = await det.detect(bmp);
+      if (!codes || !codes.length) { toast('这张图片里没识别到二维码', 'err'); return; }
+      const raw = codes[0].rawValue || '';
+      if (!/^otpauth/i.test(raw)) { toast('二维码内容不是 otpauth 令牌', 'err'); return; }
+      await addParsedTokens(parseAnyOtp(raw));
+    } catch (e) {
+      toast('图片识别失败', 'err');
+    }
+  };
+  inp.click();
+}
+
+async function grabFromClipboard() {
+  let txt = '';
+  try {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      txt = await navigator.clipboard.readText();
+    }
+  } catch (_) {}
+  if (!txt || !txt.trim()) {
+    txt = await showModal({
+      title: '粘贴令牌内容',
+      body: '支持 otpauth 链接、Google 迁移串（otpauth-migration://）或纯 Base32 密钥。',
+      input: true, placeholder: 'otpauth://totp/...', okText: '导入'
+    });
+    if (txt == null) return;
+  }
+  const parsed = parseAnyOtp(txt);
+  if (!parsed.length) { toast('没识别到有效密钥', 'err'); return; }
+  await addParsedTokens(parsed);
+}
+
+async function openGrab() {
+  const choice = await showChoice({
+    title: '获取令牌',
+    body: '把已经开着的两步验证搬进来',
+    options: [
+      { key: 'scan',  title: '扫二维码',        desc: '用它扫网站上的 2FA 二维码' },
+      { key: 'image', title: '从图片识别',      desc: '相册里的二维码截图' },
+      { key: 'paste', title: '粘贴链接或密钥',  desc: 'otpauth 链接 / 迁移串 / Base32' }
+    ]
+  });
+  if (choice === 'scan') await openScanner();
+  else if (choice === 'image') pickImageForScan();
+  else if (choice === 'paste') await grabFromClipboard();
+}
+
 async function mergeEntries(arr) {
   if (!Array.isArray(arr)) return toast('备份内容无效', 'err');
   let n = 0;
@@ -1576,6 +1977,15 @@ function bindGlobal() {
 
   // FAB
   $('#fab').onclick = () => { haptic(10); openEditor(); };
+
+  // 获取令牌
+  const grabBtn = $('#grabBtn');
+  if (grabBtn) grabBtn.onclick = () => { haptic(10); openGrab(); };
+  const scanClose = $('#scanClose');
+  if (scanClose) scanClose.onclick = () => stopScanner();
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && _scanStream) stopScanner();
+  });
 
   // 标签栏
   $('#tabbar').onclick = ev => {

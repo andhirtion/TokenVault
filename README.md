@@ -1,14 +1,18 @@
 # TokenVault · 令牌保险库
 
+**在线直接用（无需安装）：<https://andhirtion.github.io/TokenVault/>**
+手机浏览器打开即可，菜单里「添加到主屏幕」就像个 App，离线也能出码。
+
 一个**本地加密、离线生成**的两步验证（TOTP）令牌管理器，同时提供两套实现：
 
 | 交付 | 目录 | 状态 |
 | --- | --- | --- |
-| Web 版 PWA | [`web/`](web/) | 可直接用，手机浏览器「添加到主屏幕」即装即用 |
+| 在线网页版（GitHub Pages） | [`docs/`](docs/) | **打开就用** <https://andhirtion.github.io/TokenVault/> |
+| Web 版 PWA（本地） | [`web/`](web/) | 源码；`docs/` 是它的发布副本 |
 | 原生安卓 App | [`android/`](android/) | Kotlin + Jetpack Compose，**已编译出成品包**：[`dist/TokenVault-1.1.0.apk`](dist/)（2.2 MB） |
 
 > **v1.1.0 新增：四条「自动获取密钥」通道** —— 相机扫码 / 登录账号后自动抓取 / 相册图片识别 / 剪贴板粘贴。
-> 详见[第四节](#四怎么把已有令牌搬进来)。令牌本体仍是本地 AES-256-GCM 加密，从不上传。
+> 详见[第四节](#四怎么把已有令牌搬进来)。令牌本体仍是本地 AES-256-GCM 加密，从不上传。**网页版同样支持扫码 / 图片 / 粘贴 / Google 迁移串。**
 
 支持 26 个平台（Google / Microsoft / GitHub / Steam / Apple / Discord / X / Amazon / Dropbox /
 Facebook / GitLab / LinkedIn / Slack / Telegram / Twitter / Reddit / Twitch / Spotify / Binance /
@@ -18,6 +22,17 @@ Cloudflare / Notion / Proton / Epic / Instagram / Xbox / 自定义），
 ---
 
 ## 一、Web 版：现在就能用
+
+### 1. 在线地址（最快）
+
+打开 <https://andhirtion.github.io/TokenVault/> —— 手机上也能直接开，无需装任何东西。
+登录一次 PIN 后，令牌存本地浏览器（IndexedDB），**不会上传服务器**（GitHub Pages 只托管静态文件）。
+想更像 App：浏览器菜单 → 「添加到主屏幕」。
+
+网页版的「获取」也能扫码：Chrome / Edge / Safari 支持 `BarcodeDetector` 时直接调摄像头，
+不支持就用「从图片识别」（相册里的二维码截图）。
+
+### 2. 本地起服务（改代码时用）
 
 ```bash
 cd TokenVault
@@ -245,8 +260,9 @@ TokenVault/
 两套实现各自带一份自检，都跑一遍才能说「两边算的是同一个码」。
 
 ```bash
-node tools/verify.js          # Web 版（JS）
-bash tools/build_apk.sh test  # 安卓版（Kotlin，28 项 JVM 单元测试）
+node tools/verify.js             # Web 版算法（JS）
+node tools/verify_web_import.js  # Web 版「获取令牌」解析层（JS）
+bash tools/build_apk.sh test     # 安卓版（Kotlin，30 项 JVM 单元测试）
 ```
 
 覆盖范围：
@@ -263,8 +279,10 @@ bash tools/build_apk.sh test  # 安卓版（Kotlin，28 项 JVM 单元测试）
 | `otpauth://` 解析（Google/GitHub/Steam/自定义） | ✅ | ✅ |
 | 26 个平台默认参数合法性 | — | ✅ |
 | WebCrypto 与纯 JS 实现交叉验证 | ✅ | — |
-| `otpauth-migration://` protobuf 解析（多账号 / SHA256 / 8 位 / 跳过 HOTP） | — | ✅ |
-| 混合文本识别（otpauth + migration + 裸 Base32）与按 secret 去重 | — | ✅ |
-| HTML 实体反转义（`&amp;`）、垃圾文本拒绝 | — | ✅ |
+| `otpauth-migration://` protobuf 解析（多账号 / SHA256 / 8 位 / 跳过 HOTP） | ✅ | ✅ |
+| 混合文本识别（otpauth + migration + 裸 Base32）与按 secret 去重 | ✅ | ✅ |
+| HTML 实体反转义（`&amp;`）、垃圾文本拒绝 | ✅ | ✅ |
+| 平台别名识别（Gmail→Google、Outlook→Microsoft、iCloud→Apple、AWS→Amazon） | ✅ | ✅ |
+| 单字符 key 不误判（`x` vs `Xbox`） | ✅ | ✅ |
 
-当前结果：**Web 30 通过 / 0 失败；安卓 18 通过 / 0 失败。**
+当前结果：**Web 算法 30 项 + Web 导入 39 项 = 69 通过 / 0 失败；安卓 30 通过 / 0 失败。**

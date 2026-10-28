@@ -2,6 +2,7 @@ package com.yg.tokenvault
 
 import com.yg.tokenvault.data.OtpImporter
 import com.yg.tokenvault.data.OtpMigration
+import com.yg.tokenvault.data.Platforms
 import com.yg.tokenvault.util.Base32
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -188,5 +189,24 @@ class OtpImportTest {
         assertEquals(6, entry.digits)
         assertEquals(30, entry.period)
         assertEquals("Microsoft", entry.name)
+    }
+
+    @Test
+    fun platforms_guessesByAlias() {
+        assertEquals("google", Platforms.guess("Gmail").key)
+        assertEquals("microsoft", Platforms.guess("Outlook").key)
+        assertEquals("apple", Platforms.guess("iCloud").key)
+        assertEquals("amazon", Platforms.guess("AWS").key)
+        assertEquals("proton", Platforms.guess("ProtonMail").key)
+        assertEquals("epic", Platforms.guess("Epic Games").key)
+    }
+
+    @Test
+    fun platforms_doesNotMisreadShortKeys() {
+        // key "x" 只有一个字符，不能参与包含匹配，否则 Xbox 会被判成 X
+        assertEquals("xbox", Platforms.guess("Xbox Live").key)
+        assertEquals("custom", Platforms.guess("某个小网站").key)
+        assertEquals("custom", Platforms.guess(null).key)
+        assertEquals("x", Platforms.guess("x").key)
     }
 }

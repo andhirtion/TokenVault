@@ -66,16 +66,37 @@ object Platforms {
 
     /** 根据 issuer / 标签猜测平台，用于 otpauth:// 导入 */
     fun guess(issuerOrLabel: String?): Platform {
-        val s = (issuerOrLabel ?: "").lowercase()
+        val s = (issuerOrLabel ?: "").trim().lowercase()
         if (s.isBlank()) return of("custom")
-        // 先精确匹配 key，再按包含关系匹配
+        // 1) key 精确命中
         BY_KEY[s]?.let { return it }
-        return ALL.firstOrNull { it.key != "custom" && (s.contains(it.key) || it.label.lowercase().let(s::contains)) }
-            ?: when {
-                s.contains("git") -> of("github")
-                s.contains("steam") -> of("steam")
-                s.contains("window") || s.contains("office") || s.contains("outlook") -> of("microsoft")
-                else -> of("custom")
-            }
+        // 2) key / label 包含匹配。key 长度 < 3 的（x）跳过，否则任何含 x 的 issuer 都会误判
+        ALL.firstOrNull {
+            it.key != "custom" && it.key.length >= 3 &&
+                (s.contains(it.key) || (it.label.length >= 3 && s.contains(it.label.lowercase())))
+        }?.let { return it }
+        // 3) 常见别名
+        for ((key, words) in ALIASES) {
+            if (words.any { s.contains(it) }) return of(key)
+        }
+        return when {
+            s.contains("steam") -> of("steam")
+            s.contains("git") -> of("github")
+            s.contains("window") || s.contains("office") || s.contains("outlook") -> of("microsoft")
+            else -> of("custom")
+        }
     }
+
+    /** issuer 里常见的非品牌名 */
+    private val ALIASES: Map<String, List<String>> = mapOf(
+        "google" to listOf("gmail", "googlemail", "youtube", "workspace", "gsuite"),
+        "microsoft" to listOf("outlook", "hotmail", "office365", "office 365", "azure", "onedrive", "skype", "msn", "live.com"),
+        "apple" to listOf("icloud", "appleid", "apple id"),
+        "amazon" to listOf("aws", "amazon web"),
+        "proton" to listOf("protonmail"),
+        "facebook" to listOf("meta", "fb"),
+        "x" to listOf("twitter"),
+        "epic" to listOf("epicgames", "epic games"),
+        "xbox" to listOf("xbox live")
+    )
 }
