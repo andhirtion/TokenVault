@@ -66,7 +66,7 @@ TokenVault/dist/TokenVault-1.1.0-debug.apk # 26 MB，debug 版（带日志，排
 cd TokenVault
 bash tools/build_apk.sh            # → dist/... 之前先出 app/build/outputs/apk/debug/app-debug.apk
 bash tools/build_apk.sh release    # 正式包，已配 debug 签名，直接能装
-bash tools/build_apk.sh test       # 跑 18 项 JVM 单元测试（TOTP 算法自检）
+bash tools/build_apk.sh test       # 跑 28 项 JVM 单元测试（TOTP 算法自检）
 ```
 
 `.toolchain/` 里已经备好 **JDK 17 + Android SDK Platform 35 + Build-Tools 35.0.0 + Gradle 8.11.1**，
@@ -224,7 +224,7 @@ TokenVault/
 │  │  ├─ VaultViewModel.kt
 │  │  ├─ TokenVaultApp.kt
 │  │  └─ MainActivity.kt     # 含 otpauth:// 外链导入
-│  ├─ app/src/test/java/com/yg/tokenvault/CoreLogicTest.kt   # 18 项算法单测
+│  ├─ app/src/test/java/com/yg/tokenvault/CoreLogicTest.kt   # 18 项算法单测 + 10 项导入解析单测
 │  └─ app/src/main/res/      # 品牌图标、自适应启动图标、字符串、备份排除规则
 ├─ tools/
 │  ├─ serve.py               # 带正确 MIME 的本地服务器
@@ -246,7 +246,7 @@ TokenVault/
 
 ```bash
 node tools/verify.js          # Web 版（JS）
-bash tools/build_apk.sh test  # 安卓版（Kotlin，18 项 JVM 单元测试）
+bash tools/build_apk.sh test  # 安卓版（Kotlin，28 项 JVM 单元测试）
 ```
 
 覆盖范围：
@@ -263,5 +263,8 @@ bash tools/build_apk.sh test  # 安卓版（Kotlin，18 项 JVM 单元测试）
 | `otpauth://` 解析（Google/GitHub/Steam/自定义） | ✅ | ✅ |
 | 26 个平台默认参数合法性 | — | ✅ |
 | WebCrypto 与纯 JS 实现交叉验证 | ✅ | — |
+| `otpauth-migration://` protobuf 解析（多账号 / SHA256 / 8 位 / 跳过 HOTP） | — | ✅ |
+| 混合文本识别（otpauth + migration + 裸 Base32）与按 secret 去重 | — | ✅ |
+| HTML 实体反转义（`&amp;`）、垃圾文本拒绝 | — | ✅ |
 
 当前结果：**Web 30 通过 / 0 失败；安卓 18 通过 / 0 失败。**
