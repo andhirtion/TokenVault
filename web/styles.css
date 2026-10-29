@@ -219,6 +219,16 @@ input, textarea, select { -webkit-appearance: none; appearance: none; }
   display: flex; flex-direction: column; align-items: center; gap: 14px;
 }
 .scan-hint { font-size: 13px; color: rgba(255, 255, 255, .82); letter-spacing: .02em; }
+.scan-actions { display: flex; align-items: center; gap: 10px; }
+.scan-album {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 22px; border-radius: 999px; font-size: 13.5px; font-weight: 620;
+  color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: 1px solid rgba(255, 255, 255, .18);
+  box-shadow: 0 10px 26px -10px var(--accent);
+}
+.scan-album svg { width: 16px; height: 16px; display: block; }
+.scan-album:active { transform: scale(.95); }
 .scan-close {
   padding: 11px 26px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
   color: #fff; background: rgba(255, 255, 255, .16);

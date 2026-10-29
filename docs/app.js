@@ -1675,12 +1675,9 @@ function scanSupported() {
 }
 
 async function openScanner() {
-  if (!scanSupported()) {
-    toast('这个浏览器不支持实时扫码，改用「从图片识别」', 'err');
-    return;
-  }
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    toast('当前环境拿不到摄像头，改用「从图片识别」', 'err');
+  if (!scanSupported() || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast('这个浏览器不能实时扫码，改从相册选图');
+    pickImageForScan();
     return;
   }
   const overlay = $('#scanOverlay'), video = $('#scanVideo'), hint = $('#scanHint');
@@ -1689,7 +1686,9 @@ async function openScanner() {
       video: { facingMode: { ideal: 'environment' } }, audio: false
     });
   } catch (e) {
-    toast('摄像头没打开：' + (e && e.name === 'NotAllowedError' ? '权限被拒绝' : '不可用'), 'err');
+    const denied = e && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
+    toast(denied ? '摄像头权限被拒绝，改从相册选图' : '摄像头打不开，改从相册选图');
+    pickImageForScan();
     return;
   }
   video.srcObject = _scanStream;
@@ -1748,6 +1747,7 @@ function pickImageForScan() {
       if (!codes || !codes.length) { toast('这张图片里没识别到二维码', 'err'); return; }
       const raw = codes[0].rawValue || '';
       if (!/^otpauth/i.test(raw)) { toast('二维码内容不是 otpauth 令牌', 'err'); return; }
+      stopScanner();
       await addParsedTokens(parseAnyOtp(raw));
     } catch (e) {
       toast('图片识别失败', 'err');
@@ -1983,6 +1983,8 @@ function bindGlobal() {
   if (grabBtn) grabBtn.onclick = () => { haptic(10); openGrab(); };
   const scanClose = $('#scanClose');
   if (scanClose) scanClose.onclick = () => stopScanner();
+  const scanAlbum = $('#scanAlbum');
+  if (scanAlbum) scanAlbum.onclick = () => pickImageForScan();
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && _scanStream) stopScanner();
   });
