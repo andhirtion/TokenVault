@@ -37,7 +37,7 @@
 | 方式 | 地址 / 文件 | 大小 | 适合 |
 | --- | --- | --- | --- |
 | **① 在线网页版** | <https://andhirtion.github.io/TokenVault/> | 0 安装 | **手机浏览器打开就用**，菜单里「添加到主屏幕」就像个 App，断网也能出码 |
-| **② 安卓 App** | [`dist/TokenVault-1.1.2.apk`](dist/) | 2.2 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥） |
+| **② 安卓 App** | [TokenVault-1.1.2.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.2/TokenVault-1.1.2.apk) | 2.2 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥） |
 | **③ 本地跑源码** | [`web/`](web/) 或 [`android/`](android/) | — | 想改代码 |
 
 ### ① 在线网页版（最快，推荐先试这个）
@@ -53,13 +53,13 @@
 
 ### ② 安卓 App
 
-```
-TokenVault/dist/TokenVault-1.1.2.apk        # 2.2 MB，正式包名 com.yg.tokenvault
-TokenVault/dist/TokenVault-1.1.2-debug.apk  # 20 MB，未混淆版（正式包闪退时换它）
-```
+| 文件 | 大小 | 说明 |
+| --- | --- | --- |
+| [TokenVault-1.1.2.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.2/TokenVault-1.1.2.apk) | 2.2 MB | 正式包，包名 `com.yg.tokenvault`，R8 混淆 |
+| [TokenVault-1.1.2-debug.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.2/TokenVault-1.1.2-debug.apk) | 20 MB | 未混淆版，正式包万一闪退就换它 |
 
-也可以从 [Releases](https://github.com/andhirtion/TokenVault/releases) 下。传到手机 → 点开 →
-允许「安装未知来源应用」→ 装完打开。
+传到手机 → 点开 → 允许「安装未知来源应用」→ 装完打开。
+（全部版本见 [Releases](https://github.com/andhirtion/TokenVault/releases)。）
 
 - 要求 **Android 8.0（API 26）** 及以上
 - debug 证书签名，上不了 Play 商店，自己用没问题
