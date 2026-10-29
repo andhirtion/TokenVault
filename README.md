@@ -37,7 +37,7 @@
 | 方式 | 地址 / 文件 | 大小 | 适合 |
 | --- | --- | --- | --- |
 | **① 在线网页版** | <https://andhirtion.github.io/TokenVault/> | 0 安装 | **手机浏览器打开就用**，菜单里「添加到主屏幕」就像个 App，断网也能出码 |
-| **② 安卓 App** | [`dist/TokenVault-1.1.1.apk`](dist/) | 2.2 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥） |
+| **② 安卓 App** | [`dist/TokenVault-1.1.2.apk`](dist/) | 2.2 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥） |
 | **③ 本地跑源码** | [`web/`](web/) 或 [`android/`](android/) | — | 想改代码 |
 
 ### ① 在线网页版（最快，推荐先试这个）
@@ -54,8 +54,8 @@
 ### ② 安卓 App
 
 ```
-TokenVault/dist/TokenVault-1.1.1.apk        # 2.2 MB，正式包名 com.yg.tokenvault
-TokenVault/dist/TokenVault-1.1.1-debug.apk  # 20 MB，未混淆版（正式包闪退时换它）
+TokenVault/dist/TokenVault-1.1.2.apk        # 2.2 MB，正式包名 com.yg.tokenvault
+TokenVault/dist/TokenVault-1.1.2-debug.apk  # 20 MB，未混淆版（正式包闪退时换它）
 ```
 
 也可以从 [Releases](https://github.com/andhirtion/TokenVault/releases) 下。传到手机 → 点开 →
@@ -332,6 +332,8 @@ TokenVault/
 ---
 
 ## 更新日志
+
+**v1.1.2** — 扫码取景层加「从相册选择」（网页版 + 安卓版同步）；网页版摄像头不可用或被拒时自动降级到相册；README 重写并配上 10 张界面截图。
 
 **v1.1.1** — 网页版上线 <https://andhirtion.github.io/TokenVault/>；网页版支持扫码 / 图片 / 粘贴 /
 Google 迁移串导入；扫码界面加「从相册选择」；修平台别名与单字符 key 误判；修弹层透光。

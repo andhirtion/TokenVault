@@ -1,5 +1,9 @@
 package com.yg.tokenvault
 
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -38,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,6 +65,7 @@ import com.yg.tokenvault.ui.screens.ToolsScreen
 import com.yg.tokenvault.ui.screens.VaultScreen
 import com.yg.tokenvault.ui.screens.androidClickable
 import com.yg.tokenvault.ui.theme.LocalPalette
+import com.yg.tokenvault.util.QrDecoder
 import com.yg.tokenvault.ui.theme.TokenVaultTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -83,6 +89,30 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
     var showImport by remember { mutableStateOf(false) }
     var showScan by remember { mutableStateOf(false) }
     var showLogin by remember { mutableStateOf(false) }
+
+    // 从相册选二维码图片（免权限）
+    val appContext = LocalContext.current
+    val albumLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val text = runCatching {
+            appContext.contentResolver.openInputStream(uri)?.use { input ->
+                QrDecoder.fromBitmap(BitmapFactory.decodeStream(input))
+            }
+        }.getOrNull()
+        if (text.isNullOrBlank()) {
+            vm.toast("这张图片里没识别到二维码")
+        } else {
+            showScan = false
+            vm.importAnyText(text, OtpImporter.Origin.QR_CODE)
+        }
+    }
+    val pickAlbum: () -> Unit = {
+        albumLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
+    }
 
     // 消息流 → 轻提示
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -225,7 +255,8 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                 onDecoded = { text ->
                     showScan = false
                     vm.importAnyText(text, OtpImporter.Origin.QR_CODE)
-                }
+                },
+                onPickAlbum = pickAlbum
             )
         }
 

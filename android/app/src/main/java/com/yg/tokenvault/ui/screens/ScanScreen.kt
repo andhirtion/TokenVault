@@ -21,17 +21,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -78,7 +82,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Composable
 fun ScanScreen(
     onDismiss: () -> Unit,
-    onDecoded: (String) -> Unit
+    onDecoded: (String) -> Unit,
+    onPickAlbum: () -> Unit
 ) {
     val pal = LocalPalette.current
     val context = LocalContext.current
@@ -125,22 +130,36 @@ fun ScanScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "也可以回到上一页手动粘贴密钥",
+                    text = "也可以从相册选一张二维码截图",
                     style = MaterialTheme.typography.bodyMedium,
                     color = pal.text3,
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(22.dp))
-                Text(
-                    text = "重新授权",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = pal.accent,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(pal.accent.copy(alpha = 0.16f))
-                        .androidClickable { launcher.launch(Manifest.permission.CAMERA) }
-                        .padding(horizontal = 20.dp, vertical = 10.dp)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "重新授权",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = pal.accent,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(pal.accent.copy(alpha = 0.16f))
+                            .androidClickable { launcher.launch(Manifest.permission.CAMERA) }
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = "从相册选择",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(pal.accent, pal.accent2)))
+                            .androidClickable { onPickAlbum() }
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                    )
+                }
             }
         }
 
@@ -183,13 +202,40 @@ fun ScanScreen(
             )
         }
 
-        // 底部提示
-        Box(
+        // 底部：相册兜底 + 提示
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 26.dp, vertical = 40.dp)
+                .navigationBarsPadding()
+                .padding(horizontal = 26.dp)
+                .padding(bottom = 34.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(pal.accent, pal.accent2)))
+                    .androidClickable { onPickAlbum() }
+                    .padding(horizontal = 24.dp, vertical = 13.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Image,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "从相册选择",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(Modifier.height(13.dp))
             Text(
                 text = "识别成功会自动填充密钥并返回",
                 style = MaterialTheme.typography.labelSmall,
