@@ -299,7 +299,8 @@ const PLATFORM_ALIASES = {
   epic:       ['epicgames', 'epic games'],
   xbox:       ['xbox live'],
   dropbox:    ['dropbox'],
-  binance:    ['binance']
+  binance:    ['binance'],
+  telegram:   ['t.me', 'web.telegram', 'telegram web']
 };
 
 function _guessPlatform(hay) {
@@ -569,7 +570,11 @@ const CFG_DEFAULTS = {
   clipClear: 20,
   hideCode: false,
   hasVault: false,
-  salt: ''
+  salt: '',
+  bio: false,      // 是否启用指纹 / 面容解锁
+  bioId: '',       // WebAuthn credential rawId（base64url）
+  bioPin: '',      // 被包裹的访问密码（iv.ct）
+  bioKey: ''       // 包裹密钥（设备支持 PRF 时不用它）
 };
 let cfg = { ...CFG_DEFAULTS };
 
@@ -1146,6 +1151,189 @@ function upsertEntry(item) {
   state.codeCache.delete(item.id);
 }
 
+/* ───────────────── 指纹 / 面容解锁（WebAuthn platform authenticator） ───────────────── */
+/* 说明：浏览器不允许网页直接读指纹，只能用系统弹窗做「本地用户在场验证」。
+   因此做法是：开启时把访问密码用 AES-GCM 包一层存本机，验证通过后解出来走正常解锁。
+   支持 WebAuthn PRF 扩展的设备（Chrome / Edge / Safari 17+）用 PRF 结果派生包裹密钥，
+   密钥本身不落盘；不支持时退回用本机随机 key（等价于「把密码加密存在这台设备」）。 */
+const BIO_PRF_SALT = new TextEncoder().encode('tokenvault/biometric/v1');
+let currentPin = '';   // 仅在本次已解锁会话内保存，锁屏即清空
+
+function bioSupported() {
+  return typeof PublicKeyCredential !== 'undefined'
+    && typeof navigator.credentials !== 'undefined'
+    && window.isSecureContext === true;
+}
+
+async function bioAvailable() {
+  if (!bioSupported()) return false;
+  try {
+    if (typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== 'function') return false;
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch (_) { return false; }
+}
+
+const _bioB64u = buf => bytesToB64(new Uint8Array(buf))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const _bioUnb64u = s => b64ToBytes(String(s).replace(/-/g, '+').replace(/_/g, '/'));
+
+function _bioPrfOf(cred) {
+  try {
+    const ext = cred && cred.getClientExtensionResults ? cred.getClientExtensionResults() : null;
+    const first = ext && ext.prf && ext.prf.results && ext.prf.results.first;
+    return first || null;
+  } catch (_) { return null; }
+}
+
+/* 包裹密钥：PRF 优先，否则本机随机 key */
+async function _bioWrapKey(prfFirst, create) {
+  if (prfFirst) {
+    const h = await crypto.subtle.digest('SHA-256', prfFirst);
+    return crypto.subtle.importKey('raw', h, 'AES-GCM', false, ['encrypt', 'decrypt']);
+  }
+  if (!cfg.bioKey && create) {
+    cfg.bioKey = bytesToB64(crypto.getRandomValues(new Uint8Array(32)));
+  }
+  if (!cfg.bioKey) return null;
+  return crypto.subtle.importKey('raw', b64ToBytes(cfg.bioKey), 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+
+async function _bioSeal(pin, key) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(pin));
+  return bytesToB64(iv) + '.' + bytesToB64(new Uint8Array(ct));
+}
+
+async function _bioUnseal(sealed, key) {
+  const parts = String(sealed).split('.');
+  const pt = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: b64ToBytes(parts[0]) }, key, b64ToBytes(parts[1])
+  );
+  return new TextDecoder().decode(pt);
+}
+
+/* 锁屏上的指纹按钮只在「已开启 + 设备支持」时出现 */
+async function refreshBioButton() {
+  const btn = $('#bioBtn');
+  if (!btn) return;
+  let on = false;
+  if (cfg.bio) on = await bioAvailable();
+  btn.hidden = !on;
+}
+
+async function enableBiometric() {
+  if (!HAS_SUBTLE) { toast('当前打开方式不支持加密接口', 'err'); return; }
+  if (!await bioAvailable()) { toast('这台设备没有可用的指纹或面容', 'err'); return; }
+  let pin = currentPin;
+  if (!pin) {
+    pin = await showModal({
+      title: '验证访问密码',
+      body: '开启指纹解锁前，请再输一次当前访问密码',
+      input: true,
+      placeholder: '6 位访问密码',
+      okText: '继续'
+    });
+    if (!pin) return;
+  }
+  try {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'TokenVault' },
+        user: {
+          id: crypto.getRandomValues(new Uint8Array(16)),
+          name: 'tokenvault-local',
+          displayName: '本机令牌库'
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required',
+          residentKey: 'preferred',
+          requireResidentKey: false
+        },
+        timeout: 90000,
+        attestation: 'none',
+        extensions: { prf: { eval: { first: BIO_PRF_SALT } } }
+      }
+    });
+    if (!cred) return;
+    const key = await _bioWrapKey(_bioPrfOf(cred), true);
+    if (!key) throw new Error('无法生成包裹密钥');
+    cfg.bioId = _bioB64u(cred.rawId);
+    cfg.bioPin = await _bioSeal(pin, key);
+    cfg.bio = true;
+    saveCfg();
+    await refreshBioButton();
+    if (typeof bindSettingsPage === 'function' && $('#pageHost')) bindSettingsPage($('#pageHost'));
+    haptic(14);
+    toast('指纹解锁已开启', 'ok');
+  } catch (e) {
+    if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) return;
+    toast('开启失败：' + ((e && e.message) || '设备不支持'), 'err');
+  }
+}
+
+function disableBiometric(silent) {
+  const had = !!cfg.bio;
+  cfg.bio = false;
+  cfg.bioId = '';
+  cfg.bioPin = '';
+  cfg.bioKey = '';
+  saveCfg();
+  refreshBioButton();
+  if (typeof bindSettingsPage === 'function' && $('#pageHost')) bindSettingsPage($('#pageHost'));
+  if (had && !silent) toast('指纹解锁已关闭');
+}
+
+async function bioUnlock() {
+  if (!cfg.bio || !cfg.bioId) return;
+  if (!await bioAvailable()) { toast('这台设备当前不支持指纹或面容', 'err'); return; }
+  try {
+    const cred = await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ id: _bioUnb64u(cfg.bioId), type: 'public-key', transports: ['internal'] }],
+        userVerification: 'required',
+        timeout: 90000,
+        extensions: { prf: { eval: { first: BIO_PRF_SALT } } }
+      }
+    });
+    if (!cred) return;
+    const key = await _bioWrapKey(_bioPrfOf(cred), false);
+    if (!key) throw new Error('包裹密钥不可用');
+    const pin = await _bioUnseal(cfg.bioPin, key);
+    const ok = await tryUnlockWithPin(pin);
+    if (!ok) {
+      disableBiometric(true);
+      pinShake('指纹解锁已失效，请用密码进入后重新开启');
+    }
+  } catch (e) {
+    if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) return;
+    toast('指纹验证失败：' + ((e && e.message) || '未知错误'), 'err');
+  }
+}
+
+/* 用密码解锁（PIN 与指纹共用） */
+async function tryUnlockWithPin(pin) {
+  try {
+    if (!HAS_SUBTLE) {
+      if (!loadFallback(pin)) return false;
+    } else {
+      const { key } = await cryptoBox.deriveKey(pin, cfg.salt);
+      cryptoBox._key = key;
+      const ok = await loadVault();
+      if (!ok) { cryptoBox._key = null; return false; }
+    }
+    currentPin = pin;
+    await unlock();
+    return true;
+  } catch (_) {
+    cryptoBox._key = null;
+    return false;
+  }
+}
+
 /* ───────────────── 锁屏 ───────────────── */
 let pinBuffer = '';
 let pinMode = 'unlock';   // unlock | setup | confirm
@@ -1207,6 +1395,7 @@ async function onPinComplete() {
       cfg.hasVault = true;
       saveCfg();
       state.entries = [];
+      currentPin = pin;
       await unlock();
       toast('令牌库已创建', 'ok');
     } catch (e) {
@@ -1216,25 +1405,8 @@ async function onPinComplete() {
   }
 
   // 解锁
-  try {
-    if (!HAS_SUBTLE) {
-      const okFallback = loadFallback(pin);
-      if (!okFallback) { pinShake('密码错误'); return; }
-    } else {
-      const { key } = await cryptoBox.deriveKey(pin, cfg.salt);
-      cryptoBox._key = key;
-      const ok = await loadVault();
-      if (!ok) {
-        cryptoBox._key = null;
-        pinShake('密码错误');
-        return;
-      }
-    }
-    await unlock();
-  } catch (e) {
-    cryptoBox._key = null;
-    pinShake('密码错误');
-  }
+  const okPin = await tryUnlockWithPin(pin);
+  if (!okPin) pinShake('密码错误');
 }
 
 /* 无 WebCrypto 的降级存储（XOR + Base64，仅为让 file:// 可演示） */
@@ -1306,6 +1478,8 @@ function lockApp() {
   $('#pinError').textContent = '';
   const lock = $('#lockScreen');
   lock.hidden = false;
+  currentPin = '';
+  refreshBioButton();
   requestAnimationFrame(() => lock.classList.remove('is-out'));
 }
 
@@ -1450,6 +1624,10 @@ function settingsPageHtml() {
     <div class="set-group">
       <div class="set-group-label">安全</div>
       <div class="set-row">
+        <div class="set-row-main"><span>指纹 / 面容解锁</span><em id="bioHint">用系统生物识别代替输入密码</em></div>
+        <label class="switch"><input type="checkbox" id="setBio" ${cfg.bio ? 'checked' : ''}><i></i></label>
+      </div>
+      <div class="set-row">
         <div class="set-row-main"><span>自动锁定</span><em>切到后台后多久重新验证</em></div>
         <select id="setAutoLock" class="set-select">
           <option value="0" ${cfg.autoLock == 0 ? 'selected' : ''}>立即</option>
@@ -1517,6 +1695,27 @@ function bindSettingsPage(host) {
     cfg.hideCode = ev.target.checked; saveCfg(); state.revealed.clear(); renderList();
   };
   host.querySelector('#setAutoLock').onchange = ev => { cfg.autoLock = +ev.target.value; saveCfg(); };
+
+  // 指纹 / 面容解锁
+  const bioEl = host.querySelector('#setBio');
+  if (bioEl) {
+    bioEl.onchange = async ev => {
+      if (ev.target.checked) {
+        ev.target.checked = false;         // 先复位，真的开启成功再勾上
+        await enableBiometric();
+        ev.target.checked = !!cfg.bio;
+      } else {
+        disableBiometric();
+      }
+    };
+    bioAvailable().then(ok => {
+      if (!ok) {
+        bioEl.disabled = true;
+        const hint = host.querySelector('#bioHint');
+        if (hint) hint.textContent = '这台设备或浏览器不支持（需 HTTPS + 系统指纹）';
+      }
+    });
+  }
   host.querySelector('#setClipClear').onchange = ev => { cfg.clipClear = +ev.target.value; saveCfg(); };
   host.querySelector('#btnLockNow').onclick = () => lockApp();
   host.querySelector('#btnChangePin').onclick = changePin;
@@ -1859,7 +2058,7 @@ function bindLockScreen() {
       haptic(6);
       return;
     }
-    if (k === 'bio') return;
+    if (k === 'bio') { bioUnlock(); return; }
     if (/^\d$/.test(k)) {
       if (pinBuffer.length >= 6) return;
       pinBuffer += k;
@@ -2156,6 +2355,7 @@ async function boot() {
   }
   renderPinDots();
   reloadFallbackHint();
+  refreshBioButton();
 
   // 预热：无数据的空库也需要 key 已存在
   if (hasData && cfg.salt && HAS_SUBTLE) { /* 等用户输入 PIN 后派生 */ }

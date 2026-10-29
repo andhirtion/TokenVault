@@ -59,6 +59,7 @@ import com.yg.tokenvault.ui.screens.EditorSheet
 import com.yg.tokenvault.ui.screens.ImportSheet
 import com.yg.tokenvault.ui.screens.LockScreen
 import com.yg.tokenvault.ui.screens.LoginScreen
+import com.yg.tokenvault.security.BiometricVault
 import com.yg.tokenvault.ui.screens.ScanScreen
 import com.yg.tokenvault.ui.screens.SettingsScreen
 import com.yg.tokenvault.ui.screens.ToolsScreen
@@ -114,6 +115,15 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
         )
     }
 
+    // 指纹解锁状态
+    val hostActivity = appContext as? androidx.fragment.app.FragmentActivity
+    var bioOn by remember { mutableStateOf(false) }
+    var bioOk by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(state.unlocked, state.hasVault) {
+        bioOk = BiometricVault.canUse(appContext)
+        bioOn = BiometricVault.isEnabled(appContext)
+    }
+
     // 消息流 → 轻提示
     androidx.compose.runtime.LaunchedEffect(Unit) {
         vm.messages.collect { msg ->
@@ -161,7 +171,19 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                 LockScreen(
                     hasVault = state.hasVault,
                     onCreate = { pin -> vm.createVault(pin) },
-                    onUnlock = { pin -> vm.unlock(pin) }
+                    onUnlock = { pin -> vm.unlock(pin) },
+                    onBiometric = if (hostActivity != null && bioOn && bioOk) {
+                        {
+                            BiometricVault.unlock(
+                                activity = hostActivity,
+                                onPin = { pin -> if (pin != null) vm.unlock(pin) },
+                                onNotice = { msg ->
+                                    vm.toast(msg)
+                                    bioOn = BiometricVault.isEnabled(appContext)
+                                }
+                            )
+                        }
+                    } else null
                 )
             } else {
                 Column(
@@ -193,9 +215,36 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 onShowRing = vm::setShowRing,
                                 onAutoLock = vm::setAutoLock,
                                 onClipClear = vm::setClipClear,
-                                onChangePin = { old, new -> vm.changePin(old, new) },
+                                onChangePin = { old, new ->
+                                    if (vm.changePin(old, new)) {
+                                        // 旧 PIN 已被封进指纹安全区，改完后作废，需重新开启
+                                        BiometricVault.disable(appContext)
+                                        bioOn = false
+                                    }
+                                },
                                 onExport = { pw -> vm.exportBackup(pw) },
                                 onImport = { text, pw -> vm.importBackup(text, pw) },
+                                bioEnabled = bioOn,
+                                bioAvailable = bioOk,
+                                onToggleBio = { want ->
+                                    val act = hostActivity
+                                    if (want) {
+                                        val pin = vm.currentPin()
+                                        when {
+                                            act == null -> vm.toast("当前界面无法调起指纹")
+                                            pin == null -> vm.toast("请用 PIN 解锁后再开启指纹")
+                                            else -> BiometricVault.enable(act, pin) { ok, msg ->
+                                                if (ok) vm.toast("指纹解锁已开启")
+                                                else if (msg != null) vm.toast(msg)
+                                                bioOn = BiometricVault.isEnabled(appContext)
+                                            }
+                                        }
+                                    } else {
+                                        BiometricVault.disable(appContext)
+                                        bioOn = false
+                                        vm.toast("指纹解锁已关闭")
+                                    }
+                                },
                                 onLock = {
                                     detailId = null
                                     editorId = null

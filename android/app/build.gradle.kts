@@ -14,8 +14,8 @@ android {
         applicationId = "com.yg.tokenvault"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.1.2"
+        versionCode = 5
+        versionName = "1.1.3"
         resourceConfigurations += listOf("zh", "en")
     }
 
@@ -76,6 +76,8 @@ dependencies {
 
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("androidx.biometric:biometric:1.1.0")
+    // BiometricPrompt 需要 FragmentActivity 宿主
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     implementation("com.google.zxing:core:3.5.3")

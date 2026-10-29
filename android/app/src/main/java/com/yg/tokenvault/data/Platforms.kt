@@ -97,6 +97,8 @@ object Platforms {
         "facebook" to listOf("meta", "fb"),
         "x" to listOf("twitter"),
         "epic" to listOf("epicgames", "epic games"),
-        "xbox" to listOf("xbox live")
+        "xbox" to listOf("xbox live"),
+        // Telegram：网页版 / 频道链接 t.me、web.telegram.org 都归到 Telegram
+        "telegram" to listOf("t.me", "web.telegram", "telegram web", "tg web")
     )
 }

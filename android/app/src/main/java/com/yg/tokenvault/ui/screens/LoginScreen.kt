@@ -81,7 +81,9 @@ val LOGIN_SHORTCUTS = listOf(
     LoginShortcut("Dropbox", "https://www.dropbox.com/account/security"),
     LoginShortcut("Amazon", "https://www.amazon.com/a/settings/approval"),
     LoginShortcut("Epic", "https://www.epicgames.com/account/password"),
-    LoginShortcut("Discord", "https://discord.com/settings/security")
+    LoginShortcut("Discord", "https://discord.com/settings/security"),
+    LoginShortcut("Telegram", "https://web.telegram.org/k/"),
+    LoginShortcut("X", "https://x.com/settings/security_and_login_information")
 )
 
 /**

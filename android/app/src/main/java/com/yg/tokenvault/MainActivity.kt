@@ -2,7 +2,7 @@ package com.yg.tokenvault
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
@@ -19,7 +19,7 @@ import com.yg.tokenvault.data.OtpImporter
  * 额外职责：接收从浏览器 / 其他应用点开的 otpauth:// 与 otpauth-migration:// 链接，
  * 直接导入到令牌库（需已解锁）。
  */
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private var pendingUri by mutableStateOf<String?>(null)
 

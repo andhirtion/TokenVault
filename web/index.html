@@ -54,7 +54,17 @@
       <button data-k="7">7<em>PQRS</em></button>
       <button data-k="8">8<em>TUV</em></button>
       <button data-k="9">9<em>WXYZ</em></button>
-      <button data-k="bio" class="key-ghost" id="bioBtn" hidden>指纹</button>
+      <button data-k="bio" class="key-ghost key-bio" id="bioBtn" hidden aria-label="指纹解锁">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3.6a8.4 8.4 0 0 0-8.4 8.4v2.2"/>
+          <path d="M20.4 12A8.4 8.4 0 0 0 12 3.6"/>
+          <path d="M12 6.8A5.2 5.2 0 0 0 6.8 12v4.3"/>
+          <path d="M17.2 12A5.2 5.2 0 0 0 12 6.8"/>
+          <path d="M12 10a2 2 0 0 0-2 2v5.4"/>
+          <path d="M14 12a2 2 0 0 1 2 2v3.4"/>
+        </svg>
+      </button>
       <button data-k="0" data-zero>0</button>
       <button data-k="del" class="key-ghost">⌫</button>
     </div>

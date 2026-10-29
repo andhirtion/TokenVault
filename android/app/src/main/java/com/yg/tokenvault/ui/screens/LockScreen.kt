@@ -45,7 +45,8 @@ fun LockScreen(
     hasVault: Boolean,
     onCreate: (String) -> Boolean,
     onUnlock: (String) -> Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBiometric: (() -> Unit)? = null
 ) {
     val pal = LocalPalette.current
     val haptic = LocalHapticFeedback.current
@@ -146,7 +147,8 @@ fun LockScreen(
             text = when (stage) {
                 Stage.SETUP -> "设置 6 位访问 PIN"
                 Stage.CONFIRM -> "再次输入以确认"
-                Stage.UNLOCK -> "输入 PIN 解锁保险库"
+                Stage.UNLOCK -> if (onBiometric != null) "输入 PIN，或点指纹直接进入"
+                else "输入 PIN 解锁保险库"
             },
             style = MaterialTheme.typography.bodyMedium,
             color = pal.text2,
@@ -187,6 +189,7 @@ fun LockScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 }
             },
+            onBiometric = if (stage == Stage.UNLOCK) onBiometric else null,
             enabled = true
         )
 

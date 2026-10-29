@@ -37,7 +37,7 @@
 | 方式 | 地址 / 文件 | 大小 | 适合 |
 | --- | --- | --- | --- |
 | **① 在线网页版** | <https://andhirtion.github.io/TokenVault/> | 0 安装 | **手机浏览器打开就用**，菜单里「添加到主屏幕」就像个 App，断网也能出码 |
-| **② 安卓 App** | [TokenVault-1.1.2.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.2/TokenVault-1.1.2.apk) | 2.2 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥） |
+| **② 安卓 App** | [TokenVault-1.1.3.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.3/TokenVault-1.1.3.apk) | 2.3 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥） |
 | **③ 本地跑源码** | [`web/`](web/) 或 [`android/`](android/) | — | 想改代码 |
 
 ### ① 在线网页版（最快，推荐先试这个）
@@ -55,8 +55,8 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.1.2.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.2/TokenVault-1.1.2.apk) | 2.2 MB | 正式包，包名 `com.yg.tokenvault`，R8 混淆 |
-| [TokenVault-1.1.2-debug.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.2/TokenVault-1.1.2-debug.apk) | 20 MB | 未混淆版，正式包万一闪退就换它 |
+| [TokenVault-1.1.3.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.3/TokenVault-1.1.3.apk) | 2.3 MB | 正式包，包名 `com.yg.tokenvault`，R8 混淆 |
+| [TokenVault-1.1.3-debug.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.1.3/TokenVault-1.1.3-debug.apk) | 20 MB | 未混淆版，正式包万一闪退就换它 |
 
 传到手机 → 点开 → 允许「安装未知来源应用」→ 装完打开。
 （全部版本见 [Releases](https://github.com/andhirtion/TokenVault/releases)。）
@@ -103,12 +103,19 @@ bash tools/build_apk.sh test       # 跑 30 项 JVM 单元测试
 
 <sub>PIN 锁屏 · 浅色主题 · 令牌编辑器 · 安全工具（随机口令 / Base32 生成 / 验证码试算）</sub>
 
+<img src="shots/18-lock-bio.png" width="196" alt="锁屏指纹">
+<img src="shots/17-settings-bio.png" width="196" alt="指纹开关">
+<img src="shots/19-bio-unlocked.png" width="196" alt="指纹解锁后">
+
+<sub>锁屏左下多出指纹键 · 设置里开启「指纹 / 面容解锁」· 指纹验证后直接进入</sub>
+
 </div>
 
 - 深色为默认（`#07080c` 底 + 紫青渐变），可切浅色或跟随系统
 - 品牌图标 26 套，全是手写内联 SVG / VectorDrawable，**不加载任何网络图片**
 - 环形倒计时，剩 5 秒变红；点验证码即复制，可设 15/30/60 秒后自动清剪贴板
 - 长按卡片收藏，收藏置顶分组
+- **指纹 / 面容解锁**：设置里开启后锁屏左下会出现指纹键，按一下就进（安卓走 `BiometricPrompt`，网页走 WebAuthn）
 - 「隐藏验证码」模式：列表只显圆点，点开详情才显示
 - 搜索（名称 / 账号 / 备注）+ 平台筛选
 
@@ -129,9 +136,11 @@ bash tools/build_apk.sh test       # 跑 30 项 JVM 单元测试
 - 剪贴板粘贴：`otpauth://`、`otpauth-migration://`、裸 Base32 都认
 - **Google Authenticator 迁移串原生解析**（手写 protobuf，无第三方库），一条链接导入全部账号
 - 安卓独有：内置浏览器登录平台 2FA 设置页，自动抓页面里的 otpauth 链接 / 密钥文本 / 二维码图片
+  （内置站点含 Google、Microsoft、GitHub、Steam、Dropbox、Amazon、Epic、Discord、**Telegram 网页版**、X）
 - 安卓独有：浏览器里点 `otpauth://` 链接直接跳进 App 导入
 
 **安全**
+- **指纹 / 面容解锁（当 PIN 用）**：验证一次系统生物识别就直接进入，不用输 PIN
 - PIN 经 **PBKDF2-HMAC-SHA256（250,000 次迭代）** 派生 256 位密钥
 - 令牌用 **AES-256-GCM** 加密落盘（认证加密，密文被改即解不开）
 - 换 PIN 重新生成随机盐、整体重加密
@@ -202,7 +211,8 @@ Facebook · GitLab · LinkedIn · Slack · Telegram · Reddit · Twitch · Spoti
 Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 自定义
 
 平台识别带别名表：`Gmail` → Google、`Outlook/Hotmail/Office 365/Azure` → Microsoft、
-`iCloud` → Apple、`AWS` → Amazon、`Epic Games` → Epic、`Xbox Live` → Xbox。
+`iCloud` → Apple、`AWS` → Amazon、`Epic Games` → Epic、`Xbox Live` → Xbox、
+`t.me / web.telegram.org` → **Telegram**（频道与网页版登录都归到同一个平台）。
 不认识的 issuer 一律落到「自定义」，照样能出码。
 
 ---
@@ -217,6 +227,7 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 | 换 PIN | 新盐 + 全量重加密 |
 | 备份 | 独立密码再加密一次，明文永不落盘 |
 | 系统备份 | 安卓 `allowBackup=false` + `dataExtractionRules` 全排除 |
+| 生物解锁 | 安卓 `AndroidKeyStore` 里一把「每次使用都需认证」的 AES-256-GCM 密钥封住 PIN（`setUserAuthenticationRequired` + `setInvalidatedByBiometricEnrollment`），密钥不出安全区；网页版走 WebAuthn platform authenticator，支持 PRF 时包裹密钥不落盘，不支持时用本机随机密钥包裹（属于便利层，等价于把 PIN 加密存本机） |
 | 网络 | Web 版零请求；安卓 `INTERNET` 权限只服务于内置浏览器登录页，代码里没有任何上传逻辑 |
 
 **没有找回通道。** 忘了 PIN 只能靠之前导出的加密备份 —— 能找回就等于别人也能找回。
@@ -247,6 +258,12 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 1. 要走到 **2FA 设置页**，不是登录页或首页 —— 密钥只在这个页面出现；
 2. 平台在已开启状态下只显示「已启用」，不给密钥。只能先移除再重新开启，在重开那一次扫；
 3. 抓取每 1.8 秒扫一次页面，页面加载慢就多点几次右上角「抓取」。
+
+**Telegram（网页版 / 频道）怎么存？**
+Telegram 的两步验证是**自设密码**，不是 TOTP 动态码，所以没有二维码可扫。做法是：
+新建一条 **「笔记」类型**条目 → 平台选 Telegram → 账号填手机号或 `@频道名` → 备注里写两步验证密码 / 恢复邮箱 / 备用码。
+如果你自己的某个服务（如自建的 Telegram Bot 面板）给了 TOTP 二维码，照常扫码即入库，平台会自动归到 Telegram。
+安卓版「获取密钥 → 登录网页」里已内置 `web.telegram.org`，可直接在里面登录。
 
 ---
 
@@ -332,6 +349,8 @@ TokenVault/
 ---
 
 ## 更新日志
+
+**v1.1.3** — 新增**指纹 / 面容解锁**（指纹当 PIN 用）：网页版走 WebAuthn、安卓走 BiometricPrompt + AndroidKeyStore；Telegram 网页版 / 频道链接（`t.me`）加入平台识别与内置登录站点。
 
 **v1.1.2** — 扫码取景层加「从相册选择」（网页版 + 安卓版同步）；网页版摄像头不可用或被拒时自动降级到相册；README 重写并配上 10 张界面截图。
 

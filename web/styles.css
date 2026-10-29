@@ -132,6 +132,9 @@ input, textarea, select { -webkit-appearance: none; appearance: none; }
 .keypad button:active { transform: scale(.92); background: var(--surface-hi); border-color: var(--border-hi); }
 .keypad .key-ghost { font-size: 15px; color: var(--text-2); background: transparent; border-color: transparent; }
 .keypad .key-ghost:active { background: var(--surface); }
+.keypad .key-bio { color: var(--accent); }
+.keypad .key-bio svg { width: 30px; height: 30px; }
+.keypad .key-bio:active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .keypad button[data-zero] { grid-column: 2; }
 .lock-foot { margin: 26px 0 0; font-size: 11.5px; color: var(--text-3); letter-spacing: .02em; }
 

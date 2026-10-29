@@ -1,5 +1,5 @@
 /* TokenVault Service Worker — 离线优先，绝不缓存任何动态请求 */
-const CACHE = 'tokenvault-v2';
+const CACHE = 'tokenvault-v3';
 const ASSETS = [
   './',
   './index.html',

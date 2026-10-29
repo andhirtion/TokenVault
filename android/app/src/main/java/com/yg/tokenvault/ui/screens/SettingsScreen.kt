@@ -69,7 +69,10 @@ fun SettingsScreen(
     onExport: (String) -> String?,
     onImport: (String, String) -> Unit,
     onLock: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    bioEnabled: Boolean = false,
+    bioAvailable: Boolean = false,
+    onToggleBio: (Boolean) -> Unit = {}
 ) {
     val pal = LocalPalette.current
     val clipboard = LocalClipboardManager.current
@@ -146,6 +149,17 @@ fun SettingsScreen(
         Spacer(Modifier.height(14.dp))
         GroupLabel("安全")
         Section {
+            ToggleRow(
+                title = "指纹解锁",
+                subtitle = when {
+                    bioEnabled -> "指纹验证通过后直接进入，不用输入 PIN"
+                    bioAvailable -> "用指纹或面容代替输入 PIN"
+                    else -> "这台设备没有可用的指纹或面容"
+                },
+                checked = bioEnabled,
+                onCheckedChange = { want -> if (bioAvailable) onToggleBio(want) }
+            )
+            Divider()
             ToggleRow(
                 title = "隐藏验证码",
                 subtitle = "列表默认显示为圆点，点开详情查看",

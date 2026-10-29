@@ -93,11 +93,20 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
 
     private var ticker: Job? = null
 
+    /**
+     * 仅在已解锁会话内保留 PIN 明文，用于把 PIN 封进生物识别安全区。
+     * 锁屏即清空，不落盘、不进状态树。
+     */
+    private var sessionPin: String? = null
+
+    fun currentPin(): String? = sessionPin
+
     // ── 解锁流程 ──────────────────────────────────────────────
 
     fun createVault(pin: String): Boolean {
         val ok = repo.create(pin.toCharArray())
         if (ok) {
+            sessionPin = pin
             _state.value = _state.value.copy(hasVault = true, unlocked = true, entries = emptyList())
             startTicker()
             toast("保险库已创建")
@@ -110,6 +119,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
     fun unlock(pin: String): Boolean {
         val ok = repo.unlock(pin.toCharArray())
         if (ok) {
+            sessionPin = pin
             _state.value = _state.value.copy(
                 hasVault = true,
                 unlocked = true,
@@ -122,6 +132,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
 
     fun lock() {
         repo.lock()
+        sessionPin = null
         ticker?.cancel()
         ticker = null
         _state.value = _state.value.copy(unlocked = false, entries = emptyList(), query = "", filter = null, tab = Tab.VAULT)
@@ -205,6 +216,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
 
     fun changePin(old: String, new: String): Boolean {
         val ok = repo.changePin(old.toCharArray(), new.toCharArray())
+        if (ok) sessionPin = new
         toast(if (ok) "PIN 已更新" else "原 PIN 不正确")
         return ok
     }
