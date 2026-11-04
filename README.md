@@ -390,6 +390,13 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 - **会被浏览器拦的**：坚果云（默认不放行）、部分只给客户端用的 WebDAV 服务。
 - 打开「自动备份」后，本地任何改动 **6 秒后自动上传一次**（防抖，避免边打字边传）。
 
+「从云端恢复」用的是同一套密码口径：**填了就按填的解，留空就直接用你当前解锁的 PIN**，
+所以备份时留空、恢复时也留空，可以一路点到底不弹框；只有密码填错才会提示解密失败。
+
+已经用本地假服务器（`tools/dav_mock.py`）跑通完整回路：测试连接 → 立即备份（云端落 1 条，
+`app=TokenVault`、`alg=AES-256-GCM`、密文 384 字符、**不含明文条目名与密码**）→ 清空本地库 →
+从云端恢复回同一条，页面零报错。
+
 上传的文件长这样（外面一层是 WebDAV 传输，里面这层才是真加密）：
 
 ```json
@@ -469,6 +476,13 @@ python tools/shoot_v121.py   # 平台折叠 + 搜索 + 分类 + 指纹优先冷�
 python tools/shoot_bio.py    # 指纹开启 + 指纹解锁全流程（CDP 虚拟认证器）
 python tools/shoot_v13.py    # 国内平台列表（微信 / 支付宝 / 哔哩哔哩 / 京东）
 python tools/shoot_v14.py    # 主界面 → 进入 → 自定义图标上传 → 列表图标 → WebDAV 设置页
+python tools/shoot_v15.py    # WebDAV 全链路：测试连接 → 立即备份 → 清空本地 → 从云端恢复
+```
+
+WebDAV 联调用本地假服务器（零依赖，纯内存，不落盘）：
+
+```bash
+python tools/dav_mock.py 8778   # 起一个内存 WebDAV：OPTIONS/PROPFIND/MKCOL/PUT/GET/DELETE + CORS
 ```
 
 图标与素材脚本：
@@ -525,6 +539,8 @@ TokenVault/
 │  ├─ shoot_v121.py           # 平台折叠 / 搜索 / 分类 / 指纹优先冷启动
 │  ├─ shoot_v13.py            # 国内平台列表截图
 │  ├─ shoot_v14.py            # 主界面 / 自定义图标 / WebDAV 设置页截图
+│  ├─ shoot_v15.py            # WebDAV 全链路截图（测试连接 / 备份 / 恢复）
+│  ├─ dav_mock.py             # 本地内存 WebDAV 假服务器（联调用，零依赖）
 │  ├─ fetch_icons.py          # 从 Simple Icons（CC0）拉官方品牌 path 重写 ICONS
 │  ├─ shoot_bio.py            # 指纹流程截图（CDP 虚拟认证器）
 │  └─ dbg_bio.py              # 指纹调试脚本
@@ -552,6 +568,8 @@ TokenVault/
 - **WebDAV 云端备份**：设置里填服务器 / 账号 / 应用密码 / 远程路径，支持测试连接（PROPFIND）、
   立即备份（PUT）、从云端恢复（GET）、6 秒防抖自动备份；上传内容用 PIN 再加密一层（AES-256-GCM），
   服务器端只看到密文。同时保留原来的本地文件导出 / 导入；
+  **恢复时密码留空直接沿用当前解锁 PIN**，与上传口径一致；已用内存版假服务器
+  （`tools/dav_mock.py`）跑通「备份 → 清空 → 恢复」全回路；
 - **UI 打磨**：主界面标题分两行不再挤出孤字、四张卡收紧、加「AES-256 本地加密 / 指纹·面容解锁 /
   WebDAV 备份」三枚特性标签；图标行与预览方块对齐；关于页版本号跟上。
 

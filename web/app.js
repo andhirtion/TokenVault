@@ -2454,7 +2454,8 @@ async function davRestore() {
   }
 
   const d = davCfg();
-  let pwd = String(d.pwd || '');
+  // 与上传保持一致：优先用「备份加密密码」，留空则回落到本次解锁 PIN
+  let pwd = String(d.pwd || currentPin || '');
   let ok = false;
   if (pwd.length >= 6) {
     try {
