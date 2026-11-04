@@ -6,11 +6,12 @@
 
 ## 👉 <https://andhirtion.github.io/TokenVault/> 👈
 
-26 个平台 · Steam 5 位字母码 · 指纹一键进入 · AES-256-GCM 本地加密 · 数据永不上传
+60 个平台（含 20 个国内） · 折叠搜索选平台 · 指纹优先进入 · AES-256-GCM 本地加密 · 数据永不上传
 
 <br>
 
-<img src="shots/24-mixed-list.png" width="248" alt="混合列表">
+<img src="shots/32-list-cn.png" width="248" alt="国内平台列表">
+<img src="shots/28-platform-panel.png" width="248" alt="平台面板">
 <img src="shots/25-detail-login.png" width="248" alt="账号密码详情">
 <img src="shots/18-lock-bio.png" width="248" alt="指纹锁屏">
 
@@ -38,7 +39,7 @@
 | 方式 | 地址 / 文件 | 大小 | 适合 |
 | --- | --- | --- | --- |
 | **① 在线网页版** | <https://andhirtion.github.io/TokenVault/> | 0 安装 | **手机浏览器打开就用**，菜单里「添加到主屏幕」就像个 App，断网也能出码 |
-| **② 安卓 App** | [TokenVault-1.2.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.2.0/TokenVault-1.2.0.apk) | 2.4 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥、系统指纹） |
+| **② 安卓 App** | [TokenVault-1.3.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.3.0/TokenVault-1.3.0.apk) | 2.4 MB | 想要原生体验（真机相机扫码、内置浏览器抓密钥、系统指纹） |
 | **③ 本地跑源码** | [`web/`](web/) 或 [`android/`](android/) | — | 想改代码 |
 
 ### ① 在线网页版（最快，推荐先试这个）
@@ -57,8 +58,8 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.2.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.2.0/TokenVault-1.2.0.apk) | 2.4 MB | 正式包，包名 `com.yg.tokenvault`，R8 混淆 |
-| [TokenVault-1.2.0-debug.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.2.0/TokenVault-1.2.0-debug.apk) | 21 MB | 未混淆版，正式包万一闪退就换它 |
+| [TokenVault-1.3.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.3.0/TokenVault-1.3.0.apk) | 2.4 MB | 正式包，包名 `com.yg.tokenvault`，R8 混淆 |
+| [TokenVault-1.3.0-debug.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.3.0/TokenVault-1.3.0-debug.apk) | 21 MB | 未混淆版，包名 `com.yg.tokenvault.debug`（可与正式包共存），正式包万一闪退就换它 |
 
 传到手机 → 点开 → 允许「安装未知来源应用」→ 装完打开。
 （全部版本见 [Releases](https://github.com/andhirtion/TokenVault/releases)。）
@@ -123,6 +124,16 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 
 <div align="center">
 
+<img src="shots/27-editor-platform-collapsed.png" width="196" alt="平台栏折叠">
+<img src="shots/28-platform-panel.png" width="196" alt="平台面板展开">
+<img src="shots/29b-platform-cn.png" width="196" alt="国内平台">
+
+<sub>平台只占一行，点开才展开 · 展开后能搜索、能按国内 / 国际分类 · 20 个国内平台配好图标与品牌色</sub>
+
+</div>
+
+<div align="center">
+
 <img src="shots/23-bio-auto.png" width="196" alt="自动弹指纹">
 <img src="shots/17b-bio-on.png" width="196" alt="指纹开关">
 <img src="shots/19-bio-unlocked.png" width="196" alt="指纹解锁后">
@@ -132,9 +143,9 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 </div>
 
 - 深色为默认（`#07080c` 底 + 紫青渐变），可切浅色或跟随系统
-- 品牌图标 26 套，全是手写内联 SVG / VectorDrawable，**不加载任何网络图片**
+- **60 个平台**的品牌图标（国内 20 + 国际 14 + 原有 26），全是手写内联 SVG / VectorDrawable，**不加载任何网络图片**
 - 环形倒计时，剩 5 秒变红；点验证码即复制，可设 15/30/60 秒后自动清剪贴板
-- **指纹优先**：开了生物解锁，锁屏一出现就自动调起指纹，验证通过直接进；指纹失败或取消才轮到 PIN
+- **指纹优先**：开了生物解锁，锁屏一出现就自动调起指纹，验证通过直接进；浏览器不给无手势调用时，第一次触碰锁屏就立刻补弹；指纹失败或取消才轮到 PIN
 - 「隐藏验证码」模式：列表只显圆点，点开详情才显示
 - 搜索（名称 / 账号 / 备注）+ 类型筛选（全部 / 收藏 / 动态码 / 账号密码 / 密钥本）
 
@@ -158,11 +169,17 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 ## 四、功能
 
 **动态验证码**
-- 26 个平台品牌图标与配色，标准 TOTP（SHA-1/256/512，6/8 位，周期可改）
+- **60 个平台**的品牌图标与配色，标准 TOTP（SHA-1/256/512，6/8 位，周期可改）
 - **Steam Guard 专用 5 位字母码**算法（`23456789BCDFGHJKMNPQRTVWXY`）
 - 环形倒计时 + 进度条、剩余时间提示
 - 复制验证码、自动清剪贴板
 - 收藏、筛选、搜索、隐藏验证码
+
+**平台选择器（折叠 + 搜索）**
+- 编辑器里平台只占一行，显示当前平台图标与名称，点一下才展开
+- 展开后有搜索框，支持中文、英文、域名三种输入：`微信` / `wechat` / `weixin` 都能命中
+- 四枚分类胶囊：全部 / 国内 / 国际 / 其他
+- 手填名称或账号时自动猜平台（`yang@outlook.com` → Microsoft、`t.me/xxx` → Telegram、`哔哩哔哩` → bilibili）
 
 **账号密码**
 - 密码字段默认打码，右侧「显示 / 隐藏」切换、「复制」一键进剪贴板
@@ -201,7 +218,7 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 
 ## 五、怎么把已有令牌搬进来
 
-点列表页右上角 **「获取」**（或工具箱第一张卡）：
+点列表页右上角 **「获取」**（或工具箱第一张卡）；想用内置浏览器自己抓密钥的，点主界面顶栏的 🌐：
 
 <div align="center">
 <img src="shots/12-grab-sheet.png" width="248" alt="获取令牌面板">
@@ -214,7 +231,11 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 | **扫二维码** | 正在给某账号开启两步验证 | 网站显示二维码时对准它，一秒入库，平台 / 账号 / 参数全自动填好。**扫码界面底部还有「从相册选择」**，懒得多点一步就直接从截图选 |
 | **从图片识别** | 二维码已经截图存相册 | 选图片，本地解码，不传任何图像 |
 | **粘贴链接或密钥** | 手上有 `otpauth://` 链接 / 迁移串 / Base32 | 复制后点这一项，自动拆出平台、账号、算法、位数、周期 |
-| **登录账号自动获取**（安卓） | 想让 App 自己抓回来 | 选平台（Google / 微软 / GitHub / Steam / Dropbox / Amazon / Epic / Discord / Telegram），在内置浏览器里正常登录走到 2FA 设置页，页面上的二维码和密钥文本会被自动识别，底部出现「已捕获 N 条密钥 → 全部导入」 |
+
+> **安卓的「在应用内登录抓密钥」不在导入面板里了**，入口移到了主界面顶栏 —— 那个 🌐 地球图标就是。
+> 点它打开内置浏览器，选平台（Google / 微软 / GitHub / Steam / Dropbox / Amazon / Epic / Discord / Telegram 网页版），
+> 正常登录走到 2FA 设置页，页面上的二维码和密钥文本会被自动识别，底部出现「已捕获 N 条密钥 → 全部导入」。
+> 之所以挪出来：它属于「自己动手抓」，和「把已有的搬进来」是两件事，混在一个弹窗里容易看错。
 
 > **为什么不能"事后读回"已经开着的 2FA 密钥？**
 > 这是各平台自己的限制：Google / 微软 / GitHub 的安全设置里只会显示「已开启」，密钥在开启那一刻
@@ -254,15 +275,27 @@ Google Authenticator「导出账号」生成
 
 ## 六、支持的平台
 
-Google · Microsoft · GitHub · **Steam** · Apple · Discord · X (Twitter) · Amazon · Dropbox ·
-Facebook · GitLab · LinkedIn · Slack · Telegram · Reddit · Twitch · Spotify · Binance ·
+**60 个**，编辑器里按「全部 / 国内 / 国际 / 其他」分类，也能直接搜。
+
+**国内 20 个**：微信 · QQ · 支付宝 · 淘宝 · 京东 · 百度 · 哔哩哔哩 · 知乎 · 微博 · 小米 · 华为 ·
+抖音 · 网易 · 阿里云 · 腾讯云 · 钉钉 · 美团 · 拼多多 · 小红书 · 携程
+
+**国际 14 个**：PayPal · Netflix · Stripe · Vercel · DigitalOcean · Bitwarden · 1Password ·
+任天堂 · PlayStation · 战网 · Roblox · Zoom · Figma · OpenAI
+
+**原有 26 个**：Google · Microsoft · GitHub · **Steam** · Apple · Discord · X (Twitter) · Amazon ·
+Dropbox · Facebook · GitLab · LinkedIn · Slack · Telegram · Reddit · Twitch · Spotify · Binance ·
 Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 自定义
 
-平台识别带别名表：`Gmail` → Google、`Outlook/Hotmail/Office 365/Azure` → Microsoft、
-`iCloud` → Apple、`AWS` → Amazon、`Epic Games` → Epic、`Xbox Live` → Xbox、
-`t.me / web.telegram.org` → **Telegram**（频道与网页版登录都归到同一个平台）。
+平台识别带别名表，中英文都认：`Gmail` → Google、`Outlook/Hotmail/Office 365/Azure` → Microsoft、
+`iCloud` → Apple、`AWS` → Amazon、`t.me / web.telegram.org` → **Telegram**、
+`微信 / weixin` → 微信、`哔哩 / b站` → 哔哩哔哩、`tiktok / 字节` → 抖音、
+`chatgpt / anthropic / claude` → OpenAI、`战网 / blizzard / 暴雪` → 战网。
 手填名称时也会自动猜平台：名称或账号里出现 `github` 就落到 GitHub，出现 `steam` 就落到 Steam，
-不用先去点图标。不认识的 issuer 一律落到「自定义」，照样能用。
+出现 `小米账号` 就落到小米，不用先去点图标。不认识的 issuer 一律落到「自定义」，照样能用。
+
+**图标全在手边**：60 套品牌图形都是手写内联 SVG（网页）与 VectorDrawable（安卓），网页侧
+`tools/export_icons.py` 从 web 的 `ICONS` 表自动转出安卓资源，两端永远是同一套图，不加载任何网络图片。
 
 ---
 
@@ -298,9 +331,13 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 只是贴一段文本（API Key、恢复码、备用码），选**密钥笔记**。两者加密强度一样，区别只在界面。
 
 **指纹和 PIN 谁优先？**
-开了「指纹 / 面容解锁」就**指纹优先**：锁屏一出现自动调起系统指纹，验证通过直接进。
-指纹没通过、被取消，或者设备取消了录入的指纹（`KeyPermanentlyInvalidatedException`），
-就退回输 PIN —— 此时指纹绑定会被自动清掉，进设置页重新开启即可。
+开了「指纹 / 面容解锁」就**指纹优先**，PIN 只是兜底：
+- 锁屏一出现就自动调起系统指纹，验证通过直接进，不用点任何东西；
+- 安卓端会等窗口真正拿到焦点（约 0.65 秒）再弹，否则系统会静默丢弃这次认证；
+- 浏览器不允许无手势调用 WebAuthn（`NotAllowedError`）时，会自动布防 —— 你第一次触碰锁屏（点、滑、按键任一下）
+  立刻补弹指纹，仍然不用去按指纹按钮；
+- 指纹没通过、被取消，或者设备取消/新增了录入的指纹（`KeyPermanentlyInvalidatedException`），
+  就退回输 PIN —— 此时指纹绑定会被自动清掉，进设置页重新开启即可。
 
 **指纹是不是把密码明文存手机里了？**
 安卓端存的是被 AndroidKeyStore 硬件密钥封住的密文，那把密钥要求每次使用都做一次生物认证，
@@ -320,16 +357,23 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 `BarcodeDetector` 只有 Chrome / Edge 新版和部分 Safari 支持。不支持时点「扫二维码」会自动改为
 **从相册选图**；再不行就用「粘贴链接或密钥」。
 
-**「登录账号自动获取」抓不到东西？**（安卓）
+**内置浏览器抓不到密钥？**（安卓，入口在主界面顶栏的 🌐 图标）
 1. 要走到 **2FA 设置页**，不是登录页或首页 —— 密钥只在这个页面出现；
 2. 平台在已开启状态下只显示「已启用」，不给密钥。只能先移除再重新开启，在重开那一次扫；
 3. 抓取每 1.8 秒扫一次页面，页面加载慢就多点几次右上角「抓取」。
+
+**平台太多了不好找？**
+编辑器里的平台栏默认折叠成一行，点开才有网格。展开后：
+- 上方搜索框支持中文、英文、域名 —— `微信`、`wechat`、`weixin` 都能命中；搜 `云` 会同时出阿里云和腾讯云；
+- 四枚胶囊切「全部 / 国内 / 国际 / 其他」，国内 20 个一眼扫完；
+- 干脆不选也行，直接填名称或账号，保存时会自动猜到平台。
 
 **Telegram（网页版 / 频道）怎么存？**
 Telegram 的两步验证是**自设密码**，不是 TOTP 动态码，没有二维码可扫。做法：新建一条
 **「账号密码」**条目 → 平台选 Telegram → 账号填手机号或 `@频道名` → 密码填两步验证密码，
 备注里写恢复邮箱 / 备用码。如果你自己的某个服务（如自建 Telegram Bot 面板）给了 TOTP 二维码，
-照常扫码即入库，平台会自动归到 Telegram。安卓版「获取密钥 → 登录网页」里已内置 `web.telegram.org`。
+照常扫码即入库，平台会自动归到 Telegram。安卓版内置浏览器的站点列表里已包含 `web.telegram.org`
+（主界面顶栏 🌐 进入）。
 
 **为什么包里还叫 `com.yg.tokenvault`、仓库还叫 TokenVault？**
 改名只改了显示名称。包名一改就是另一个应用，旧数据、旧指纹绑定、已导出的备份全对不上；
@@ -361,7 +405,8 @@ bash tools/build_apk.sh test     # 安卓版（33 项 JVM 单元测试）
 | 混合文本识别与按 secret 去重 | — | ✅ | ✅ |
 | HTML 实体反转义、垃圾文本拒绝 | — | ✅ | ✅ |
 | 平台别名识别、单字符 key 不误判 | — | ✅ | ✅ |
-| 26 平台默认参数合法性 | — | ✅ | ✅ |
+| 60 平台默认参数合法性 / 分类合法（cn·intl·other） | — | ✅ | ✅ |
+| 平台搜索：中文别名命中（`微信`→wechat）、分类过滤（`国内=20`） | — | — | ✅ |
 | WebCrypto 与纯 JS 实现交叉验证 | ✅ | — | — |
 
 **当前结果：Web 算法 30 + Web 导入 39 + 安卓 33 = 102 项，全部通过 / 0 失败。**
@@ -374,7 +419,9 @@ python tools/shoot_grab.py   # 「获取」面板 + 迁移串导入全流程
 python tools/shoot_scan.py   # 扫码层（含「从相册选择」，用 fake camera）
 python tools/shoot_login.py  # 账号密码条目（增 / 列表 / 详情 / 重载自动指纹）
 python tools/shoot_v12.py    # 三类条目混合列表 / 密码详情 / 密码编辑器
+python tools/shoot_v121.py   # 平台折叠 + 搜索 + 分类 + 指纹优先冷启动（CDP 虚拟认证器）
 python tools/shoot_bio.py    # 指纹开启 + 指纹解锁全流程（CDP 虚拟认证器）
+python tools/shoot_v13.py    # 国内平台列表（微信 / 支付宝 / 哔哩哔哩 / 京东）
 ```
 
 ---
@@ -401,24 +448,27 @@ TokenVault/
 │  │  ├─ ui/theme/            # 配色、字体、深浅主题
 │  │  ├─ ui/components/       # BrandTile / TokenCard / RingProgress / PinPad / AppLogo
 │  │  ├─ ui/screens/          # Lock / Vault / Editor / Detail / Settings / Tools
-│  │  │                       # + ImportSheet（四选一）/ ScanScreen（CameraX 扫码）
-│  │  │                       # + LoginScreen（内置浏览器登录抓取）
+│  │  │                       # + ImportSheet（三选一）/ ScanScreen（CameraX 扫码）
+│  │  │                       # + LoginScreen（内置浏览器登录抓取，入口在主界面顶栏）
 │  │  ├─ VaultViewModel.kt    # 含 sessionPin、类型筛选、密码生成
 │  │  ├─ TokenVaultApp.kt     # 含指纹优先自动唤起
 │  │  └─ MainActivity.kt      # FragmentActivity（BiometricPrompt 宿主）+ otpauth:// 外链导入
 │  ├─ app/src/test/java/com/yg/tokenvault/   # CoreLogicTest 21 项 + OtpImportTest 12 项
-│  └─ app/src/main/res/       # 品牌图标、自适应启动图标、字符串、备份排除规则
+│  └─ app/src/main/res/       # 60 套品牌图标、自适应启动图标、字符串、备份排除规则
 ├─ tools/
 │  ├─ serve.py                # 带正确 MIME 的本地服务器
 │  ├─ verify.js               # Web 版算法自检
 │  ├─ verify_web_import.js    # Web 版导入解析自检（自带 protobuf 编码器）
 │  ├─ build_apk.sh            # 一键编译 / 跑测试（自带工具链）
 │  ├─ export_icons.py         # 从 web/app.js 的品牌 SVG 生成安卓 VectorDrawable
+│  ├─ fix_icon_fill.py        # 单色图标统一改 currentColor（避免同色底上看不见）
 │  ├─ shoot.py                # 界面截图
 │  ├─ shoot_grab.py           # 「获取令牌」流程截图
 │  ├─ shoot_scan.py           # 扫码层截图（fake camera）
 │  ├─ shoot_login.py          # 账号密码条目截图
 │  ├─ shoot_v12.py            # 三类条目混合截图
+│  ├─ shoot_v121.py           # 平台折叠 / 搜索 / 分类 / 指纹优先冷启动
+│  ├─ shoot_v13.py            # 国内平台列表截图
 │  ├─ shoot_bio.py            # 指纹流程截图（CDP 虚拟认证器）
 │  └─ dbg_bio.py              # 指纹调试脚本
 ├─ shots/                     # README 与验收用截图
@@ -428,6 +478,12 @@ TokenVault/
 ---
 
 ## 更新日志
+
+**v1.3.0** — 平台从 26 个扩到 **60 个**（新增国内 20 + 国际 14，每套配矢量品牌图标，网页与安卓同源）；
+**平台栏改成折叠 + 搜索**：默认只占一行，点开展开网格，支持中英文域名搜索与「全部 / 国内 / 国际 / 其他」分类；
+**指纹真正优先**：浏览器无手势被拒后自动布防，第一次触碰锁屏就补弹指纹；安卓等窗口拿到焦点再弹（650ms），
+避免系统静默丢弃认证；安卓导入面板去掉「登录账号自动获取」，网页登录入口移到主界面顶栏；
+修掉平台网格里一半图标显示成纯色方块（单色 glyph 统一用前景色渲染）。自检 102 项全过。
 
 **v1.2.0** — 加入**账号密码**条目类型（密码打码显示、一键复制、内置 20 位随机强密码生成）；
 **指纹优先**：开启生物解锁后锁屏自动调起指纹，通过即进，失败才退回 PIN；
