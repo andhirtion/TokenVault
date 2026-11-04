@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,7 +46,7 @@ import com.yg.tokenvault.util.QrDecoder
 /**
  * 「获取密钥」方式选择器。
  *
- * 四条路：相机扫码、相册图片识别、内置浏览器登录自动抓取、剪贴板粘贴。
+ * 三条路：相机扫码、相册图片识别、剪贴板粘贴。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +54,6 @@ fun ImportSheet(
     onDismiss: () -> Unit,
     onText: (String) -> Unit,
     onScan: () -> Unit,
-    onWebLogin: () -> Unit,
     onToast: (String) -> Unit
 ) {
     val pal = LocalPalette.current
@@ -121,7 +119,7 @@ fun ImportSheet(
                         color = pal.text
                     )
                     Text(
-                        text = "四条路，任选一条",
+                        text = "三条路，任选一条",
                         style = MaterialTheme.typography.labelSmall,
                         color = pal.text3
                     )
@@ -138,16 +136,6 @@ fun ImportSheet(
             ) {
                 onDismiss()
                 onScan()
-            }
-
-            OptionLine(
-                icon = Icons.Outlined.Language,
-                title = "登录账号自动获取",
-                subtitle = "在应用内登录，走到「启用验证器」那步，自动抓下密钥",
-                highlight = true
-            ) {
-                onDismiss()
-                onWebLogin()
             }
 
             OptionLine(

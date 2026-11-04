@@ -8,29 +8,65 @@
 const ICONS = {
   google: `<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`,
   microsoft: `<svg viewBox="0 0 24 24"><rect x="2" y="2" width="9.4" height="9.4" rx=".6" fill="#F25022"/><rect x="12.6" y="2" width="9.4" height="9.4" rx=".6" fill="#7FBA00"/><rect x="2" y="12.6" width="9.4" height="9.4" rx=".6" fill="#00A4EF"/><rect x="12.6" y="12.6" width="9.4" height="9.4" rx=".6" fill="#FFB900"/></svg>`,
-  github: `<svg viewBox="0 0 24 24" fill="#f0f3f6"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.2 18.3 4.5 18.3 4.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>`,
-  steam: `<svg viewBox="0 0 24 24" fill="#c7d5e0"><path d="M11.98 2C6.5 2 2.01 6.15 1.5 11.5l5.6 2.32a3.15 3.15 0 0 1 2.03-.51l2.5-3.62v-.05a4.2 4.2 0 1 1 4.2 4.2h-.1l-3.57 2.55c0 .06.01.13.01.2a3.16 3.16 0 1 1-6.28-.2l-3.2-1.32A10.5 10.5 0 0 0 11.98 22c5.8 0 10.5-4.7 10.5-10.5S17.78 2 11.98 2zm-4.6 13.9-1.4-.58a2.37 2.37 0 0 0 4.36-1.05 2.37 2.37 0 0 0-4.35-1.1l1.45.6a1.74 1.74 0 1 1-1.33 3.2l-.03-.02 1.3.06zm8.35-4.44a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6zm0-.44a2.36 2.36 0 1 1 0-4.72 2.36 2.36 0 0 1 0 4.72z"/></svg>`,
-  apple: `<svg viewBox="0 0 24 24" fill="#e8ebf0"><path d="M17.05 12.53c-.03-2.5 2.04-3.7 2.13-3.76-1.16-1.7-2.97-1.93-3.61-1.96-1.54-.16-3 .9-3.78.9-.78 0-1.98-.88-3.26-.86-1.68.03-3.22.97-4.08 2.47-1.74 3.02-.44 7.5 1.25 9.95.83 1.2 1.82 2.55 3.12 2.5 1.25-.05 1.72-.81 3.23-.81 1.5 0 1.93.81 3.25.79 1.34-.03 2.19-1.22 3.01-2.43.95-1.39 1.34-2.73 1.36-2.8-.03-.01-2.6-1-2.62-3.99zM14.6 5.2c.68-.83 1.14-1.98 1.02-3.12-.98.04-2.17.65-2.88 1.48-.63.73-1.19 1.9-1.04 3.02 1.1.09 2.21-.55 2.9-1.38z"/></svg>`,
-  discord: `<svg viewBox="0 0 24 24" fill="#c9d1f0"><path d="M20.3 4.5A19.8 19.8 0 0 0 15.4 3l-.25.5a18 18 0 0 0-6.3 0L8.6 3a19.8 19.8 0 0 0-4.9 1.5C.6 9.2-.2 13.8.2 18.2a19.9 19.9 0 0 0 6 3l.8-1.3a13 13 0 0 1-2.1-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2.1 1l.8 1.3a19.9 19.9 0 0 0 6-3c.5-5-.8-9.6-3.5-13.7zM8.3 15.3c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm7.4 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg>`,
-  x: `<svg viewBox="0 0 24 24" fill="#e8ebf0"><path d="M18.9 2h3.5l-7.7 8.8L23.8 22h-7l-5.5-7.2L5 22H1.5l8.2-9.4L1 2h7.2l5 6.6L18.9 2zm-1.2 18h1.9L7.4 3.9H5.4L17.7 20z"/></svg>`,
-  facebook: `<svg viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.6.2 2.6.2v2.9h-1.5c-1.5 0-1.9.9-1.9 1.8V12h3.3l-.5 3.5h-2.8v8.4A12 12 0 0 0 24 12z"/></svg>`,
-  amazon: `<svg viewBox="0 0 24 24" fill="#FF9900"><path d="M14.6 11.1c0 .3 0 .6.1.8.1.2.2.4.3.5l.1.2c0 .1 0 .1-.1.2l-.4.3c-.1 0-.1 0-.2-.1a1.9 1.9 0 0 1-.4-.6c-.9 1.1-2.1 1.6-3.4 1.6-1.6 0-2.6-.9-2.6-2.3 0-1.5 1.2-2.4 3-2.4.5 0 1 0 1.6.1v-.6c0-1.3-.6-1.9-2-1.9-.5 0-1 .1-1.5.2-.3.1-.5.2-.6.2-.1 0-.1 0-.2-.1v-.5c0-.1 0-.2.1-.2.4-.2.8-.4 1.3-.5.6-.1 1.1-.2 1.7-.2 2.1 0 3.2 1.2 3.2 3.2v-3.1zm-4.7 1.8c.5 0 .9-.1 1.3-.3.4-.2.7-.6.9-1 .1-.2.1-.4.1-.7v-.6c-.4-.1-.9-.1-1.3-.1-1 0-1.6.4-1.6 1.3 0 .8.5 1.4 1.6 1.4z"/><path d="M19.3 17.4c-2.2 1.6-5.3 2.4-8 2.4-3.8 0-7.2-1.4-9.7-3.7-.2-.2 0-.5.2-.4 2.8 1.6 6.1 2.6 9.7 2.6 2.4 0 4.9-.5 7.3-1.5.4-.1.6.2.5.6z"/><path d="M20.3 16.3c-.3-.4-1.9-.2-2.6-.1-.2 0-.3-.2-.1-.3.9-.6 2.2-.4 2.3-.2.2.2 0 1.4-.8 2.1-.1.1-.2 0-.2-.1.2-.5.7-1.3.4-1.4z"/></svg>`,
-  dropbox: `<svg viewBox="0 0 24 24" fill="#0061FF"><path d="M6 2 0 5.9l6 3.9 6-3.9L6 2zm12 0-6 3.9 6 3.9 6-3.9L18 2zM0 13.7l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.9l6 3.9 6-3.9-6-3.8-6 3.8z"/></svg>`,
-  gitlab: `<svg viewBox="0 0 24 24" fill="#FC6D26"><path d="M23.5 9.6 12 2.3 12 22l5.9-4.3 4.3-5.4c.4-.5.5-1.2.2-1.8l1.1-.9z" opacity=".85"/><path d="M12 2.3.5 9.6l1.1.9c-.3.6-.2 1.3.2 1.8l4.3 5.4L12 22V2.3z"/></svg>`,
-  linkedin: `<svg viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.4 2H3.6C2.7 2 2 2.7 2 3.6v16.8c0 .9.7 1.6 1.6 1.6h16.8c.9 0 1.6-.7 1.6-1.6V3.6c0-.9-.7-1.6-1.6-1.6zM8 19H5V9h3v10zM6.5 7.7a1.8 1.8 0 1 1 0-3.5 1.8 1.8 0 0 1 0 3.5zM19 19h-3v-5.3c0-1.3 0-2.9-1.8-2.9s-2 1.4-2 2.8V19h-3V9h2.9v1.4h.1c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V19z"/></svg>`,
-  twitter: `<svg viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23 4.9a9 9 0 0 1-2.6.7 4.5 4.5 0 0 0 2-2.5c-.9.5-1.9.9-2.9 1.1a4.5 4.5 0 0 0-7.7 4.1A12.8 12.8 0 0 1 2.5 3.6a4.5 4.5 0 0 0 1.4 6 4.4 4.4 0 0 1-2-.6v.1a4.5 4.5 0 0 0 3.6 4.4 4.5 4.5 0 0 1-2 .1 4.5 4.5 0 0 0 4.2 3.1A9 9 0 0 1 1 18.6a12.7 12.7 0 0 0 6.9 2c8.3 0 12.8-6.9 12.8-12.8v-.6A9 9 0 0 0 23 4.9z"/></svg>`,
-  telegram: `<svg viewBox="0 0 24 24" fill="#2AABEE"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 6.9-1.6 7.5c-.1.5-.4.7-.9.4l-2.4-1.8-1.2 1.1c-.1.1-.2.2-.5.2l.2-2.5 4.5-4c.2-.2 0-.3-.3-.1l-5.6 3.5-2.4-.7c-.5-.2-.5-.5.1-.8l9.4-3.6c.4-.2.8 0 .7.8z"/></svg>`,
+  github: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.2 18.3 4.5 18.3 4.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>`,
+  steam: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.98 2C6.5 2 2.01 6.15 1.5 11.5l5.6 2.32a3.15 3.15 0 0 1 2.03-.51l2.5-3.62v-.05a4.2 4.2 0 1 1 4.2 4.2h-.1l-3.57 2.55c0 .06.01.13.01.2a3.16 3.16 0 1 1-6.28-.2l-3.2-1.32A10.5 10.5 0 0 0 11.98 22c5.8 0 10.5-4.7 10.5-10.5S17.78 2 11.98 2zm-4.6 13.9-1.4-.58a2.37 2.37 0 0 0 4.36-1.05 2.37 2.37 0 0 0-4.35-1.1l1.45.6a1.74 1.74 0 1 1-1.33 3.2l-.03-.02 1.3.06zm8.35-4.44a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6zm0-.44a2.36 2.36 0 1 1 0-4.72 2.36 2.36 0 0 1 0 4.72z"/></svg>`,
+  apple: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.53c-.03-2.5 2.04-3.7 2.13-3.76-1.16-1.7-2.97-1.93-3.61-1.96-1.54-.16-3 .9-3.78.9-.78 0-1.98-.88-3.26-.86-1.68.03-3.22.97-4.08 2.47-1.74 3.02-.44 7.5 1.25 9.95.83 1.2 1.82 2.55 3.12 2.5 1.25-.05 1.72-.81 3.23-.81 1.5 0 1.93.81 3.25.79 1.34-.03 2.19-1.22 3.01-2.43.95-1.39 1.34-2.73 1.36-2.8-.03-.01-2.6-1-2.62-3.99zM14.6 5.2c.68-.83 1.14-1.98 1.02-3.12-.98.04-2.17.65-2.88 1.48-.63.73-1.19 1.9-1.04 3.02 1.1.09 2.21-.55 2.9-1.38z"/></svg>`,
+  discord: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.5A19.8 19.8 0 0 0 15.4 3l-.25.5a18 18 0 0 0-6.3 0L8.6 3a19.8 19.8 0 0 0-4.9 1.5C.6 9.2-.2 13.8.2 18.2a19.9 19.9 0 0 0 6 3l.8-1.3a13 13 0 0 1-2.1-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2.1 1l.8 1.3a19.9 19.9 0 0 0 6-3c.5-5-.8-9.6-3.5-13.7zM8.3 15.3c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm7.4 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2h3.5l-7.7 8.8L23.8 22h-7l-5.5-7.2L5 22H1.5l8.2-9.4L1 2h7.2l5 6.6L18.9 2zm-1.2 18h1.9L7.4 3.9H5.4L17.7 20z"/></svg>`,
+  facebook: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.6.2 2.6.2v2.9h-1.5c-1.5 0-1.9.9-1.9 1.8V12h3.3l-.5 3.5h-2.8v8.4A12 12 0 0 0 24 12z"/></svg>`,
+  amazon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.6 11.1c0 .3 0 .6.1.8.1.2.2.4.3.5l.1.2c0 .1 0 .1-.1.2l-.4.3c-.1 0-.1 0-.2-.1a1.9 1.9 0 0 1-.4-.6c-.9 1.1-2.1 1.6-3.4 1.6-1.6 0-2.6-.9-2.6-2.3 0-1.5 1.2-2.4 3-2.4.5 0 1 0 1.6.1v-.6c0-1.3-.6-1.9-2-1.9-.5 0-1 .1-1.5.2-.3.1-.5.2-.6.2-.1 0-.1 0-.2-.1v-.5c0-.1 0-.2.1-.2.4-.2.8-.4 1.3-.5.6-.1 1.1-.2 1.7-.2 2.1 0 3.2 1.2 3.2 3.2v-3.1zm-4.7 1.8c.5 0 .9-.1 1.3-.3.4-.2.7-.6.9-1 .1-.2.1-.4.1-.7v-.6c-.4-.1-.9-.1-1.3-.1-1 0-1.6.4-1.6 1.3 0 .8.5 1.4 1.6 1.4z"/><path d="M19.3 17.4c-2.2 1.6-5.3 2.4-8 2.4-3.8 0-7.2-1.4-9.7-3.7-.2-.2 0-.5.2-.4 2.8 1.6 6.1 2.6 9.7 2.6 2.4 0 4.9-.5 7.3-1.5.4-.1.6.2.5.6z"/><path d="M20.3 16.3c-.3-.4-1.9-.2-2.6-.1-.2 0-.3-.2-.1-.3.9-.6 2.2-.4 2.3-.2.2.2 0 1.4-.8 2.1-.1.1-.2 0-.2-.1.2-.5.7-1.3.4-1.4z"/></svg>`,
+  dropbox: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2 0 5.9l6 3.9 6-3.9L6 2zm12 0-6 3.9 6 3.9 6-3.9L18 2zM0 13.7l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.9l6 3.9 6-3.9-6-3.8-6 3.8z"/></svg>`,
+  gitlab: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 9.6 12 2.3 12 22l5.9-4.3 4.3-5.4c.4-.5.5-1.2.2-1.8l1.1-.9z" opacity=".85"/><path d="M12 2.3.5 9.6l1.1.9c-.3.6-.2 1.3.2 1.8l4.3 5.4L12 22V2.3z"/></svg>`,
+  linkedin: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 2H3.6C2.7 2 2 2.7 2 3.6v16.8c0 .9.7 1.6 1.6 1.6h16.8c.9 0 1.6-.7 1.6-1.6V3.6c0-.9-.7-1.6-1.6-1.6zM8 19H5V9h3v10zM6.5 7.7a1.8 1.8 0 1 1 0-3.5 1.8 1.8 0 0 1 0 3.5zM19 19h-3v-5.3c0-1.3 0-2.9-1.8-2.9s-2 1.4-2 2.8V19h-3V9h2.9v1.4h.1c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V19z"/></svg>`,
+  twitter: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 4.9a9 9 0 0 1-2.6.7 4.5 4.5 0 0 0 2-2.5c-.9.5-1.9.9-2.9 1.1a4.5 4.5 0 0 0-7.7 4.1A12.8 12.8 0 0 1 2.5 3.6a4.5 4.5 0 0 0 1.4 6 4.4 4.4 0 0 1-2-.6v.1a4.5 4.5 0 0 0 3.6 4.4 4.5 4.5 0 0 1-2 .1 4.5 4.5 0 0 0 4.2 3.1A9 9 0 0 1 1 18.6a12.7 12.7 0 0 0 6.9 2c8.3 0 12.8-6.9 12.8-12.8v-.6A9 9 0 0 0 23 4.9z"/></svg>`,
+  telegram: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 6.9-1.6 7.5c-.1.5-.4.7-.9.4l-2.4-1.8-1.2 1.1c-.1.1-.2.2-.5.2l.2-2.5 4.5-4c.2-.2 0-.3-.3-.1l-5.6 3.5-2.4-.7c-.5-.2-.5-.5.1-.8l9.4-3.6c.4-.2.8 0 .7.8z"/></svg>`,
   slack: `<svg viewBox="0 0 24 24"><path d="M5.1 15.2a2 2 0 1 1-2-2h2v2zm1 0a2 2 0 0 1 4 0v5a2 2 0 1 1-4 0v-5z" fill="#E01E5A"/><path d="M8.1 5.2a2 2 0 1 1 2-2v2h-2zm0 1a2 2 0 0 1 0 4h-5a2 2 0 1 1 0-4h5z" fill="#36C5F0"/><path d="M18.1 8.2a2 2 0 1 1 2 2h-2v-2zm-1 0a2 2 0 0 1-4 0v-5a2 2 0 1 1 4 0v5z" fill="#2EB67D"/><path d="M15.1 18.2a2 2 0 1 1-2 2v-2h2zm0-1a2 2 0 0 1 0-4h5a2 2 0 1 1 0 4h-5z" fill="#ECB22E"/></svg>`,
-  reddit: `<svg viewBox="0 0 24 24" fill="#FF4500"><path d="M22 11.8a2.4 2.4 0 0 0-4.1-1.7 11.7 11.7 0 0 0-5.3-1.6l1-4.1 2.9.6a1.7 1.7 0 1 0 .3-1.4l-3.6-.8a.6.6 0 0 0-.7.4l-1.2 4.9a11.8 11.8 0 0 0-5.4 1.7 2.4 2.4 0 1 0-2.5 3.9 4.4 4.4 0 0 0-.1.9c0 3.3 3.9 6 8.6 6s8.6-2.7 8.6-6a4.4 4.4 0 0 0-.1-.9 2.4 2.4 0 0 0 1.6-2.3zM6 12.9a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm8.5 3.9c-1 1-3 1.1-3.6 1.1s-2.6-.1-3.6-1.1a.4.4 0 0 1 .5-.5c.7.5 2.2.7 3.1.7s2.4-.2 3.1-.7a.4.4 0 0 1 .5.5zm-.4-2.4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>`,
-  twitch: `<svg viewBox="0 0 24 24" fill="#9146FF"><path d="M4.3 2 .5 5.8v14.5h4v3.7l3.7-3.7h3L20 12V2H4.3zM18 11.3l-3.3 3.3h-4l-2.7 2.6v-2.6H4.7V4h13.3v7.3z"/><path d="M10.3 7.3h2v5.4h-2zm5.4 0h2v5.4h-2z"/></svg>`,
-  spotify: `<svg viewBox="0 0 24 24" fill="#1DB954"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.4a.9.9 0 0 1-1.2.3c-3.3-2-7.4-2.5-12.3-1.4a.9.9 0 1 1-.4-1.7c5.3-1.2 9.9-.7 13.6 1.6.4.2.5.7.3 1.2zm1.2-2.8a1.1 1.1 0 0 1-1.5.4c-3.8-2.3-9.5-3-14-1.6a1.1 1.1 0 1 1-.6-2.1c5.1-1.5 11.4-.8 15.7 1.8.5.3.7 1 .4 1.5zm.1-2.9C13.4 8 6.7 7.8 2.4 9.1a1.3 1.3 0 1 1-.8-2.5C6.6 5.1 14 5.4 19 8.4a1.3 1.3 0 0 1-1.3 2.3z"/></svg>`,
-  binance: `<svg viewBox="0 0 24 24" fill="#F0B90B"><path d="M12 1.5 15.2 4.7 12 7.9 8.8 4.7 12 1.5zM5.3 8.2 8.5 11.4 5.3 14.6 2.1 11.4 5.3 8.2zm13.4 0 3.2 3.2-3.2 3.2-3.2-3.2 3.2-3.2zM12 8.7l3.3 3.3-3.3 3.3-3.3-3.3L12 8.7zm0 7.4 3.2 3.2L12 22.5l-3.2-3.2L12 16.1z"/></svg>`,
-  cloudflare: `<svg viewBox="0 0 24 24" fill="#F38020"><path d="M17.7 13.6c.1-.3.1-.6 0-.8-.1-.3-.3-.4-.6-.5l-8.5-.1c-.1 0-.2 0-.2-.1s0-.2.1-.2l8.6-.1c1-.1 2.1-.9 2.5-1.8l.5-1.3c0-.1 0-.1 0-.2A5.6 5.6 0 0 0 9.4 7c-.5-.4-1.2-.6-1.9-.5a3 3 0 0 0-2.7 2.5 2.8 2.8 0 0 0-2.4 2.6v.3c0 .1.1.2.2.2h15c.1 0 .2-.1.1-.5z"/><path d="M19.2 9.6h-.2l-.3 1a6 6 0 0 1-.5 1.8c0 .1 0 .2.1.2h.8c.1 0 .2 0 .2-.2.4-1.4.2-2.2-.1-2.8z" opacity=".7"/></svg>`,
-  notion: `<svg viewBox="0 0 24 24" fill="#e8ebf0"><path d="M4 3.7 15.6 2.6c1.4-.1 1.8 0 2.7.6l3.2 2.3c.6.4.8.6.8 1.1v14.6c0 .9-.3 1.4-1.5 1.5L7.7 23.8c-.9.1-1.3-.1-1.8-.7l-2.4-3.2c-.6-.7-.8-1.3-.8-2V5.2c0-.7.3-1.3 1.3-1.5zm12.3 2-9.9.7c-.7.1-.9.4-.9 1v12.4l11.9-.7V6.5c0-.5-.2-.7-.6-.8h-.5zM9.4 8.9l6.4-.4v9.6l-6.4.4V8.9z"/></svg>`,
-  proton: `<svg viewBox="0 0 24 24" fill="#8B5CF6"><path d="M2 5h20v7.5h-5.3L12 7.2 7.3 12.5H2V5zm0 9.5h3.7l3.5-4 3.5 4h3.5L12 9.9l-4.4 4.6H2zM2 16.5h20V19H2v-2.5z"/></svg>`,
-  instagram: `<svg viewBox="0 0 24 24" fill="#E1306C"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1.1.1-1.7.2-2.1.4-.5.2-.9.4-1.2.8-.4.4-.6.7-.8 1.2-.2.4-.3 1-.4 2.1-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1.1.2 1.7.4 2.1.2.5.4.9.8 1.2.4.4.7.6 1.2.8.4.2 1 .3 2.1.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1.1-.1 1.7-.2 2.1-.4.5-.2.9-.4 1.2-.8.4-.4.6-.7.8-1.2.2-.4.3-1 .4-2.1.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1.1-.2-1.7-.4-2.1-.2-.5-.4-.9-.8-1.2-.4-.4-.7-.6-1.2-.8-.4-.2-1-.3-2.1-.4-1.2-.1-1.6-.1-4.7-.1zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8zm0 8.1a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zm6.3-8.3a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0z"/></svg>`,
-  epic: `<svg viewBox="0 0 24 24" fill="#e8ebf0"><path d="M3.5 2 4.9 20 12 22l7.1-2L20.5 2h-17zm3.9 4h9.2v1.9H9.4v2.5h6.6v1.9H9.4v2.9h7.2v1.9H7.4V6z"/></svg>`,
-  xbox: `<svg viewBox="0 0 24 24" fill="#107C10"><path d="M4.6 4.5C6.6 3 9.2 2.1 12 2.1c2.8 0 5.4.9 7.4 2.4A13 13 0 0 0 12 11a13 13 0 0 0-7.4-6.5zM3.1 6.4A10 10 0 0 0 2 12c0 2.4.8 4.6 2.2 6.3 1.5-3 4-6.1 5.6-7.5-1.9-2.2-4-4.2-6.7-4.4zm17.8 0c-2.7.2-4.8 2.2-6.7 4.4 1.6 1.4 4.1 4.5 5.6 7.5A10 10 0 0 0 22 12c0-2.1-.4-4-1.1-5.6zM12 13.4c-1.9 1.7-4.6 5.3-5.6 7.2 1.6.9 3.5 1.4 5.6 1.4s4-.5 5.6-1.4c-1-1.9-3.7-5.5-5.6-7.2z"/></svg>`,
+  reddit: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 11.8a2.4 2.4 0 0 0-4.1-1.7 11.7 11.7 0 0 0-5.3-1.6l1-4.1 2.9.6a1.7 1.7 0 1 0 .3-1.4l-3.6-.8a.6.6 0 0 0-.7.4l-1.2 4.9a11.8 11.8 0 0 0-5.4 1.7 2.4 2.4 0 1 0-2.5 3.9 4.4 4.4 0 0 0-.1.9c0 3.3 3.9 6 8.6 6s8.6-2.7 8.6-6a4.4 4.4 0 0 0-.1-.9 2.4 2.4 0 0 0 1.6-2.3zM6 12.9a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm8.5 3.9c-1 1-3 1.1-3.6 1.1s-2.6-.1-3.6-1.1a.4.4 0 0 1 .5-.5c.7.5 2.2.7 3.1.7s2.4-.2 3.1-.7a.4.4 0 0 1 .5.5zm-.4-2.4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>`,
+  twitch: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.3 2 .5 5.8v14.5h4v3.7l3.7-3.7h3L20 12V2H4.3zM18 11.3l-3.3 3.3h-4l-2.7 2.6v-2.6H4.7V4h13.3v7.3z"/><path d="M10.3 7.3h2v5.4h-2zm5.4 0h2v5.4h-2z"/></svg>`,
+  spotify: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.4a.9.9 0 0 1-1.2.3c-3.3-2-7.4-2.5-12.3-1.4a.9.9 0 1 1-.4-1.7c5.3-1.2 9.9-.7 13.6 1.6.4.2.5.7.3 1.2zm1.2-2.8a1.1 1.1 0 0 1-1.5.4c-3.8-2.3-9.5-3-14-1.6a1.1 1.1 0 1 1-.6-2.1c5.1-1.5 11.4-.8 15.7 1.8.5.3.7 1 .4 1.5zm.1-2.9C13.4 8 6.7 7.8 2.4 9.1a1.3 1.3 0 1 1-.8-2.5C6.6 5.1 14 5.4 19 8.4a1.3 1.3 0 0 1-1.3 2.3z"/></svg>`,
+  binance: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5 15.2 4.7 12 7.9 8.8 4.7 12 1.5zM5.3 8.2 8.5 11.4 5.3 14.6 2.1 11.4 5.3 8.2zm13.4 0 3.2 3.2-3.2 3.2-3.2-3.2 3.2-3.2zM12 8.7l3.3 3.3-3.3 3.3-3.3-3.3L12 8.7zm0 7.4 3.2 3.2L12 22.5l-3.2-3.2L12 16.1z"/></svg>`,
+  cloudflare: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.7 13.6c.1-.3.1-.6 0-.8-.1-.3-.3-.4-.6-.5l-8.5-.1c-.1 0-.2 0-.2-.1s0-.2.1-.2l8.6-.1c1-.1 2.1-.9 2.5-1.8l.5-1.3c0-.1 0-.1 0-.2A5.6 5.6 0 0 0 9.4 7c-.5-.4-1.2-.6-1.9-.5a3 3 0 0 0-2.7 2.5 2.8 2.8 0 0 0-2.4 2.6v.3c0 .1.1.2.2.2h15c.1 0 .2-.1.1-.5z"/><path d="M19.2 9.6h-.2l-.3 1a6 6 0 0 1-.5 1.8c0 .1 0 .2.1.2h.8c.1 0 .2 0 .2-.2.4-1.4.2-2.2-.1-2.8z" opacity=".7"/></svg>`,
+  notion: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3.7 15.6 2.6c1.4-.1 1.8 0 2.7.6l3.2 2.3c.6.4.8.6.8 1.1v14.6c0 .9-.3 1.4-1.5 1.5L7.7 23.8c-.9.1-1.3-.1-1.8-.7l-2.4-3.2c-.6-.7-.8-1.3-.8-2V5.2c0-.7.3-1.3 1.3-1.5zm12.3 2-9.9.7c-.7.1-.9.4-.9 1v12.4l11.9-.7V6.5c0-.5-.2-.7-.6-.8h-.5zM9.4 8.9l6.4-.4v9.6l-6.4.4V8.9z"/></svg>`,
+  proton: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 5h20v7.5h-5.3L12 7.2 7.3 12.5H2V5zm0 9.5h3.7l3.5-4 3.5 4h3.5L12 9.9l-4.4 4.6H2zM2 16.5h20V19H2v-2.5z"/></svg>`,
+  instagram: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1.1.1-1.7.2-2.1.4-.5.2-.9.4-1.2.8-.4.4-.6.7-.8 1.2-.2.4-.3 1-.4 2.1-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1.1.2 1.7.4 2.1.2.5.4.9.8 1.2.4.4.7.6 1.2.8.4.2 1 .3 2.1.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1.1-.1 1.7-.2 2.1-.4.5-.2.9-.4 1.2-.8.4-.4.6-.7.8-1.2.2-.4.3-1 .4-2.1.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1.1-.2-1.7-.4-2.1-.2-.5-.4-.9-.8-1.2-.4-.4-.7-.6-1.2-.8-.4-.2-1-.3-2.1-.4-1.2-.1-1.6-.1-4.7-.1zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8zm0 8.1a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zm6.3-8.3a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0z"/></svg>`,
+  epic: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 2 4.9 20 12 22l7.1-2L20.5 2h-17zm3.9 4h9.2v1.9H9.4v2.5h6.6v1.9H9.4v2.9h7.2v1.9H7.4V6z"/></svg>`,
+  xbox: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.6 4.5C6.6 3 9.2 2.1 12 2.1c2.8 0 5.4.9 7.4 2.4A13 13 0 0 0 12 11a13 13 0 0 0-7.4-6.5zM3.1 6.4A10 10 0 0 0 2 12c0 2.4.8 4.6 2.2 6.3 1.5-3 4-6.1 5.6-7.5-1.9-2.2-4-4.2-6.7-4.4zm17.8 0c-2.7.2-4.8 2.2-6.7 4.4 1.6 1.4 4.1 4.5 5.6 7.5A10 10 0 0 0 22 12c0-2.1-.4-4-1.1-5.6zM12 13.4c-1.9 1.7-4.6 5.3-5.6 7.2 1.6.9 3.5 1.4 5.6 1.4s4-.5 5.6-1.4c-1-1.9-3.7-5.5-5.6-7.2z"/></svg>`,
+  /* ── 国内平台 ── */
+  wechat: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M9.3 3.2C5.1 3.2 1.7 6 1.7 9.5c0 2 1.1 3.8 2.9 5l-.8 2.4 2.7-1.4c.6.2 1.2.3 1.9.3h.6a5.6 5.6 0 0 1-.2-1.5c0-3.3 3.1-6 6.9-6h.5C14.9 5.2 12.4 3.2 9.3 3.2zM6.6 6.4a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zm5.4 0a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zM16.1 8.8c-3.4 0-6.2 2.4-6.2 5.4s2.8 5.4 6.2 5.4c.8 0 1.6-.1 2.3-.4l2.1 1.1-.6-1.9c1.5-1 2.4-2.5 2.4-4.2 0-3-2.8-5.4-6.2-5.4zm-2.1 3.4a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4.1 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>`,
+  qq: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2.2c-3.1 0-5.3 2.6-5.3 5.8 0 1.1-.5 1.7-1.2 2.7-.8 1.2-1.5 2.7-1.5 4 0 .9.4 1.4 1 1.4.5 0 .9-.3 1.4-.9.2 1.3.9 2.4 1.8 3.2-1 .4-1.8 1.1-1.8 1.9 0 1.1 1.7 1.9 3.7 1.9 1.4 0 2.5-.4 3.1-1 .6.6 1.7 1 3.1 1 2 0 3.7-.8 3.7-1.9 0-.8-.8-1.5-1.8-1.9.9-.8 1.6-1.9 1.8-3.2.5.6.9.9 1.4.9.6 0 1-.5 1-1.4 0-1.3-.7-2.8-1.5-4-.7-1-1.2-1.6-1.2-2.7 0-3.2-2.2-5.8-5.3-5.8zM10.1 7.3a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1zm3.8 0a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1z"/></svg>`,
+  alipay: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M11.6 3.4h-2v2.7H5.1v2.2h3.4c-.5 2.6-2 4.8-4.5 6.3l1.2 1.9c1.8-1.1 3.1-2.6 3.8-4.5l.6 2.5-2 .6c-1.6.5-2.5 1.6-2.5 2.9 0 1.6 1.4 2.8 3.6 2.8 2.1 0 3.8-1.2 5-3.4l3.1 1.5.9-2-3.1-1.5c.4-1.1.6-2.3.7-3.6H13c-.1 1-.2 1.9-.5 2.7-.8 1.8-2 2.7-3.4 2.7-1 0-1.7-.5-1.7-1.2 0-.6.5-1 1.4-1.3l1.8-.6-1-4h4V8.3h-3.6V3.4z"/></svg>`,
+  taobao: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M5.5 7.6h12.9l-.9 11.1a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5.5 7.6zm2.9-1.8c0-2 1.6-3.6 3.6-3.6s3.6 1.6 3.6 3.6h-1.9c0-1-.8-1.7-1.7-1.7s-1.7.8-1.7 1.7H8.4zm-.3 4h3.6v2.1h1.6v-2.1h3.6v1.8h-3.6c-.2 1.9-1.1 3.4-2.6 4.5l-1.4-1.2c1.1-.8 1.7-1.9 1.9-3.3H8.1v-1.8z"/></svg>`,
+  jd: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M6.9 4.4 9.4 8.2h5.2l2.5-3.8 1.5 2.4v3.5c0 4.1-3 7.3-6.6 7.3s-6.6-3.2-6.6-7.3V6.8l1.5-2.4zM9.5 11a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3zm5 0a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3z"/></svg>`,
+  baidu: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.9 13.1c2.9 0 5.4 1.7 5.4 3.8 0 1.7-1.7 2.8-3.7 2.8h-3.4c-2 0-3.7-1.1-3.7-2.8 0-2.1 2.5-3.8 5.4-3.8zM6.2 6.5a1.95 1.95 0 1 1 0 3.9 1.95 1.95 0 0 1 0-3.9zm11.6 0a1.95 1.95 0 1 1 0 3.9 1.95 1.95 0 0 1 0-3.9zM9 3.2a1.95 1.95 0 1 1 0 3.9A1.95 1.95 0 0 1 9 3.2zm6 0a1.95 1.95 0 1 1 0 3.9A1.95 1.95 0 0 1 15 3.2z"/></svg>`,
+  bilibili: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M6.6 5.1 4.3 3.2 3 4.7l2.6 2.1H4a2.2 2.2 0 0 0-2.2 2.2v8.1A2.2 2.2 0 0 0 4 19.3h16a2.2 2.2 0 0 0 2.2-2.2V9a2.2 2.2 0 0 0-2.2-2.2h-1.6L21 4.7l-1.3-1.5-2.3 1.9H6.6zM7.3 11h2.4v3.6H7.3V11zm7 0h2.4v3.6h-2.4V11z"/></svg>`,
+  zhihu: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2.4a9.6 9.6 0 1 1 0 19.2 9.6 9.6 0 0 1 0-19.2zm3.5 5.6H8.4v1.8h4.5l-4.5 4.7v1.8h7.1v-1.8h-4.5l4.5-4.7V8z"/></svg>`,
+  weibo: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M9.6 5.1c4.2 0 7.6 2.5 7.6 5.5 0 .9-.3 1.8-.9 2.6-1.4 1.9-4 3.2-6.7 3.2-4.2 0-7.6-2.5-7.6-5.5S5.4 5.1 9.6 5.1zm.4 2.7a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8zM18.1 2.8a4.8 4.8 0 0 1 4.3 3.5h-1.9a3 3 0 0 0-2.4-1.5V2.8zm.5 3.4c1.3 0 2.4 1 2.5 2.4h-1.7a.9.9 0 0 0-.8-.7V6.2z"/></svg>`,
+  xiaomi: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M4.2 6.5h15.6A2.2 2.2 0 0 1 22 8.7v6.6a2.2 2.2 0 0 1-2.2 2.2H4.2A2.2 2.2 0 0 1 2 15.3V8.7a2.2 2.2 0 0 1 2.2-2.2zm1.5 2.6v5.8h1.9v-3.7l1.9 3.7h1.5V9.1h-1.9v3.4L7.6 9.1H5.7zm6.9 0v5.8h1.9V9.1h-1.9zm3.6 0v5.8h1.9V9.1h-1.9z"/></svg>`,
+  huawei: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c1.5 2.1 1.9 4.6 1.2 6.9 1.7-1.6 4-2.4 6.5-2.2-1.5 2.1-1.9 4.6-1.2 6.9 2.1-1 4.6-1 6.6.2-1.9 1.6-3 4-3 6.5-2.1-1-4.6-1-6.6.2.7 2.3.3 4.8-1.2 6.9-1.1-2.3-1.6-4.8-1.2-7.2-1.7 1.7-4.1 2.5-6.6 2.3 1.5-2.1 1.9-4.6 1.2-6.9-1.7 1.6-4 2.4-6.5 2.2 1.9-1.6 3-4 3-6.5 2.1 1 4.6 1 6.6-.2-.7-2.3-.3-4.8 1.2-6.9zm0 6.1a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 0 0 0-7.4z"/></svg>`,
+  douyin: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.9 3.2c.5 2.4 2 3.9 4.3 4.2v2.7c-1.6.1-3-.4-4.3-1.3v6.3c0 3.2-2.4 5.6-5.6 5.6-3.1 0-5.6-2.4-5.6-5.5s2.4-5.5 5.6-5.5c.3 0 .7 0 1 .1v2.9c-.3-.1-.7-.2-1-.2-1.6 0-2.8 1.2-2.8 2.7s1.2 2.7 2.8 2.7 2.8-1.2 2.8-2.7V3.2h2.8z"/></svg>`,
+  netease: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2.3a9.7 9.7 0 1 1 0 19.4 9.7 9.7 0 0 1 0-19.4zm-2.7 5.2v9h2.4V11l3.9 5.5h2.3v-9h-2.4v5.4L11.7 7.5h-2.4z"/></svg>`,
+  aliyun: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3.4 3.2 7.2v9.6L9 20.6l1.5-2.3-4.7-3V9.7l4.7-3L9 3.4zm6 0-1.5 3.3 4.7 3v5.6l-4.7 3 1.5 2.3 5.8-3.8V7.2L15 3.4zM8.2 10.5h7.6v3H8.2v-3z"/></svg>`,
+  tencentcloud: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.5 19.2a4.6 4.6 0 0 1-.6-9.1A6.3 6.3 0 0 1 19 11.6a3.9 3.9 0 0 1-1.4 7.6H7.5z"/></svg>`,
+  dingtalk: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2.3a9.7 9.7 0 1 1 0 19.4 9.7 9.7 0 0 1 0-19.4zm1.8 4.1-5.2 6.6h3.2l-1.5 5 5.2-6.6h-3.2l1.5-5z"/></svg>`,
+  meituan: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 20.4V10c0-3.9 3.2-7 7.1-7 .9 0 1.8.2 2.6.5l1.5-2.1 1.8 2.8a7.7 7.7 0 0 1 3.4 6.4v9.8h-4.2v-6.6h-2.9v6.6H3.6zm7-9.7a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4z"/></svg>`,
+  pinduoduo: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21 4.1 13.2a5.2 5.2 0 0 1 7.4-7.3l.5.5.5-.5a5.2 5.2 0 0 1 7.4 7.3L12 21z"/></svg>`,
+  xiaohongshu: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M4.2 3.6h11.4a2.2 2.2 0 0 1 2.2 2.2v15H6.4a2.2 2.2 0 0 1-2.2-2.2V3.6zm2.4 2.2v12.1h4V15h2.6l1.8 3h2.8l-2.1-4a3.2 3.2 0 0 0-2.2-5.6H6.6zm4 1.9h2.3a1.35 1.35 0 0 1 0 2.7h-2.3V7.7z"/></svg>`,
+  ctrip: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.8 3.1 2.4 11.4l5.9 2.3 1 6.1 2.9-3.6 4.4 2.3 5.2-15.4zm-3.1 3.4-6.9 6.6-4-1.6 10.9-5z"/></svg>`,
+  /* ── 国际服务 ── */
+  paypal: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M7.9 3.4h5.4c2.7 0 4.4 1.6 4.4 4 0 3-2.3 5.2-5.6 5.2h-2.3l-.9 5.6H5.6L7.9 3.4zm2.2 7h1.8c1.4 0 2.3-.8 2.3-2.1 0-1-.7-1.7-1.9-1.7h-1.6l-.6 3.8zM15.1 9.1h2.5c2.3 0 3.8 1.3 3.8 3.4 0 3-2.3 5.1-5.5 5.1h-.6l-.8 4.9h-2.5L15.1 9.1z"/></svg>`,
+  netflix: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.3 2.3h4.3l6.9 13.2V2.3H21v19.4h-4.3L9.8 8.5v13.2H6.3V2.3z"/></svg>`,
+  stripe: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.7 8.8c0-1 .8-1.4 2-1.4 1.6 0 3.7.6 5.3 1.5V4.4a12.4 12.4 0 0 0-5.3-1.2c-4.3 0-7.2 2.3-7.2 6 0 5.9 7.9 4.9 7.9 7.4 0 1-.9 1.4-2.1 1.4-1.8 0-4.1-.7-5.9-1.8v4.6c2 .9 4 1.3 5.9 1.3 4.4 0 7.4-2.2 7.4-6.1 0-6.3-7.9-5.2-7.9-7.2z"/></svg>`,
+  vercel: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2 22.4 20.6H1.6L12 3.2z"/></svg>`,
+  digitalocean: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c-2.7 3.1-8.2 9.6-8.2 13.4a8.2 8.2 0 0 0 16.4 0c0-3.8-5.5-10.3-8.2-13.4z"/></svg>`,
+  bitwarden: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2 4.4 5.4v6.5c0 5.1 3.2 9.1 7.6 10.5 4.4-1.4 7.6-5.4 7.6-10.5V5.4L12 2.2zm-1.1 4.9h2.2v3.2h-2.2V7.1zm0 4.4h2.2v6.1h-2.2v-6.1z"/></svg>`,
+  onepassword: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2.3a9.7 9.7 0 1 1 0 19.4 9.7 9.7 0 0 1 0-19.4zm0 5.5a4.3 4.3 0 0 1 4.3 4.3c0 1.8-1.1 3.3-2.7 4v2.3h-3.2v-2.3a4.3 4.3 0 0 1-2.7-4A4.3 4.3 0 0 1 12 7.8zm0 2.3a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>`,
+  nintendo: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M4.7 2.5h5.7v19H4.7A2.9 2.9 0 0 1 1.8 18.6V5.4a2.9 2.9 0 0 1 2.9-2.9zm.7 3.3a1.65 1.65 0 1 0 0 3.3 1.65 1.65 0 0 0 0-3.3zM13.6 2.5h5.7a2.9 2.9 0 0 1 2.9 2.9v13.2a2.9 2.9 0 0 1-2.9 2.9h-5.7v-19zm5.1 10.6a1.65 1.65 0 1 0 0-3.3 1.65 1.65 0 0 0 0 3.3z"/></svg>`,
+  playstation: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M9.7 4.1c3.4 0 5.7 1.4 5.7 4.3 0 2.7-2 4.5-5 4.5h-1.5v4.4H6V4.1h3.7zM8.7 7v3.1h1.2c1.1 0 1.9-.6 1.9-1.6S11 7 9.9 7H8.7zM18 12.2c2 .6 3.3 1.6 3.3 3.1 0 2.1-2.3 3.3-5.3 3.3-1.2 0-2.3-.2-3.3-.5v-2.7c1 .4 2.1.7 3 .7 1 0 1.7-.3 1.7-.8 0-.6-.8-.9-2.1-1.4l-.6-.2v-1.5H18z"/></svg>`,
+  battlenet: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2.2 3 7.4v9.2L12 21.8l9-5.2V7.4L12 2.2zm0 3.2 5.9 3.4v6.6L12 18.8l-5.9-3.4V8.8L12 5.4zm0 2.5L8.4 10v4.1l3.6 2.1 3.6-2.1V10L12 7.9z"/></svg>`,
+  roblox: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M6.4 2.8 21.2 6.1 17.6 21.2 2.8 17.9 6.4 2.8zm2.2 5.4-.9 3.8 3.8.9.9-3.8-3.8-.9zm3.6 5.7-.9 3.8 3.8.9.9-3.8-3.8-.9z"/></svg>`,
+  zoom: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.8 6.7a2.1 2.1 0 0 1 2.1-2.1h8.4a2.1 2.1 0 0 1 2.1 2.1v2.6l5.8-3.4v12.4l-5.8-3.4v2.6a2.1 2.1 0 0 1-2.1 2.1H4.9a2.1 2.1 0 0 1-2.1-2.1V6.7z"/></svg>`,
+  figma: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M8.6 2.5h3.5v6.9H8.6a3.45 3.45 0 1 1 0-6.9zm3.5 0h3.4a3.45 3.45 0 1 1 0 6.9H12.1V2.5zm0 6.9h3.4a3.45 3.45 0 1 1 0 6.9H12.1V9.4zm-3.5 0h3.5v6.9H8.6a3.45 3.45 0 1 1 0-6.9zm0 6.9h3.5v3.4a3.45 3.45 0 1 1-3.5-3.4z"/></svg>`,
+  openai: `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2.5 20.2 7.3v9.4L12 21.5 3.8 16.7V7.3L12 2.5zm0 2.7L5.9 8.7v6.6L12 18.8l6.1-3.5V8.7L12 5.2z"/></svg>`,
   custom: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8.5" r="4.2"/><path d="M11.6 11.6 20 20M17 17l2-2M14 14l2-2"/></svg>`
 };
 
@@ -61,7 +97,43 @@ const PLATFORMS = {
   instagram: { label:'Instagram', bg:'#e1306c', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric' },
   epic:      { label:'Epic',      bg:'#2a2a2a', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric' },
   xbox:      { label:'Xbox',      bg:'#107c10', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric' },
-  custom:    { label:'自定义',      bg:'#3a3f52', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric' }
+  /* ── 国内平台 ── */
+  wechat:    { label:'微信',      bg:'#07c160', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  qq:        { label:'QQ',        bg:'#12b7f5', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  alipay:    { label:'支付宝',    bg:'#1677ff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  taobao:    { label:'淘宝',      bg:'#ff5000', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  jd:        { label:'京东',      bg:'#e1251b', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  baidu:     { label:'百度',      bg:'#2932e1', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  bilibili:  { label:'哔哩哔哩',  bg:'#00a1d6', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  zhihu:     { label:'知乎',      bg:'#0084ff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  weibo:     { label:'微博',      bg:'#e6162d', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  xiaomi:    { label:'小米',      bg:'#ff6900', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  huawei:    { label:'华为',      bg:'#c7000b', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  douyin:    { label:'抖音',      bg:'#161823', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  netease:   { label:'网易',      bg:'#de1414', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  aliyun:    { label:'阿里云',    bg:'#ff6a00', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  tencentcloud:{ label:'腾讯云',  bg:'#0052d9', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  dingtalk:  { label:'钉钉',      bg:'#1e7bff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  meituan:   { label:'美团',      bg:'#ffc300', fg:'#3a2503', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  pinduoduo: { label:'拼多多',    bg:'#e22e1f', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  xiaohongshu:{ label:'小红书',   bg:'#ff2442', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  ctrip:     { label:'携程',      bg:'#2577e3', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'cn' },
+  /* ── 国际服务 ── */
+  paypal:    { label:'PayPal',    bg:'#003087', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  netflix:   { label:'Netflix',   bg:'#e50914', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  stripe:    { label:'Stripe',    bg:'#635bff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  vercel:    { label:'Vercel',    bg:'#0b0b0c', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  digitalocean:{ label:'DigitalOcean', bg:'#0080ff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  bitwarden: { label:'Bitwarden', bg:'#175ddc', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  onepassword:{ label:'1Password',bg:'#1a8cff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  nintendo:  { label:'Nintendo',  bg:'#e60012', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  playstation:{ label:'PlayStation', bg:'#0070d1', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  battlenet: { label:'战网',      bg:'#148eff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  roblox:    { label:'Roblox',    bg:'#e2231a', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  zoom:      { label:'Zoom',      bg:'#2d8cff', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  figma:     { label:'Figma',     bg:'#f24e1e', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  openai:    { label:'OpenAI',    bg:'#10a37f', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'intl' },
+  custom:    { label:'自定义',      bg:'#3a3f52', fg:'#fff', digits:6, period:30, algo:'SHA1', charset:'numeric', cat:'other' }
 };
 
 const STEAM_CHARS = '23456789BCDFGHJKMNPQRTVWXY';
@@ -300,7 +372,43 @@ const PLATFORM_ALIASES = {
   xbox:       ['xbox live'],
   dropbox:    ['dropbox'],
   binance:    ['binance'],
-  telegram:   ['t.me', 'web.telegram', 'telegram web']
+  telegram:   ['t.me', 'web.telegram', 'telegram web'],
+  /* 国内 */
+  wechat:     ['微信', 'weixin', 'wechat pay', '企业微信'],
+  qq:         ['腾讯qq', 'qqmail', 'foxmail'],
+  alipay:     ['支付宝', 'zhifubao', 'ant group', '蚂蚁'],
+  taobao:     ['淘宝', 'taobao', '天猫'],
+  jd:         ['京东', 'jd.com', 'jingdong', '京东云'],
+  baidu:      ['百度', 'baidu', 'baidu.com'],
+  bilibili:   ['哔哩', 'b站', 'bili', 'bilibili.com'],
+  zhihu:      ['知乎', 'zhihu.com'],
+  weibo:      ['微博', 'sina', '新浪'],
+  xiaomi:     ['小米', 'mi.com', 'miui', '小米账号'],
+  huawei:     ['华为', 'huawei', 'harmonyos', '华为云'],
+  douyin:     ['抖音', 'douyin', 'tiktok', '字节'],
+  netease:    ['网易', '163.com', '126.com', 'netease'],
+  aliyun:     ['阿里云', 'aliyun', 'alibabacloud'],
+  tencentcloud:['腾讯云', 'tencent cloud', 'qcloud'],
+  dingtalk:   ['钉钉', 'dingtalk'],
+  meituan:    ['美团', 'meituan', 'dianping'],
+  pinduoduo:  ['拼多多', 'pinduoduo', 'pdd'],
+  xiaohongshu:['小红书', 'rednote', 'xiaohongshu', 'xhs'],
+  ctrip:      ['携程', 'ctrip', 'trip.com', '去哪儿'],
+  /* 国际服务 */
+  paypal:     ['贝宝', 'paypal.com'],
+  netflix:    ['奈飞', 'netflix.com'],
+  stripe:     ['stripe.com'],
+  vercel:     ['vercel.com', 'now.sh'],
+  digitalocean:['digital ocean', 'docean'],
+  bitwarden:  ['bitwarden.com'],
+  onepassword:['1password', 'onepassword.com', 'agilebits'],
+  nintendo:   ['任天堂', 'nintendo account', 'switch'],
+  playstation:['psn', 'sony', 'playstation network'],
+  battlenet:  ['battle.net', '战网', 'blizzard', '暴雪'],
+  roblox:     ['roblox.com'],
+  zoom:       ['zoom.us', 'zoom video'],
+  figma:      ['figma.com'],
+  openai:     ['chatgpt', 'gpt', 'openai.com', 'anthropic', 'claude']
 };
 
 function _guessPlatform(hay) {
@@ -606,6 +714,8 @@ const state = {
   editorKind: 'code',
   platformTouched: false,
   editorPlatform: 'google',
+  pfQuery: '',
+  pfCat: 'all',
   unlocked: false,
   hiddenAt: 0,
   codeCache: new Map(),
@@ -670,7 +780,7 @@ function iconTile(platform, size) {
   const def = PLATFORMS[platform] || PLATFORMS.custom;
   return {
     svg: ICONS[platform] || ICONS.custom,
-    style: `--icon-bg:${def.bg};`
+    style: `--icon-bg:${def.bg};--icon-fg:${def.fg || '#fff'};`
   };
 }
 
@@ -1081,26 +1191,96 @@ function closeSheet(scrimId, sheetId) {
 }
 
 /* ───────────────── 编辑器 ───────────────── */
-function buildPlatformGrid() {
+function pfMatches(key, q) {
+  const def = PLATFORMS[key];
+  if (!def) return false;
+  if (!q) return true;
+  const hay = [key, def.label, ...(PLATFORM_ALIASES[key] || [])].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
+function syncPfPicker() {
+  const key = state.editorPlatform || 'custom';
+  const def = PLATFORMS[key] || PLATFORMS.custom;
+  const ico = $('#pfPickerIco');
+  if (ico) {
+    ico.style.background = def.bg;
+    ico.style.color = def.fg || '#fff';
+    ico.innerHTML = (ICONS[key] || ICONS.custom).replace('<svg', '<svg style="width:20px;height:20px"');
+  }
+  const nm = $('#pfPickerName');
+  if (nm) nm.textContent = def.label;
+  const total = $('#pfPickerCats');
+  if (total) total.textContent = Object.keys(PLATFORMS).length + ' 个平台';
+}
+
+function renderPlatformGrid() {
   const grid = $('#platformGrid');
+  if (!grid) return;
+  const q = String(state.pfQuery || '').trim().toLowerCase();
+  const cat = state.pfCat || 'all';
   grid.innerHTML = '';
+  let shown = 0;
   Object.keys(PLATFORMS).forEach(key => {
+    const def = PLATFORMS[key];
+    if (cat !== 'all' && (def.cat || 'other') !== cat) return;
+    if (!pfMatches(key, q)) return;
+    shown++;
     const b = el('button', 'pf-opt');
     b.type = 'button';
     b.dataset.pf = key;
-    b.title = PLATFORMS[key].label;
-    // 用平台底色做图标，保证浅色主题下也可见
-    const def = PLATFORMS[key];
-    b.innerHTML = `<span style="display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:${def.bg}">${
+    b.title = def.label;
+    b.setAttribute('aria-label', def.label);
+    b.innerHTML = `<span style="display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:${def.bg};color:${def.fg || '#fff'}">${
       (ICONS[key] || ICONS.custom).replace('<svg', '<svg style="width:20px;height:20px"')
     }</span>`;
+    if (key === state.editorPlatform) b.classList.add('is-on');
     grid.appendChild(b);
   });
-  grid.addEventListener('click', ev => {
+  const empty = $('#pfEmpty');
+  if (empty) empty.hidden = shown > 0;
+  syncPfPicker();
+}
+
+function togglePfPanel(open) {
+  const panel = $('#pfPanel');
+  const picker = $('#pfPicker');
+  if (!panel || !picker) return;
+  const want = typeof open === 'boolean' ? open : panel.hidden;
+  panel.hidden = !want;
+  picker.setAttribute('aria-expanded', want ? 'true' : 'false');
+  if (want) {
+    renderPlatformGrid();
+    setTimeout(() => { const s = $('#pfSearch'); if (s && !isTouch()) s.focus(); }, 70);
+  }
+}
+
+function isTouch() {
+  return matchMedia('(hover: none) and (pointer: coarse)').matches;
+}
+
+function bindPlatformPicker() {
+  const picker = $('#pfPicker');
+  if (!picker) return;
+  picker.addEventListener('click', () => { togglePfPanel(); haptic(6); });
+  const search = $('#pfSearch');
+  if (search) search.addEventListener('input', () => { state.pfQuery = search.value; renderPlatformGrid(); });
+  const cats = $('#pfCats');
+  if (cats) cats.addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-cat]');
+    if (!b) return;
+    state.pfCat = b.dataset.cat;
+    $$('#pfCats button').forEach(x => x.classList.toggle('is-on', x === b));
+    renderPlatformGrid();
+    haptic(6);
+  });
+  const grid = $('#platformGrid');
+  if (grid) grid.addEventListener('click', ev => {
     const btn = ev.target.closest('.pf-opt');
     if (!btn) return;
     state.platformTouched = true;
     selectPlatform(btn.dataset.pf);
+    togglePfPanel(false);
     haptic(6);
   });
 }
@@ -1108,7 +1288,7 @@ function buildPlatformGrid() {
 function selectPlatform(key) {
   state.editorPlatform = key;
   $$('#platformGrid .pf-opt').forEach(b => b.classList.toggle('is-on', b.dataset.pf === key));
-  const def = PLATFORMS[key];
+  const def = PLATFORMS[key] || PLATFORMS.custom;
   if (key !== 'custom') {
     const nameInput = $('#fName');
     if (!nameInput.value.trim() || Object.values(PLATFORMS).some(p => p.label === nameInput.value.trim())) {
@@ -1118,6 +1298,7 @@ function selectPlatform(key) {
     $('#fPeriod').value = String(def.period);
     $('#fAlgo').value = def.algo;
   }
+  syncPfPicker();
 }
 
 function setEditorKind(kind) {
@@ -1154,8 +1335,14 @@ function openEditor(id = null) {
 
   setEditorKind(e ? e.type : 'code');
   state.platformTouched = !!e;
+  state.pfQuery = '';
+  state.pfCat = 'all';
+  const pfSearch = $('#pfSearch');
+  if (pfSearch) pfSearch.value = '';
+  $$('#pfCats button').forEach(x => x.classList.toggle('is-on', x.dataset.cat === 'all'));
+  togglePfPanel(false);
+  renderPlatformGrid();
   selectPlatform(state.editorPlatform);
-  $$('#platformGrid .pf-opt').forEach(b => b.classList.toggle('is-on', b.dataset.pf === state.editorPlatform));
 
   $('#editorScrim').hidden = false;
   $('#editorSheet').hidden = false;
@@ -1314,8 +1501,10 @@ async function refreshBioButton() {
   const btn = $('#bioBtn');
   if (!btn) return;
   let on = false;
-  if (cfg.bio) on = await bioAvailable();
+  if (cfg.bio && cfg.bioId) on = await bioAvailable();
   btn.hidden = !on;
+  // 支持指纹时，把锁屏副标题也改成引导文案
+  if (on) updateLockHint();
 }
 
 async function enableBiometric() {
@@ -1388,10 +1577,12 @@ function disableBiometric(silent) {
 async function bioUnlock(opts) {
   const silent = !!(opts && opts.silent);
   if (!cfg.bio || !cfg.bioId) return false;
+  if (bioBusy) return false;
   if (!await bioAvailable()) {
     if (!silent) toast('这台设备当前不支持指纹或面容', 'err');
     return false;
   }
+  bioBusy = true;
   try {
     const cred = await navigator.credentials.get({
       publicKey: {
@@ -1416,18 +1607,43 @@ async function bioUnlock(opts) {
     if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) return false;
     if (!silent) toast('指纹验证失败：' + ((e && e.message) || '未知错误'), 'err');
     return false;
+  } finally {
+    bioBusy = false;
   }
 }
 
 /* 指纹优先级最高：进入应用时先自动唤起系统指纹，用户取消才落到 PIN 键盘 */
 let bioAutoTried = false;
+let bioBusy = false;
+let bioHooks = [];
+
+function bioReady() { return !!(cfg.bio && cfg.bioId && !state.unlocked && !bioBusy); }
+
+function bioDetachGesture() {
+  bioHooks.forEach(pair => document.removeEventListener(pair[0], pair[1], true));
+  bioHooks = [];
+}
+
+/* 浏览器要求「用户手势」才允许弹 WebAuthn；锁屏上任何一次触碰都先试指纹 */
+function armBioGesture() {
+  bioDetachGesture();
+  if (!cfg.bio || !cfg.bioId) return;
+  const fire = () => {
+    bioDetachGesture();
+    if (!bioReady()) return;
+    bioUnlock({ silent: true });
+  };
+  bioHooks = [['pointerdown', fire], ['touchstart', fire], ['keydown', fire]];
+  bioHooks.forEach(pair => document.addEventListener(pair[0], pair[1], true));
+}
+
 async function autoBioPrompt() {
   if (bioAutoTried || !cfg.bio || !cfg.bioId || state.unlocked) return;
-  if (!await bioAvailable()) return;
   bioAutoTried = true;
-  await new Promise(r => setTimeout(r, 380));
+  await new Promise(r => setTimeout(r, 120));
   if (state.unlocked) return;
-  bioUnlock({ silent: true });
+  const ok = await bioUnlock({ silent: true });
+  if (!ok && !state.unlocked) armBioGesture();   // 无手势被浏览器拒绝 → 等第一次触碰
 }
 
 function updateLockHint() {
@@ -1571,6 +1787,7 @@ function loadFallback(pin) {
 
 async function unlock() {
   state.unlocked = true;
+  bioDetachGesture();
   pinBuffer = '';
   renderPinDots();
   const lock = $('#lockScreen');
@@ -1603,8 +1820,11 @@ function lockApp() {
   const lock = $('#lockScreen');
   lock.hidden = false;
   currentPin = '';
+  bioAutoTried = false;
   refreshBioButton();
   requestAnimationFrame(() => lock.classList.remove('is-out'));
+  /* 再次锁定时重新布防：锁屏上任意一次触碰都会先试指纹 */
+  setTimeout(() => { if (!state.unlocked) { autoBioPrompt(); } }, 460);
 }
 
 function reloadFallbackHint() {
@@ -2476,7 +2696,8 @@ async function boot() {
     b.classList.toggle('is-on', b.dataset.theme === cfg.theme);
   });
 
-  buildPlatformGrid();
+  bindPlatformPicker();
+  renderPlatformGrid();
   bindLockScreen();
   bindList();
   bindGlobal();

@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -81,6 +82,7 @@ fun VaultScreen(
     onToggleFav: (String) -> Unit,
     onAdd: () -> Unit,
     onImport: () -> Unit,
+    onWebLogin: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val pal = LocalPalette.current
@@ -110,6 +112,11 @@ fun VaultScreen(
                     )
                 }
                 if (!searching) {
+                    IconGhostButton(
+                        onClick = onWebLogin,
+                        icon = Icons.Outlined.Language
+                    )
+                    Spacer(Modifier.width(4.dp))
                     Text(
                         text = "获取",
                         style = MaterialTheme.typography.labelLarge.copy(

@@ -1,5 +1,6 @@
 package com.yg.tokenvault.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,9 +46,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -93,6 +98,9 @@ fun EditorSheet(
     var algo by remember { mutableStateOf(existing?.algo ?: "SHA1") }
     var showAdvanced by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var pfOpen by remember { mutableStateOf(false) }
+    var pfQuery by remember { mutableStateOf("") }
+    var pfCat by remember { mutableStateOf("all") }
 
     val isSteam = platformKey == "steam"
     val secretOk = secret.isNotBlank() && Base32.isValid(secret)
@@ -169,52 +177,160 @@ fun EditorSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            // 平台选择
+            // 平台选择：默认折叠成一行（当前平台），点开才展开网格 + 搜索
             SectionTitle("平台")
             Spacer(Modifier.height(9.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
-                verticalArrangement = Arrangement.spacedBy(9.dp),
-                maxItemsInEachRow = 6
+            val curPlatform = Platforms.of(platformKey)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(pal.surfaceHi.copy(alpha = if (pfOpen) 0.85f else 0.5f))
+                    .border(
+                        width = 1.dp,
+                        color = if (pfOpen) Accent.copy(alpha = 0.8f) else pal.border,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .androidClickable { pfOpen = !pfOpen }
+                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Platforms.picker.forEach { p ->
-                    val on = p.key == platformKey
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .androidClickable {
-                                platformKey = p.key
-                                if (p.key == "steam") {
-                                    digits = 5
-                                    algo = "SHA1"
+                BrandTile(platform = curPlatform, size = 32.dp)
+                Spacer(Modifier.width(11.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = curPlatform.label,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = pal.text
+                    )
+                    Text(
+                        text = if (pfOpen) "收起" else "点击更换 · ${Platforms.picker.size} 个平台",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                        color = pal.text3
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Outlined.KeyboardArrowDown,
+                    contentDescription = if (pfOpen) "收起平台列表" else "展开平台列表",
+                    tint = pal.text2,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(if (pfOpen) 180f else 0f)
+                )
+            }
+
+            AnimatedVisibility(visible = pfOpen) {
+                Column(modifier = Modifier.padding(top = 10.dp)) {
+                    OutlinedTextField(
+                        value = pfQuery,
+                        onValueChange = { pfQuery = it },
+                        singleLine = true,
+                        placeholder = { Text("搜索平台：微信 / GitHub", color = pal.text3) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Search,
+                                contentDescription = null,
+                                tint = pal.text3,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = pal.text, fontSize = 13.5.sp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = pal.accent,
+                            unfocusedBorderColor = pal.border,
+                            cursorColor = pal.accent,
+                            focusedContainerColor = pal.surfaceHi.copy(alpha = 0.4f),
+                            unfocusedContainerColor = Color.Transparent
+                        ),
+                        shape = RoundedCornerShape(13.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(Modifier.height(9.dp))
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        listOf(
+                            "all" to "全部",
+                            "cn" to "国内",
+                            "intl" to "国际",
+                            "other" to "其他"
+                        ).forEach { (c, t) ->
+                            val on = pfCat == c
+                            Text(
+                                text = t,
+                                style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
+                                color = if (on) Color.White else pal.text2,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(if (on) Accent else pal.surfaceHi.copy(alpha = 0.6f))
+                                    .androidClickable { pfCat = c }
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(11.dp))
+
+                    val shown = Platforms.search(pfQuery, pfCat)
+                    if (shown.isEmpty()) {
+                        Text(
+                            text = "没有匹配的平台，可先用「自定义」",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
+                            color = pal.text3,
+                            modifier = Modifier.padding(vertical = 10.dp)
+                        )
+                    } else {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(9.dp),
+                            verticalArrangement = Arrangement.spacedBy(9.dp),
+                            maxItemsInEachRow = 6
+                        ) {
+                            shown.forEach { p ->
+                                val on = p.key == platformKey
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .androidClickable {
+                                            platformKey = p.key
+                                            if (p.key == "steam") {
+                                                digits = 5
+                                                algo = "SHA1"
+                                            }
+                                            pfOpen = false
+                                            pfQuery = ""
+                                        }
+                                        .padding(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .border(
+                                                width = if (on) 2.dp else 0.dp,
+                                                color = if (on) Accent else Color.Transparent,
+                                                shape = RoundedCornerShape(14.dp)
+                                            )
+                                            .padding(if (on) 1.5.dp else 3.dp)
+                                    ) {
+                                        BrandTile(platform = p, size = 38.dp)
+                                    }
+                                    Spacer(Modifier.height(3.dp))
+                                    Text(
+                                        text = p.label,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 9.sp,
+                                            letterSpacing = 0.sp
+                                        ),
+                                        color = if (on) pal.accent else pal.text3,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
-                            .padding(4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
-                                .border(
-                                    width = if (on) 2.dp else 0.dp,
-                                    color = if (on) Accent else Color.Transparent,
-                                    shape = RoundedCornerShape(14.dp)
-                                )
-                                .padding(if (on) 1.5.dp else 3.dp)
-                        ) {
-                            BrandTile(platform = p, size = 38.dp)
                         }
-                        Spacer(Modifier.height(3.dp))
-                        Text(
-                            text = p.label,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp,
-                                letterSpacing = 0.sp
-                            ),
-                            color = if (on) pal.accent else pal.text3,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
                 }
             }

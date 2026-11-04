@@ -115,10 +115,10 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
         )
     }
 
-    // 指纹解锁状态
+    // 指纹解锁状态：首帧就同步读一次，避免"要等一轮才变成 true"导致自动弹窗被跳过
     val hostActivity = appContext as? androidx.fragment.app.FragmentActivity
-    var bioOn by remember { mutableStateOf(false) }
-    var bioOk by remember { mutableStateOf(false) }
+    var bioOk by remember { mutableStateOf(BiometricVault.canUse(appContext)) }
+    var bioOn by remember { mutableStateOf(BiometricVault.isEnabled(appContext)) }
     androidx.compose.runtime.LaunchedEffect(state.unlocked, state.hasVault) {
         bioOk = BiometricVault.canUse(appContext)
         bioOn = BiometricVault.isEnabled(appContext)
@@ -135,7 +135,9 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
         if (!state.hasVault || !bioOn || !bioOk) return@LaunchedEffect
         val act = hostActivity ?: return@LaunchedEffect
         bioAutoAsked = true
-        delay(420)
+        // 等窗口真正拿到焦点再弹，否则系统会静默丢弃这次认证
+        delay(650)
+        if (state.unlocked) return@LaunchedEffect
         BiometricVault.unlock(
             activity = act,
             onPin = { pin -> if (pin != null) vm.unlock(pin) },
@@ -223,7 +225,8 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 onOpen = { id -> detailId = id },
                                 onToggleFav = vm::toggleFavorite,
                                 onAdd = { editorId = NEW_ENTRY },
-                                onImport = { showImport = true }
+                                onImport = { showImport = true },
+                                onWebLogin = { showLogin = true }
                             )
 
                             VaultViewModel.Tab.TOOLS -> ToolsScreen(
@@ -309,13 +312,12 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
             }
         }
 
-        // ── 获取密钥：选择方式 → 扫码 / 登录 ───────────
+        // ── 获取密钥：选择方式 → 扫码 / 图片 / 剪贴板 ───────
         if (showImport) {
             ImportSheet(
                 onDismiss = { showImport = false },
                 onText = { text -> vm.importAnyText(text, OtpImporter.Origin.LINK) },
                 onScan = { showScan = true },
-                onWebLogin = { showLogin = true },
                 onToast = { msg -> vm.toast(msg) }
             )
         }

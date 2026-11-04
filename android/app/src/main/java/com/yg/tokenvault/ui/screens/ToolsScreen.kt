@@ -113,7 +113,7 @@ fun ToolsScreen(
         // ── 获取密钥 ────────────────────────────
         ToolCard("获取密钥") {
             Text(
-                text = "扫码 / 登录账号 / 相册图片 / 剪贴板，四种方式把已有的两步验证密钥搬进来",
+                text = "扫码 / 相册图片 / 剪贴板，三种方式把已有的两步验证密钥搬进来",
                 style = MaterialTheme.typography.bodyMedium,
                 color = pal.text2
             )

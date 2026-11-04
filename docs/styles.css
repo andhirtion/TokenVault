@@ -347,6 +347,7 @@ html[data-theme="light"] .card::after { background: linear-gradient(180deg, rgba
   flex: none; width: 42px; height: 42px; border-radius: 13px;
   display: grid; place-items: center; position: relative; z-index: 1;
   background: var(--icon-bg, var(--surface-hi));
+  color: var(--icon-fg, #fff);
   box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 4px 12px -6px rgba(0,0,0,.7);
 }
 .pf-icon svg { width: 23px; height: 23px; display: block; }
@@ -460,7 +461,8 @@ html[data-theme="light"] .sheet { background: #fff; }
 .sheet-detail { padding: 0 20px 20px; }
 .detail-head { display: flex; align-items: center; gap: 13px; padding: 16px 0 20px; }
 .detail-icon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; flex: none;
-  background: var(--icon-bg, var(--surface-hi)); box-shadow: 0 1px 0 rgba(255,255,255,.16) inset; }
+  background: var(--icon-bg, var(--surface-hi)); box-shadow: 0 1px 0 rgba(255,255,255,.16) inset;
+  color: var(--icon-fg, #fff); }
 .detail-icon svg { width: 28px; height: 28px; }
 .detail-meta { flex: 1; min-width: 0; }
 .detail-meta h2 { margin: 0; font-size: 19px; font-weight: 660; letter-spacing: -.024em;
@@ -550,7 +552,7 @@ html[data-theme="light"] .detail-ring .ring-bg { stroke: rgba(15,23,42,.13); }
 .field-label { display: block; font-size: 12px; font-weight: 640; letter-spacing: .05em;
   text-transform: uppercase; color: var(--text-3); margin-bottom: 11px; }
 
-.platform-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-bottom: 22px; }
+.platform-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin: 0; }
 .pf-opt {
   aspect-ratio: 1; border-radius: 15px; display: grid; place-items: center;
   background: var(--surface-sink); border: 1.5px solid transparent;
@@ -560,6 +562,49 @@ html[data-theme="light"] .detail-ring .ring-bg { stroke: rgba(15,23,42,.13); }
 .pf-opt.is-on { border-color: var(--accent); background: var(--accent-soft); }
 .pf-opt.is-on svg { transform: scale(1.1); }
 .pf-opt:active { transform: scale(.9); }
+
+/* ── 平台折叠选择器 ── */
+.pf-picker {
+  width: 100%; display: flex; align-items: center; gap: 11px; margin-bottom: 15px;
+  padding: 11px 14px; border-radius: 16px; text-align: left;
+  background: var(--surface-sink); border: 1.5px solid var(--line);
+  transition: border-color .2s var(--ease), background .2s var(--ease);
+}
+.pf-picker:active { transform: scale(.985); }
+.pf-picker[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.pf-picker-ico { width: 34px; height: 34px; border-radius: 10px; flex: none;
+  display: grid; place-items: center; overflow: hidden; }
+.pf-picker-ico svg { width: 20px; height: 20px; display: block; }
+.pf-picker-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 640;
+  color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-picker-cats { flex: none; font-size: 11.5px; color: var(--text-3); letter-spacing: .02em; }
+.pf-picker-arrow { flex: none; width: 18px; height: 18px; color: var(--text-3);
+  transition: transform .25s var(--ease); }
+.pf-picker[aria-expanded="true"] .pf-picker-arrow { transform: rotate(180deg); }
+
+.pf-panel { margin-bottom: 18px; padding: 12px; border-radius: 18px;
+  background: var(--surface-sink); border: 1.5px solid var(--line);
+  animation: pfIn .26s var(--ease); }
+@keyframes pfIn { from { opacity: 0; transform: translateY(-6px) scale(.99); } to { opacity: 1; transform: none; } }
+
+.pf-search-wrap { display: flex; align-items: center; gap: 8px; padding: 0 12px;
+  height: 40px; border-radius: 12px; background: var(--surface-1);
+  border: 1px solid var(--line); margin-bottom: 10px; }
+.pf-search-wrap svg { width: 16px; height: 16px; flex: none; color: var(--text-3); }
+.pf-search-wrap input { flex: 1; min-width: 0; height: 100%; border: 0; background: none;
+  color: var(--text-1); font-size: 14px; font-family: inherit; outline: none; }
+.pf-search-wrap input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.pf-chips { display: flex; gap: 7px; margin-bottom: 11px; }
+.pf-chips button { padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  color: var(--text-2); background: var(--surface-1); border: 1px solid var(--line);
+  transition: all .18s var(--ease); }
+.pf-chips button.is-on { color: #fff; background: var(--accent); border-color: transparent; }
+.pf-chips button:active { transform: scale(.94); }
+
+.pf-panel .platform-grid { max-height: 252px; overflow-y: auto; padding-right: 2px;
+  -webkit-overflow-scrolling: touch; }
+.pf-empty { padding: 16px 0 6px; text-align: center; font-size: 13px; color: var(--text-3); }
 
 .field { margin-bottom: 15px; }
 .field label { display: block; font-size: 12.5px; font-weight: 560; color: var(--text-2); margin-bottom: 7px; }

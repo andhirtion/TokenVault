@@ -200,7 +200,26 @@
     </div>
 
     <label class="field-label">选择平台</label>
-    <div class="platform-grid" id="platformGrid"></div>
+    <button type="button" class="pf-picker" id="pfPicker" aria-expanded="false">
+      <span class="pf-picker-ico" id="pfPickerIco"></span>
+      <span class="pf-picker-name" id="pfPickerName">自定义</span>
+      <span class="pf-picker-cats" id="pfPickerCats">59 个平台</span>
+      <svg class="pf-picker-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="pf-panel" id="pfPanel" hidden>
+      <div class="pf-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 3.5 3.5"/></svg>
+        <input id="pfSearch" type="search" placeholder="搜索平台：微信 / GitHub / Steam" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="pf-chips" id="pfCats">
+        <button type="button" class="is-on" data-cat="all">全部</button>
+        <button type="button" data-cat="cn">国内</button>
+        <button type="button" data-cat="intl">国际</button>
+        <button type="button" data-cat="other">其他</button>
+      </div>
+      <div class="platform-grid" id="platformGrid"></div>
+      <div class="pf-empty" id="pfEmpty" hidden>没有匹配的平台</div>
+    </div>
 
     <div class="field">
       <label>名称 / 平台</label>

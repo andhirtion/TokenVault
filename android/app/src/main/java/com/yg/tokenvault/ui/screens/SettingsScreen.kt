@@ -225,7 +225,7 @@ fun SettingsScreen(
                         color = pal.text
                     )
                     Text(
-                        text = "版本 1.2.0 · 纯本地",
+                        text = "版本 1.3.0 · 纯本地",
                         style = MaterialTheme.typography.bodyMedium,
                         color = pal.text3
                     )

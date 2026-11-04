@@ -227,7 +227,7 @@ class CoreLogicTest {
 
     @Test
     fun all_builtin_platforms_have_sane_defaults() {
-        assertEquals(26, Platforms.picker.size)
+        assertEquals(60, Platforms.picker.size)
         val keys = Platforms.picker.map { it.key }
         assertEquals("平台 key 不应重复", keys.size, keys.toSet().size)
         for (p in Platforms.picker) {
@@ -235,11 +235,17 @@ class CoreLogicTest {
             assertTrue("${p.key} 的周期不合法：${p.period}", p.period in 15..120)
             assertTrue("${p.key} 的算法不合法：${p.algo}", p.algo in listOf("SHA1", "SHA256", "SHA512"))
             assertTrue("${p.key} 的字符集不合法：${p.charset}", p.charset in listOf("NUM", "STEAM"))
+            assertTrue("${p.key} 的分组不合法：${p.cat}", p.cat in listOf("cn", "intl", "other"))
         }
         // steam 必须是 5 位 + STEAM 字母表
         val steam = Platforms.of("steam")
         assertEquals(5, steam.digits)
         assertEquals("STEAM", steam.charset)
+        // 国内平台要能搜到，且搜索默认覆盖全部
+        assertEquals("wechat", Platforms.search("微信").first().key)
+        assertTrue("搜「云」应命中阿里云/腾讯云", Platforms.search("云").size >= 2)
+        assertEquals(20, Platforms.search("", "cn").size)
+        assertTrue("空搜索返回全部", Platforms.search("").size == Platforms.picker.size)
     }
 
     // ── 随机密码 ────────────────────────────────────────────────
