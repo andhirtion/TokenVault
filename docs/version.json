@@ -1,0 +1,29 @@
+{
+  "app": "TokenVault",
+  "name": "钥匣 KeyCoffer",
+  "version": "1.4.0",
+  "code": 8,
+  "minCode": 1,
+  "publishedAt": "2026-11-04T21:00:00+08:00",
+  "notes": [
+    "设置 → 关于：新增 GitHub 仓库入口，源码、更新日志与安装包都能直接打开",
+    "新增「检查更新」：自动比对线上最新版本，有新版就显示版本号与更新说明",
+    "应用内更新：下载好安装包后直接拉起系统安装器，不用再跳浏览器手动装",
+    "版本清单与安装包都会自动切镜像（GitHub / gh-proxy / ghfast / ghproxy），哪个通用哪个",
+    "网页版 1.4.0 同步上线：主界面先选后进、平台图标全部换成官方版、可自定义图标、WebDAV 云备份"
+  ],
+  "repo": "https://github.com/andhirtion/TokenVault",
+  "web": "https://andhirtion.github.io/TokenVault/",
+  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.4.0",
+  "apk": {
+    "name": "TokenVault-1.4.0.apk",
+    "size": 2443013,
+    "sha256": "e1c248d7cabd3336fa373d7b9b4f8f98452bea68081f9877eaacfedf238b6a4e",
+    "urls": [
+      "https://github.com/andhirtion/TokenVault/releases/download/v1.4.0/TokenVault-1.4.0.apk",
+      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.4.0/TokenVault-1.4.0.apk",
+      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.4.0/TokenVault-1.4.0.apk",
+      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.4.0/TokenVault-1.4.0.apk"
+    ]
+  }
+}

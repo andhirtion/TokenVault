@@ -1,5 +1,9 @@
-package com.yg.tokenvault.ui.screens
+﻿package com.yg.tokenvault.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,11 +27,14 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.SettingsBrightness
+import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -37,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -52,6 +61,11 @@ import androidx.compose.ui.unit.sp
 import com.yg.tokenvault.VaultViewModel
 import com.yg.tokenvault.ui.theme.LocalPalette
 import com.yg.tokenvault.ui.theme.ThemeMode
+import com.yg.tokenvault.update.CheckResult
+import com.yg.tokenvault.update.UpdateInfo
+import com.yg.tokenvault.update.Updater
+import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * 设置页：外观、安全、数据、关于。
@@ -80,6 +94,100 @@ fun SettingsScreen(
     var showPinDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
+
+    // ── 关于 / 更新 ────────────────────────────
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+    val curVer = remember { Updater.currentVersion(ctx) }
+
+    var updBusy by remember { mutableStateOf(false) }
+    var updMsg by remember { mutableStateOf<String?>(null) }
+    var updErr by remember { mutableStateOf(false) }
+    var updTarget by remember { mutableStateOf<UpdateInfo?>(null) }
+    var showUpdDialog by remember { mutableStateOf(false) }
+    var dlProgress by remember { mutableStateOf(-1f) }
+    var dlText by remember { mutableStateOf("") }
+    var readyApk by remember { mutableStateOf<File?>(null) }
+
+    val openUrl: (String) -> Unit = { url ->
+        runCatching {
+            ctx.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+    }
+
+    val doCheck: () -> Unit = {
+        if (!updBusy) {
+            updBusy = true
+            updMsg = null
+            updErr = false
+            scope.launch {
+                when (val r = Updater.check(ctx)) {
+                    is CheckResult.Newer -> {
+                        updTarget = r.info
+                        updMsg = "发现新版本 v${r.info.version}（来自 ${r.info.source}）"
+                        readyApk = null
+                        dlProgress = -1f
+                        dlText = ""
+                        showUpdDialog = true
+                    }
+                    is CheckResult.Latest -> updMsg = "已是最新版本 v${r.current}（来源 ${r.source}）"
+                    is CheckResult.Failed -> {
+                        updMsg = "检查失败：${r.message}"
+                        updErr = true
+                    }
+                }
+                updBusy = false
+            }
+        }
+    }
+
+    val doDownload: (UpdateInfo) -> Unit = { info ->
+        if (dlProgress < 0f || readyApk != null) {
+            readyApk = null
+            dlProgress = 0f
+            dlText = "正在连接下载源…"
+            scope.launch {
+                val res = Updater.download(ctx, info) { read, total ->
+                    mainHandler.post {
+                        dlProgress = if (total > 0) (read.toFloat() / total).coerceIn(0f, 1f) else -1f
+                        dlText = if (total > 0) {
+                            "${read / 1048576} / ${total / 1048576} MB"
+                        } else {
+                            "${read / 1024} KB"
+                        }
+                    }
+                }
+                res.onSuccess { f ->
+                    readyApk = f
+                    dlProgress = 1f
+                    dlText = "已下载完成（${f.length() / 1024 / 1024} MB）"
+                }.onFailure { e ->
+                    dlProgress = -1f
+                    dlText = ""
+                    updMsg = "下载失败：${e.message}"
+                    updErr = true
+                }
+            }
+        }
+    }
+
+    val doInstall: () -> Unit = {
+        val f = readyApk
+        if (f != null) {
+            if (!Updater.canInstall(ctx)) {
+                Updater.openInstallPermissionSettings(ctx)
+                updMsg = "请在系统设置里允许「安装未知应用」，回到这里再点一次安装"
+                updErr = false
+            } else {
+                Updater.install(ctx, f)
+                showUpdDialog = false
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -225,7 +333,7 @@ fun SettingsScreen(
                         color = pal.text
                     )
                     Text(
-                        text = "版本 1.3.0 · 纯本地",
+                        text = "版本 $curVer · 数据纯本地",
                         style = MaterialTheme.typography.bodyMedium,
                         color = pal.text3
                     )
@@ -234,9 +342,37 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
             Text(
                 text = "所有密钥经 PBKDF2-SHA256（25 万次迭代）派生的 AES-256-GCM 密钥加密后保存在本机，" +
-                    "应用不申请网络权限，验证码全程离线计算。",
+                    "验证码全程离线计算。只有你主动「检查更新」或使用内置浏览器登录时才会联网。",
                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 19.sp),
                 color = pal.text2
+            )
+            Divider()
+            ActionRow(
+                title = "GitHub 仓库",
+                subtitle = "源码、更新日志与安装包都在这里",
+                icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                onClick = { openUrl(Updater.REPO_URL) }
+            )
+            Divider()
+            ActionRow(
+                title = if (updBusy) "正在检查…" else "检查更新",
+                subtitle = updMsg ?: "当前 v$curVer · 自动切换可用镜像",
+                icon = Icons.Outlined.SystemUpdate,
+                onClick = { doCheck() }
+            )
+            if (updMsg != null && updErr) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = updMsg!!,
+                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 17.sp),
+                    color = pal.danger
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "下载源会依次尝试 GitHub、gh-proxy、ghfast、ghproxy，哪个通用哪个。",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp, lineHeight = 17.sp),
+                color = pal.text3
             )
         }
 
@@ -285,6 +421,118 @@ fun SettingsScreen(
             }
         )
     }
+
+    // ── 发现新版本 / 下载安装 ────────────────────
+    val target = updTarget
+    if (showUpdDialog && target != null) {
+        UpdateDialog(
+            info = target,
+            curVer = curVer,
+            progress = dlProgress,
+            progressText = dlText,
+            ready = readyApk != null,
+            onDownload = { doDownload(target) },
+            onInstall = { doInstall() },
+            onDismiss = { showUpdDialog = false }
+        )
+    }
+}
+
+// ── 更新对话框 ──────────────────────────────────
+
+@Composable
+private fun UpdateDialog(
+    info: UpdateInfo,
+    curVer: String,
+    progress: Float,
+    progressText: String,
+    ready: Boolean,
+    onDownload: () -> Unit,
+    onInstall: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val pal = LocalPalette.current
+    val downloading = progress >= 0f && !ready
+
+    AlertDialog(
+        onDismissRequest = { if (!downloading) onDismiss() },
+        containerColor = pal.surface,
+        titleContentColor = pal.text,
+        textContentColor = pal.text2,
+        title = { Text("发现新版本 v${info.version}") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "当前 v$curVer → 最新 v${info.version}" +
+                        if (info.apkSize > 0) " · 安装包 ${info.apkSize / 1048576} MB" else "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = pal.text3
+                )
+
+                if (info.notes.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    info.notes.take(6).forEach { line ->
+                        Text(
+                            text = "· ${line.removePrefix("-").removePrefix("*").trim()}",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 18.sp),
+                            color = pal.text2,
+                            modifier = Modifier.padding(bottom = 3.dp)
+                        )
+                    }
+                }
+
+                if (progress >= 0f) {
+                    Spacer(Modifier.height(12.dp))
+                    LinearProgressIndicator(
+                        progress = { progress.coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = pal.accent,
+                        trackColor = pal.surfaceHi
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = progressText,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp),
+                        color = pal.text3
+                    )
+                }
+
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "下载源会依次尝试 GitHub / gh-proxy / ghfast / ghproxy，哪个通用哪个。",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp, lineHeight = 16.sp),
+                    color = pal.text3
+                )
+            }
+        },
+        confirmButton = {
+            if (ready) {
+                TextButton(onClick = onInstall) {
+                    Text("安装", color = pal.accent, fontWeight = FontWeight.SemiBold)
+                }
+            } else {
+                TextButton(onClick = onDownload, enabled = !downloading) {
+                    Text(
+                        text = if (downloading) "下载中…" else "立即更新",
+                        color = if (downloading) pal.text3 else pal.accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !downloading) {
+                Text(if (downloading) "请稍候" else "以后再说", color = pal.text3)
+            }
+        }
+    )
 }
 
 // ── 复用小组件 ──────────────────────────────────

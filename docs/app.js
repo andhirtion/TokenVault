@@ -566,6 +566,28 @@ const DB_KEY   = 'tokenvault_v1';
 const CFG_KEY  = 'tokenvault_cfg_v1';
 const PBKDF2_ITER = 250000;
 
+/* ───────────────── 版本与更新 ───────────────── */
+const APP_VER   = '1.4.0';
+const APP_CODE  = 8;
+const REPO_URL  = 'https://github.com/andhirtion/TokenVault';
+const PAGES_URL = 'https://andhirtion.github.io/TokenVault/';
+// 版本清单：优先自己的 Pages（国内一般能开），再走 raw / jsDelivr / 镜像，最后兜 GitHub API
+const VER_SOURCES = [
+  { name: 'Pages',      kind: 'json', url: () => PAGES_URL + 'version.json?v=' + Date.now() },
+  { name: 'jsDelivr',   kind: 'json', url: () => 'https://cdn.jsdelivr.net/gh/andhirtion/TokenVault@main/docs/version.json?v=' + Date.now() },
+  { name: 'raw',        kind: 'json', url: () => 'https://raw.githubusercontent.com/andhirtion/TokenVault/main/docs/version.json?v=' + Date.now() },
+  { name: 'gh-proxy',   kind: 'json', url: () => 'https://gh-proxy.com/https://raw.githubusercontent.com/andhirtion/TokenVault/main/docs/version.json?v=' + Date.now() },
+  { name: 'ghfast',     kind: 'json', url: () => 'https://ghfast.top/https://raw.githubusercontent.com/andhirtion/TokenVault/main/docs/version.json?v=' + Date.now() },
+  { name: 'GitHub API', kind: 'api',  url: () => 'https://api.github.com/repos/andhirtion/TokenVault/releases/latest' }
+];
+// GitHub 下载加速前缀（APK：安卓端用；也用于网页端「下载安装包」按钮）
+const GH_MIRRORS = [
+  { name: 'GitHub',    pre: '' },
+  { name: 'gh-proxy',  pre: 'https://gh-proxy.com/' },
+  { name: 'ghfast',    pre: 'https://ghfast.top/' },
+  { name: 'ghproxy',   pre: 'https://ghproxy.net/' }
+];
+
 const cryptoBox = {
   _key: null,
 
@@ -2196,7 +2218,29 @@ function settingsPageHtml() {
       <div class="set-row">
         <div class="set-row-main">
           <span>钥匣 KeyCoffer</span>
-          <em>v1.4.0 · 纯本地 · 无网络请求 · ${HAS_SUBTLE ? 'WebCrypto 已启用' : '降级模式'}</em>
+          <em>v${APP_VER} · 数据纯本地 · ${HAS_SUBTLE ? 'WebCrypto 已启用' : '降级模式'}</em>
+        </div>
+      </div>
+      <div class="set-row">
+        <div class="set-row-main">
+          <span>GitHub 仓库</span>
+          <em>源码 · 更新日志 · 安装包都在这里</em>
+        </div>
+        <a class="mini-btn" id="repoLink" href="${REPO_URL}" target="_blank" rel="noopener noreferrer">打开</a>
+      </div>
+      <div class="set-row">
+        <div class="set-row-main">
+          <span>检查更新</span>
+          <em id="updAt">当前 v${APP_VER} · 点右侧按钮联网检查一次</em>
+        </div>
+        <button class="mini-btn accent" id="updBtn">检查更新</button>
+      </div>
+      <div class="upd-box">
+        <div class="upd-state" id="updState"></div>
+        <div class="upd-links">
+          <a href="${PAGES_URL}" target="_blank" rel="noopener noreferrer">在线版</a>
+          <span>·</span>
+          <a id="apkLink" href="javascript:void 0">下载安卓安装包</a>
         </div>
       </div>
     </div>
@@ -2275,11 +2319,161 @@ function bindSettingsPage(host) {
   const rBtn = host.querySelector('#davRestoreBtn');
   if (rBtn) rBtn.onclick = () => davRestore();
   renderDavFootIfAny();
+
+  // 关于 / 检查更新
+  const updBtn = host.querySelector('#updBtn');
+  if (updBtn) updBtn.onclick = () => checkUpdate(true);
+  const apkLink = host.querySelector('#apkLink');
+  if (apkLink) apkLink.onclick = ev => { ev.preventDefault(); openApkDownload(); };
+  const repoLink = host.querySelector('#repoLink');
+  if (repoLink) repoLink.onclick = () => haptic(6);
+
   const st = host.querySelector('#davState');
   if (st) { st.textContent = ''; st.className = 'dav-state'; }
 }
 
-/* ───────────────── WebDAV 云端备份 ───────────────── */
+/* ───────────────── 检查更新 ───────────────── */
+/* 版本清单有多个来源（Pages / jsDelivr / raw / 镜像 / GitHub API），逐个试，谁先返回用谁。
+   网页端的「应用内更新」= 清掉 Service Worker 与 Cache Storage 再重载，拿到新的 index/app.js。 */
+
+function cmpVer(a, b) {
+  const pa = String(a || '0').replace(/^v/i, '').split(/[.\-+]/);
+  const pb = String(b || '0').replace(/^v/i, '').split(/[.\-+]/);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = parseInt(pa[i] || '0', 10) || 0;
+    const y = parseInt(pb[i] || '0', 10) || 0;
+    if (x !== y) return x > y ? 1 : -1;
+  }
+  return 0;
+}
+
+const _lastGoodSource = { name: '' };
+
+/** 依次尝试各来源拿版本清单，返回 { info, source } 或抛错 */
+async function fetchVersionInfo() {
+  const errs = [];
+  for (const src of VER_SOURCES) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    try {
+      const r = await fetch(src.url(), {
+        cache: 'no-store',
+        signal: ctrl.signal,
+        headers: src.kind === 'api' ? { Accept: 'application/vnd.github+json' } : {}
+      });
+      clearTimeout(timer);
+      if (!r.ok) { errs.push(src.name + ' ' + r.status); continue; }
+      const j = await r.json();
+      let info;
+      if (src.kind === 'api') {
+        // GitHub API releases/latest：只有 tag 与正文，APK 走 assets
+        const ver = String(j.tag_name || '').replace(/^v/i, '');
+        if (!ver) { errs.push(src.name + ' 无 tag'); continue; }
+        const assets = Array.isArray(j.assets) ? j.assets : [];
+        const apk = assets.find(a => /\.apk$/i.test(a.name || ''));
+        info = {
+          version: ver,
+          code: 0,
+          notes: String(j.body || '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 12),
+          release: j.html_url || REPO_URL + '/releases',
+          apk: apk ? { name: apk.name, size: apk.size, urls: GH_MIRRORS.map(m => m.pre + apk.browser_download_url) } : null
+        };
+      } else {
+        info = j;
+        if (!info || !info.version) { errs.push(src.name + ' 格式不对'); continue; }
+      }
+      _lastGoodSource.name = src.name;
+      return { info, source: src.name };
+    } catch (e) {
+      clearTimeout(timer);
+      errs.push(src.name + ' ' + (e && e.name === 'AbortError' ? '超时' : '失败'));
+    }
+  }
+  throw new Error('全部来源不可达（' + errs.join(' / ') + '）');
+}
+
+/** 页面上显示检查结果 */
+function setUpdateUI(html, cls) {
+  const box = $('#updState');
+  if (!box) return;
+  box.className = 'upd-state' + (cls ? ' ' + cls : '');
+  box.innerHTML = html;
+}
+
+let _updInfo = null;
+
+async function checkUpdate(manual) {
+  const btn = $('#updBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '检查中…'; }
+  setUpdateUI('<span class="upd-dim">正在连接…</span>');
+  try {
+    const { info, source } = await fetchVersionInfo();
+    _updInfo = info;
+    const cur = APP_VER;
+    const newer = cmpVer(info.version, cur) > 0;
+    const srcTag = '<span class="upd-dim">· 源 ' + source + '</span>';
+    if (newer) {
+      const notes = (info.notes || []).slice(0, 6)
+        .map(n => '<li>' + String(n).replace(/^[-*\s]+/, '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])) + '</li>').join('');
+      setUpdateUI(
+        '<div class="upd-new">发现新版本 <b>v' + info.version + '</b>（当前 v' + cur + '）' + srcTag + '</div>' +
+        (notes ? '<ul class="upd-notes">' + notes + '</ul>' : '') +
+        '<div class="upd-acts"><button class="mini-btn accent" id="updApplyBtn">立即更新</button></div>'
+      );
+      const apply = $('#updApplyBtn');
+      if (apply) apply.onclick = () => applyWebUpdate();
+      if (manual) toast('发现新版本 v' + info.version, 'ok');
+    } else {
+      setUpdateUI('<div class="upd-ok">已是最新版本 v' + cur + ' ✓' + srcTag + '</div>');
+      if (manual) toast('已是最新版本', 'ok');
+    }
+    const at = $('#updAt');
+    if (at) at.textContent = '上次检查：' + new Date().toLocaleString('zh-CN', { hour12: false });
+  } catch (e) {
+    setUpdateUI('<div class="upd-err">检查失败：' + String(e.message || e).replace(/[<>&]/g, '') + '</div>' +
+      '<div class="upd-acts"><button class="mini-btn" id="updRetryBtn">重试</button></div>');
+    const r = $('#updRetryBtn');
+    if (r) r.onclick = () => checkUpdate(true);
+    if (manual) toast('检查失败，网络不通可换镜像再试', 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '检查更新'; }
+  }
+}
+
+/** 网页端「应用内更新」：清 SW 缓存 + 重载，确保拿到新的 index.html 与 app.js */
+async function applyWebUpdate() {
+  const btn = $('#updApplyBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '正在更新…'; }
+  setUpdateUI('<span class="upd-dim">正在清除旧缓存并重新加载…</span>');
+  try {
+    if (window.caches && caches.keys) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.update().catch(() => {})));
+    }
+  } catch (e) { /* 清缓存失败也继续重载 */ }
+  const u = new URL(location.href);
+  u.searchParams.set('u', Date.now().toString(36));
+  location.replace(u.toString());
+}
+
+/** 安卓安装包下载（网页端也给一个入口，方便手机上直接更新） */
+function openApkDownload() {
+  const info = _updInfo;
+  if (!info || !info.apk || !info.apk.urls || !info.apk.urls.length) {
+    toast('还没拿到安装包地址，先点「检查更新」', 'info');
+    return;
+  }
+  const url = info.apk.urls.find(Boolean);
+  window.open(url, '_blank', 'noopener');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // 刻意不做自动检查：只有你点「检查更新」时才联网，保持「纯本地」的定位。
+});
 /* 说明：浏览器直连 WebDAV 需要服务器返回 CORS 头（Nextcloud / Alist / 自建均可在面板里开启）。
    坚果云等未开放 CORS 的服务会被浏览器拦截，此时请用「导出文件」或自建反代。 */
 

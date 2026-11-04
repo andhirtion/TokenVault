@@ -6,7 +6,7 @@
 
 ## 👉 <https://andhirtion.github.io/TokenVault/> 👈
 
-60 个平台（含 20 个国内） · 折叠搜索选平台 · 主界面先选后进 · 自定义图标 · 指纹优先进入 · WebDAV 云备份 · AES-256-GCM 本地加密
+60 个平台（含 20 个国内） · 折叠搜索选平台 · 主界面先选后进 · 自定义图标 · 指纹优先进入 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密
 
 <br>
 
@@ -58,11 +58,14 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.3.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.3.0/TokenVault-1.3.0.apk) | 2.4 MB | 正式包，包名 `com.yg.tokenvault`，R8 混淆 |
+| [TokenVault-1.4.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.4.0/TokenVault-1.4.0.apk) | 2.3 MB | 正式包，包名 `com.yg.tokenvault`，R8 混淆 |
 | [TokenVault-1.3.0-debug.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.3.0/TokenVault-1.3.0-debug.apk) | 21 MB | 未混淆版，包名 `com.yg.tokenvault.debug`（可与正式包共存），正式包万一闪退就换它 |
 
 传到手机 → 点开 → 允许「安装未知来源应用」→ 装完打开。
 （全部版本见 [Releases](https://github.com/andhirtion/TokenVault/releases)。）
+
+**装过一次之后就不用再回这里了**：App 里「设置 → 关于 → 检查更新」能直接下新包并拉起安装器，
+国内网络会自己切镜像。
 
 - 要求 **Android 8.0（API 26）** 及以上；指纹解锁需要设备有可用的生物识别硬件并录入过指纹
 - debug 证书签名，上不了 Play 商店，自己用没问题
@@ -218,11 +221,21 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 - 换 PIN 重新生成随机盐、整体重加密（同时作废已绑定的指纹）
 - 自动锁定（1/3/5 分钟，切后台开始计时）、立即锁定清空内存密钥
 - 系统备份 / 设备迁移全部排除，密钥不会被云备份带走
-- **数据从不上传**：无服务端，加密解密与验证码计算全在本机
+- **数据不经过任何第三方**：没有自有服务端，加密解密与验证码计算全在本机；WebDAV 只连你自己
+  填的服务器，且传上去的仍是密文；检查更新只拉版本清单和安装包，不带任何本地数据
 
 **数据**
 - 导出 AES-256-GCM 加密备份（独立密码，可放网盘）——三类条目都在里面
 - 导入加密备份，或一批 `otpauth://` 文本批量导入
+
+**检查更新与应用内更新**（安卓 App 与网页版都有，网页版在「设置 → 关于」）
+- 「关于」里给出 **GitHub 仓库入口**、当前版本号与一键「检查更新」
+- 有新版时列出更新说明，点「立即更新」就在**应用内下载安装包**（约 2.3 MB），下载完自动拉起
+  系统安装器，不用再去浏览器里翻 Release 页面
+- **多源自动兜底**（这就是「镜像」）：版本清单依次试 Pages → jsDelivr → raw → gh-proxy →
+  ghfast → GitHub API；安装包依次试 GitHub → gh-proxy → ghfast → ghproxy。哪个通用哪个
+- 首次安装时系统会问一次「允许安装未知应用」，授权后每次更新都不再问
+- 下载的安装包缓存在 `cache/update/`，装完不用管，下次更新会覆盖
 
 **工具页**
 - 随机口令生成器（8–48 位，大小写 / 数字 / 符号开关）
@@ -327,6 +340,7 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 | 备份 | 独立密码再加密一次，明文永不落盘 |
 | WebDAV 云备份 | 上传的 `payload` 与本地库同构（PBKDF2 + AES-256-GCM），凭证只在本机 `localStorage`；服务器只见到密文文件名与字节数；连接走 `fetch` + Basic 认证，不含任何中转服务 |
 | 自定义图标 | 只在你本机做 `canvas` 裁切缩放后存进条目；「在线抓取」只请求你填的那个域名的 favicon，请求不带任何条目数据 |
+| 联网行为 | 只有三处会联网，且都由你主动触发：**检查更新**（拉版本清单与安装包）、**内置浏览器登录**（抓 otpauth）、**WebDAV 备份**（连你填的服务器）。清单请求不带任何本地数据，安装包只写进 `cache/update/`；更新包不校验签名以外的来源，也不上报任何统计 |
 | 系统备份 | 安卓 `allowBackup=false` + `dataExtractionRules` 全排除 |
 | 生物解锁（安卓） | `AndroidKeyStore` 里一把「每次使用都需认证」的 AES-256-GCM 密钥封住 PIN（`setUserAuthenticationRequired` + `setInvalidatedByBiometricEnrollment`），密钥不出安全区，新增/删除指纹即失效 |
 | 生物解锁（网页） | WebAuthn platform authenticator；支持 PRF 时包裹密钥不落盘，不支持时用本机随机密钥包裹 —— 属便利层，等价于把 PIN 加密存在本机 |
@@ -406,6 +420,20 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 
 `payload` 是用你的 PIN 派生的密钥加密的，**服务器管理员拿到文件也解不开**。
 
+**怎么更新？装不上怎么办？**
+
+「设置 → 关于 → 检查更新」（安卓 App 与网页版都有）。有新版会列出更新说明，点「立即更新」就在
+应用内下包（约 2.3 MB）并弹出系统安装器。
+
+1. **第一次会问「允许安装未知应用」**：弹窗点「设置」→ 打开「允许来自此来源的应用」→ 返回再点安装。
+   安卓 8 以上按应用授权，授权一次以后每次更新都不再问；
+2. **下载走镜像**：安装包依次试 GitHub → gh-proxy → ghfast → ghproxy；版本清单依次试
+   Pages → jsDelivr → raw → gh-proxy → ghfast → GitHub API。哪个通用哪个，所以国内直连不了
+   GitHub 也能更新（清单首选 `docs/version.json`，跟着 Pages 走）；
+3. **全失败会告诉你每个源的具体错误**，点「重试」再试一次；装完的包留在 `cache/update/`，不用管；
+4. **更新是覆盖安装，数据不动** —— 加密库在应用私有目录，安装包只写进 cache；
+5. **网页版不用手动更新**：刷新就是最新；点「立即更新」会清掉全部 CacheStorage 并带时间戳重载。
+
 **网页版扫码没反应？**
 `BarcodeDetector` 只有 Chrome / Edge 新版和部分 Safari 支持。不支持时点「扫二维码」会自动改为
 **从相册选图**；再不行就用「粘贴链接或密钥」。
@@ -477,7 +505,11 @@ python tools/shoot_bio.py    # 指纹开启 + 指纹解锁全流程（CDP 虚拟
 python tools/shoot_v13.py    # 国内平台列表（微信 / 支付宝 / 哔哩哔哩 / 京东）
 python tools/shoot_v14.py    # 主界面 → 进入 → 自定义图标上传 → 列表图标 → WebDAV 设置页
 python tools/shoot_v15.py    # WebDAV 全链路：测试连接 → 立即备份 → 清空本地 → 从云端恢复
+python tools/shoot_v16.py    # 关于页 + 检查更新三态（发现有新版本 / 已是最新 / 全源不可达）
 ```
+
+`shoot_v16.py` 用 `page.route` 拦掉 `version.json` 与 `api.github.com`，不真连 GitHub，
+用一个可变的 `STATE` 对象喂三种返回，所以断网也能跑。
 
 WebDAV 联调用本地假服务器（零依赖，纯内存，不落盘）：
 
@@ -500,6 +532,7 @@ python tools/fix_icon_fill.py # 单色图标 fill 改 currentColor，避免同�
 ```
 TokenVault/
 ├─ docs/                      # GitHub Pages 发布副本（= web/，改完 cp -r web docs）
+│  └─ version.json            # 更新检查的版本清单，检查更新的首选源（比 GitHub API 快且不被墙）
 ├─ dist/                      # 成品 APK
 ├─ web/                       # PWA，零依赖零构建
 │  ├─ index.html
@@ -519,11 +552,13 @@ TokenVault/
 │  │  ├─ ui/screens/          # Lock / Vault / Editor / Detail / Settings / Tools
 │  │  │                       # + ImportSheet（三选一）/ ScanScreen（CameraX 扫码）
 │  │  │                       # + LoginScreen（内置浏览器登录抓取，入口在主界面顶栏）
+│  │  ├─ update/Updater.kt    # 检查更新 / 多镜像下载 APK / 拉系统安装器
 │  │  ├─ VaultViewModel.kt    # 含 sessionPin、类型筛选、密码生成
 │  │  ├─ TokenVaultApp.kt     # 含指纹优先自动唤起
 │  │  └─ MainActivity.kt      # FragmentActivity（BiometricPrompt 宿主）+ otpauth:// 外链导入
 │  ├─ app/src/test/java/com/yg/tokenvault/   # CoreLogicTest 21 项 + OtpImportTest 12 项
 │  └─ app/src/main/res/       # 60 套品牌图标、自适应启动图标、字符串、备份排除规则
+│                             # + xml/updater_paths.xml（FileProvider 暴露 cache/update/）
 ├─ tools/
 │  ├─ serve.py                # 带正确 MIME 的本地服务器
 │  ├─ verify.js               # Web 版算法自检
@@ -540,6 +575,7 @@ TokenVault/
 │  ├─ shoot_v13.py            # 国内平台列表截图
 │  ├─ shoot_v14.py            # 主界面 / 自定义图标 / WebDAV 设置页截图
 │  ├─ shoot_v15.py            # WebDAV 全链路截图（测试连接 / 备份 / 恢复）
+│  ├─ shoot_v16.py            # 关于页 / 检查更新的三种状态截图（拦 GitHub，不真连）
 │  ├─ dav_mock.py             # 本地内存 WebDAV 假服务器（联调用，零依赖）
 │  ├─ fetch_icons.py          # 从 Simple Icons（CC0）拉官方品牌 path 重写 ICONS
 │  ├─ shoot_bio.py            # 指纹流程截图（CDP 虚拟认证器）
@@ -552,7 +588,7 @@ TokenVault/
 
 ## 更新日志
 
-**v1.4.0** — 网页端大改造（安卓端不出新包，功能不变）：
+**v1.4.0** — 网页端大改造 + 双端「关于 / 检查更新 / 应用内更新」：
 
 - **新增主界面（首屏）**：打开先看到四张大卡（动态验证码 / 账号密码 / 密钥笔记 / 设置与备份），
   **点哪张才加载 app.js 并进哪块**。以前是一进来就同步拉 `app.js` 再解锁，弱网会长时间白屏转圈；
@@ -572,8 +608,18 @@ TokenVault/
   （`tools/dav_mock.py`）跑通「备份 → 清空 → 恢复」全回路；
 - **UI 打磨**：主界面标题分两行不再挤出孤字、四张卡收紧、加「AES-256 本地加密 / 指纹·面容解锁 /
   WebDAV 备份」三枚特性标签；图标行与预览方块对齐；关于页版本号跟上。
+- **新增「关于」页与检查更新（安卓 + 网页都有）**：给出 GitHub 仓库入口、当前版本与一键「检查更新」；
+  有新版直接列出更新说明，点「立即更新」在**应用内下载 APK 并拉起系统安装器**，不用再回 Release 页面；
+- **多镜像兜底**：版本清单依次试 Pages → jsDelivr → raw → gh-proxy → ghfast → GitHub API，
+  安装包依次试 GitHub → gh-proxy → ghfast → ghproxy，国内直连失败也能更新。清单落在
+  `docs/version.json`（跟着 Pages 发布，比 GitHub API 快且不被墙），带文件名 / 大小 / SHA-256；
+- **安卓端同步到 1.4.0**（`versionCode 8`）：新增 `update/Updater.kt`（版本比对、多镜像下载、
+  进度回调、按大小校验、「小于 512KB 视为错误页」防护）、`res/xml/updater_paths.xml`（FileProvider
+  只暴露 `cache/update/`）、`REQUEST_INSTALL_PACKAGES` 权限；`SettingsScreen` 增加关于组、
+  检查更新入口与带进度条的更新弹窗。
 
-自检 30 + 39 项全过（`verify.js` / `verify_web_import.js`）。
+自检 30 + 39 项全过（`verify.js` / `verify_web_import.js`），安卓 33 项单测全过，
+网页端关于页三态用 `tools/shoot_v16.py` 跑通（发现有新版本 / 已是最新 / 全源不可达）。
 
 **v1.3.0** — 平台从 26 个扩到 **60 个**（新增国内 20 + 国际 14，每套配矢量品牌图标，网页与安卓同源）；
 **平台栏改成折叠 + 搜索**：默认只占一行，点开展开网格，支持中英文域名搜索与「全部 / 国内 / 国际 / 其他」分类；
