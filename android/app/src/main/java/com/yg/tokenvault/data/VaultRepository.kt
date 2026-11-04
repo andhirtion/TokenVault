@@ -105,9 +105,10 @@ class VaultRepository(context: Context) {
     fun mergeAll(incoming: List<TokenEntry>): Int {
         var added = 0
         for (e in incoming) {
-            // 同平台+同账号+同密钥视为重复
+            // 同平台+同账号+同密钥/同密码视为重复
             val dup = cache.any {
-                it.secret == e.secret && it.account == e.account && it.platformKey == e.platformKey
+                it.secret == e.secret && it.account == e.account &&
+                    it.platformKey == e.platformKey && it.password == e.password
             }
             if (!dup) {
                 cache.add(e.copy(sortOrder = cache.size))
@@ -139,6 +140,7 @@ class VaultRepository(context: Context) {
                 put("name", e.name)
                 put("account", e.account)
                 put("secret", e.secret)
+                put("password", e.password)
                 put("digits", e.digits)
                 put("period", e.period)
                 put("algo", e.algo)
@@ -167,6 +169,7 @@ class VaultRepository(context: Context) {
                     name = o.optString("name"),
                     account = o.optString("account"),
                     secret = o.optString("secret"),
+                    password = o.optString("password"),
                     digits = o.optInt("digits", 6),
                     period = o.optInt("period", 30),
                     algo = o.optString("algo", "SHA1"),

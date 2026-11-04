@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#08090d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="令牌库">
+<meta name="apple-mobile-web-app-title" content="钥匣">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<title>令牌库 · TokenVault</title>
+<title>钥匣 · KeyCoffer — 令牌与密码保险箱</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -36,7 +36,7 @@
       </svg>
     </div>
 
-    <h1 class="lock-title" id="lockTitle">令牌库</h1>
+    <h1 class="lock-title" id="lockTitle">钥匣</h1>
     <p class="lock-sub" id="lockSub">输入访问密码</p>
 
     <div class="pin-dots" id="pinDots">
@@ -78,8 +78,8 @@
   <header class="topbar" id="topbar">
     <div class="topbar-row">
       <div class="topbar-title">
-        <span class="eyebrow" id="eyebrow">全部令牌</span>
-        <h1 id="pageTitle">令牌库<span class="count" id="vaultCount">0</span></h1>
+        <span class="eyebrow" id="eyebrow">全部条目</span>
+        <h1 id="pageTitle">钥匣<span class="count" id="vaultCount">0</span></h1>
       </div>
       <div class="topbar-actions">
         <button class="grab-btn" id="grabBtn">获取</button>
@@ -104,6 +104,7 @@
       <button class="chip is-on" data-filter="all">全部</button>
       <button class="chip" data-filter="favorite">收藏</button>
       <button class="chip" data-filter="code">动态码</button>
+      <button class="chip" data-filter="login">账号密码</button>
       <button class="chip" data-filter="note">密钥本</button>
     </div>
   </header>
@@ -120,18 +121,18 @@
         <circle cx="60" cy="66" r="3" fill="rgba(139,92,246,.8)"/>
       </svg>
     </div>
-    <h2 id="emptyTitle">还没有令牌</h2>
+    <h2 id="emptyTitle">还没有条目</h2>
     <p id="emptyDesc">点击右下角 + 添加你的第一个验证器</p>
   </div>
 
-  <button class="fab" id="fab" aria-label="添加令牌">
+  <button class="fab" id="fab" aria-label="添加条目">
     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 
   <nav class="tabbar" id="tabbar">
     <button class="tab is-on" data-tab="vault">
       <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="4"/><path d="M7.5 10h9M7.5 14.5h5.5"/></svg>
-      <span>令牌</span>
+      <span>保险箱</span>
     </button>
     <button class="tab" data-tab="generator">
       <svg viewBox="0 0 24 24"><path d="M12 3.5 4 7v5.5c0 4.6 3.4 8.3 8 9.5 4.6-1.2 8-4.9 8-9.5V7l-8-3.5Z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg>
@@ -169,7 +170,7 @@
       <span id="detailRemain">30</span>
     </div>
   </div>
-  <div class="detail-progress"><i id="detailBar"></i></div>
+  <div class="detail-progress" id="detailProgressBar"><i id="detailBar"></i></div>
   <p class="detail-hint" id="detailHint">轻点验证码复制</p>
 
   <div class="detail-rows" id="detailRows"></div>
@@ -187,13 +188,14 @@
   <div class="sheet-grab"></div>
   <div class="editor-head">
     <button class="text-btn" id="editorCancel">取消</button>
-    <h2 id="editorTitle">添加令牌</h2>
+    <h2 id="editorTitle">添加条目</h2>
     <button class="text-btn accent" id="editorSave">保存</button>
   </div>
 
   <div class="editor-scroll">
     <div class="seg" id="editorSeg">
       <button class="is-on" data-kind="code">动态验证码</button>
+      <button data-kind="login">账号密码</button>
       <button data-kind="note">密钥笔记</button>
     </div>
 
@@ -215,6 +217,16 @@
         <input id="fSecret" type="text" placeholder="JBSWY3DPEHPK3PXP" autocomplete="off"
                spellcheck="false" autocapitalize="characters">
         <button class="mini-btn" id="pasteSecret">粘贴</button>
+      </div>
+    </div>
+
+    <div class="field" id="passwordField" hidden>
+      <label>密码 <em>与其它条目一起加密，不上云</em></label>
+      <div class="input-with-btn">
+        <input id="fPassword" type="password" placeholder="登录密码 / 应用专用密码"
+               autocomplete="off" spellcheck="false">
+        <button class="mini-btn" id="togglePassword" type="button">显示</button>
+        <button class="mini-btn" id="genPassword" type="button">随机</button>
       </div>
     </div>
 

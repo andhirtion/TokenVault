@@ -92,7 +92,11 @@ fun TokenCard(
             }
             Text(
                 text = entry.account.ifBlank {
-                    if (entry.type == EntryType.NOTE) "密钥笔记" else entry.platform.label
+                    when (entry.type) {
+                        EntryType.NOTE -> "密钥笔记"
+                        EntryType.LOGIN -> "账号密码"
+                        EntryType.CODE -> entry.platform.label
+                    }
                 },
                 style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
                 color = pal.text3,
@@ -108,6 +112,14 @@ fun TokenCard(
                 text = "笔记",
                 style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
                 color = pal.text3
+            )
+        } else if (entry.type == EntryType.LOGIN) {
+            Text(
+                text = if (entry.password.isBlank()) "无密码" else "账号密码 ›",
+                style = androidx.compose.material3.MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                ),
+                color = pal.accent
             )
         } else {
             CodeBlock(

@@ -52,8 +52,13 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
             get() {
                 var list = entries
                 filter?.let { f ->
-                    list = if (f == FILTER_FAV) list.filter { it.favorite }
-                    else list.filter { it.platformKey == f }
+                    list = when (f) {
+                        FILTER_FAV -> list.filter { it.favorite }
+                        FILTER_LOGIN -> list.filter { it.type == EntryType.LOGIN }
+                        FILTER_CODE -> list.filter { it.type == EntryType.CODE }
+                        FILTER_NOTE -> list.filter { it.type == EntryType.NOTE }
+                        else -> list.filter { it.platformKey == f }
+                    }
                 }
                 val q = query.trim()
                 if (q.isNotEmpty()) {
@@ -109,7 +114,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
             sessionPin = pin
             _state.value = _state.value.copy(hasVault = true, unlocked = true, entries = emptyList())
             startTicker()
-            toast("保险库已创建")
+            toast("保险箱已创建")
         } else {
             toast("创建失败，PIN 至少 4 位")
         }
@@ -288,6 +293,10 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
     fun generateSecret(length: Int = 20): String =
         com.yg.tokenvault.util.Base32.randomSecret(length)
 
+    /** 生成随机登录密码：大小写字母 + 数字 + 符号，至少各一个 */
+    fun generatePassword(length: Int = 20): String =
+        com.yg.tokenvault.util.PasswordGen.random(length)
+
     fun previewEntry(): TokenEntry = TokenEntry(
         name = "",
         platformKey = "custom",
@@ -308,6 +317,9 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
         const val FILTER_FAV = "__fav__"
+        const val FILTER_LOGIN = "__login__"
+        const val FILTER_CODE = "__code__"
+        const val FILTER_NOTE = "__note__"
         private const val K_THEME = "theme"
         private const val K_HIDE = "hideCode"
         private const val K_RING = "showRing"

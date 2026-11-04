@@ -25,6 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +48,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,7 +73,8 @@ fun EditorSheet(
     onDismiss: () -> Unit,
     onSave: (TokenEntry) -> Unit,
     onDelete: (String) -> Unit,
-    onGenerateSecret: () -> String
+    onGenerateSecret: () -> String,
+    onGeneratePassword: () -> String = { "" }
 ) {
     val pal = LocalPalette.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -80,6 +85,8 @@ fun EditorSheet(
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var account by remember { mutableStateOf(existing?.account ?: "") }
     var secret by remember { mutableStateOf(existing?.secret ?: "") }
+    var password by remember { mutableStateOf(existing?.password ?: "") }
+    var showPassword by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf(existing?.note ?: "") }
     var digits by remember { mutableStateOf(existing?.digits ?: 6) }
     var period by remember { mutableStateOf(existing?.period ?: 30) }
@@ -102,12 +109,17 @@ fun EditorSheet(
             error = "给这个令牌起个名字吧"
             return
         }
+        if (type == EntryType.LOGIN && account.isBlank() && password.isBlank()) {
+            error = "账号和密码至少填一项"
+            return
+        }
         val entry = (existing ?: TokenEntry()).copy(
             type = type,
             platformKey = platformKey,
             name = name.trim().ifBlank { Platforms.of(platformKey).label },
             account = account.trim(),
             secret = cleanSecret,
+            password = password,
             digits = if (isSteam) 5 else digits,
             period = period,
             algo = algo,
@@ -151,6 +163,7 @@ fun EditorSheet(
             // 类型切换
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TypeTab("动态验证码", type == EntryType.CODE) { type = EntryType.CODE }
+                TypeTab("账号密码", type == EntryType.LOGIN) { type = EntryType.LOGIN }
                 TypeTab("密钥笔记", type == EntryType.NOTE) { type = EntryType.NOTE }
             }
 
@@ -224,6 +237,45 @@ fun EditorSheet(
                 placeholder = "you@example.com",
                 keyboardType = KeyboardType.Email
             )
+
+            if (type == EntryType.LOGIN) {
+                Spacer(Modifier.height(11.dp))
+
+                Field(
+                    label = "密码",
+                    value = password,
+                    onChange = { password = it; error = null },
+                    placeholder = "登录密码 / 应用专用密码",
+                    masked = !showPassword,
+                    trailing = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (showPassword) Icons.Outlined.VisibilityOff
+                                else Icons.Outlined.Visibility,
+                                contentDescription = if (showPassword) "隐藏" else "显示",
+                                tint = pal.text3,
+                                modifier = Modifier
+                                    .size(19.dp)
+                                    .androidClickable { showPassword = !showPassword }
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = "随机",
+                                style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp),
+                                color = pal.accent,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .androidClickable {
+                                        password = onGeneratePassword()
+                                        showPassword = true
+                                        error = null
+                                    }
+                                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                )
+            }
 
             if (type == EntryType.CODE) {
                 Spacer(Modifier.height(11.dp))
@@ -478,6 +530,7 @@ private fun Field(
     placeholder: String = "",
     keyboardType: KeyboardType = KeyboardType.Text,
     singleLine: Boolean = true,
+    masked: Boolean = false,
     trailing: (@Composable () -> Unit)? = null
 ) {
     val pal = LocalPalette.current
@@ -489,6 +542,7 @@ private fun Field(
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 2,
         trailingIcon = trailing,
+        visualTransformation = if (masked) PasswordVisualTransformation() else VisualTransformation.None,
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = pal.text),
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType,

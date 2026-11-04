@@ -241,4 +241,31 @@ class CoreLogicTest {
         assertEquals(5, steam.digits)
         assertEquals("STEAM", steam.charset)
     }
+
+    // ── 随机密码 ────────────────────────────────────────────────
+
+    @Test
+    fun passwordGen_respectsLengthAndClasses() {
+        val pw = com.yg.tokenvault.util.PasswordGen.random(20)
+        assertEquals(20, pw.length)
+        assertTrue("必须含小写", pw.any { it in 'a'..'z' })
+        assertTrue("必须含大写", pw.any { it in 'A'..'Z' })
+        assertTrue("必须含数字", pw.any { it in '0'..'9' })
+        assertTrue("必须含符号", pw.any { !it.isLetterOrDigit() })
+        // 去掉易混淆字符
+        assertTrue("不该出现 l/I/1/O/0", pw.none { it in "lI1O0" })
+    }
+
+    @Test
+    fun passwordGen_isNotRepeating() {
+        val a = com.yg.tokenvault.util.PasswordGen.random(24)
+        val b = com.yg.tokenvault.util.PasswordGen.random(24)
+        assertTrue("两次生成不应相同", a != b)
+    }
+
+    @Test
+    fun passwordGen_clampsAbsurdLength() {
+        assertEquals(8, com.yg.tokenvault.util.PasswordGen.random(1).length)
+        assertEquals(64, com.yg.tokenvault.util.PasswordGen.random(999).length)
+    }
 }

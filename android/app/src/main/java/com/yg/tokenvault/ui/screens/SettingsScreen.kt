@@ -220,12 +220,12 @@ fun SettingsScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "TokenVault",
+                        text = "钥匣 KeyCoffer",
                         style = MaterialTheme.typography.titleMedium,
                         color = pal.text
                     )
                     Text(
-                        text = "版本 1.0.0 · 纯本地",
+                        text = "版本 1.2.0 · 纯本地",
                         style = MaterialTheme.typography.bodyMedium,
                         color = pal.text3
                     )

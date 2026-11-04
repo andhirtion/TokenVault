@@ -1,7 +1,7 @@
 {
-  "name": "令牌库 · TokenVault",
-  "short_name": "令牌库",
-  "description": "本地加密的两步验证令牌管理器，支持 Google、Microsoft、GitHub、Steam 等平台",
+  "name": "钥匣 · KeyCoffer",
+  "short_name": "钥匣",
+  "description": "本地加密的令牌与账号密码保险箱，支持 Google、Microsoft、GitHub、Steam、Telegram 等平台",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

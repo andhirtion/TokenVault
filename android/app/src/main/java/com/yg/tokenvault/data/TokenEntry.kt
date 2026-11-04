@@ -2,8 +2,8 @@ package com.yg.tokenvault.data
 
 import java.util.UUID
 
-/** 令牌类型：TOTP 动态码，或纯文本密钥笔记 */
-enum class EntryType { CODE, NOTE }
+/** 条目类型：TOTP 动态码、账号密码、纯文本密钥笔记 */
+enum class EntryType { CODE, LOGIN, NOTE }
 
 /**
  * 一条令牌。
@@ -17,6 +17,8 @@ data class TokenEntry(
     val name: String = "",
     val account: String = "",
     val secret: String = "",
+    /** 账号密码条目的密码原文（与 secret 一样随整库 AES-GCM 加密落盘） */
+    val password: String = "",
     val digits: Int = 6,
     val period: Int = 30,
     val algo: String = "SHA1",

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   令牌库 TokenVault — 核心逻辑
+   钥匣 KeyCoffer — 核心逻辑
    纯本地 · AES-256-GCM 加密 · RFC 6238 TOTP · Steam Guard
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
@@ -604,6 +604,7 @@ const state = {
   tab: 'vault',
   editingId: null,
   editorKind: 'code',
+  platformTouched: false,
   editorPlatform: 'google',
   unlocked: false,
   hiddenAt: 0,
@@ -648,10 +649,11 @@ function normalizeEntry(e) {
   const def = PLATFORMS[p];
   return {
     id: e.id || uid(),
-    type: e.type === 'note' ? 'note' : 'code',
+    type: e.type === 'note' ? 'note' : (e.type === 'login' ? 'login' : 'code'),
     platform: p,
     name: (e.name || def.label || '未命名').trim(),
     account: (e.account || '').trim(),
+    password: e.password || '',
     secret: (e.secret || '').toUpperCase().replace(/[\s\-]/g, ''),
     note: e.note || '',
     digits: [5, 6, 8].includes(+e.digits) ? +e.digits : def.digits,
@@ -686,6 +688,7 @@ function filteredEntries() {
   let arr = state.entries.slice();
   if (state.filter === 'favorite') arr = arr.filter(e => e.favorite);
   if (state.filter === 'code') arr = arr.filter(e => e.type === 'code');
+  if (state.filter === 'login') arr = arr.filter(e => e.type === 'login');
   if (state.filter === 'note') arr = arr.filter(e => e.type === 'note');
   const q = state.query.trim().toLowerCase();
   if (q) {
@@ -710,7 +713,8 @@ function renderList() {
   $('#eyebrow').textContent = state.query ? '搜索结果' : (
     state.filter === 'favorite' ? '收藏' :
     state.filter === 'code' ? '动态码' :
-    state.filter === 'note' ? '密钥本' : '全部令牌');
+    state.filter === 'login' ? '账号密码' :
+    state.filter === 'note' ? '密钥本' : '全部条目');
 
   if (!items.length) {
     list.innerHTML = '';
@@ -718,7 +722,7 @@ function renderList() {
     const t = $('#emptyTitle'), d = $('#emptyDesc');
     if (state.query) { t.textContent = '没有匹配项'; d.textContent = '换个关键词试试，或用平台名搜索'; }
     else if (state.filter !== 'all') { t.textContent = '这个分类还是空的'; d.textContent = '点右下角 + 添加，或切换回「全部」'; }
-    else { t.textContent = '还没有令牌'; d.textContent = '点击右下角 + 添加你的第一个验证器'; }
+    else { t.textContent = '保险箱还是空的'; d.textContent = '点右下角 + 添加第一个验证码、账号密码或密钥笔记'; }
     return;
   }
   emptyEl.hidden = true;
@@ -740,15 +744,20 @@ function renderList() {
       const masked = cfg.hideCode && !state.revealed.has(e.id);
       rightHtml = `<div class="card-code${masked ? ' masked' : ''}" data-code="${e.id}">${codeMarkup(null, masked)}</div>
         ${cfg.showRing ? `<div class="ring" data-ring="${e.id}">${ringSvg(1)}</div>` : ''}`;
+    } else if (e.type === 'login') {
+      rightHtml = `<div class="card-code pwd-code">账号密码 ›</div>`;
     } else {
       rightHtml = `<div class="card-code note-code">密钥本 ›</div>`;
     }
+
+    const acctFallback = e.type === 'note' ? '点击查看内容'
+      : (e.type === 'login' ? '点击查看账号密码' : `${e.digits} 位动态码`);
 
     card.innerHTML = `
       <div class="pf-icon" style="${pf.style}">${pf.svg}</div>
       <div class="card-body">
         <div class="card-name">${esc(e.name)}</div>
-        <div class="card-acct">${esc(e.account || (e.type === 'note' ? '点击查看内容' : '未填账号'))}</div>
+        <div class="card-acct">${esc(e.account || acctFallback)}</div>
       </div>
       <div class="card-right">${rightHtml}</div>`;
     frag.appendChild(card);
@@ -932,12 +941,14 @@ function openDetail(id) {
   iconBox.style.cssText = pf.style;
   iconBox.innerHTML = pf.svg;
   $('#detailName').textContent = e.name;
-  $('#detailAccount').textContent = e.account || (e.type === 'note' ? '密钥笔记' : '未填账号');
+  $('#detailAccount').textContent = e.account
+    || (e.type === 'note' ? '密钥笔记' : (e.type === 'login' ? '点击查看账号密码' : '未填账号'));
 
   const codeWrap = $('#detailCodeWrap');
   codeWrap.hidden = e.type !== 'code';
   $('#detailHint').hidden = e.type !== 'code';
-  $('#detailCopySecret').hidden = e.type === 'note' || !e.secret;
+  $('#detailProgressBar').hidden = e.type !== 'code';
+  $('#detailCopySecret').hidden = e.type !== 'code' || !e.secret;
 
   const rows = $('#detailRows');
   rows.innerHTML = '';
@@ -948,10 +959,42 @@ function openDetail(id) {
     rows.appendChild(r);
   };
 
+  const mask = pw => '•'.repeat(Math.min(Math.max(pw.length, 6), 14));
+  const addPwRow = pw => {
+    const r = el('div', 'detail-row pw-row');
+    const key = el('span', '', '密码');
+    const val = el('b', 'note-val');
+    val.id = 'detailPw';
+    let shown = false;
+    val.textContent = mask(pw);
+    const showBtn = el('button', 'mini-btn', '显示');
+    showBtn.id = 'detailPwShow';
+    showBtn.type = 'button';
+    showBtn.onclick = () => {
+      shown = !shown;
+      val.textContent = shown ? pw : mask(pw);
+      showBtn.textContent = shown ? '隐藏' : '显示';
+      haptic(6);
+    };
+    const copyBtn = el('button', 'mini-btn', '复制');
+    copyBtn.id = 'detailPwCopy';
+    copyBtn.type = 'button';
+    copyBtn.onclick = () => copyText(pw, '密码已复制');
+    const btns = el('div', 'pw-btns');
+    btns.append(showBtn, copyBtn);
+    r.append(key, val, btns);
+    rows.appendChild(r);
+  };
+
   if (e.type === 'code') {
     addRow('平台', PLATFORMS[e.platform].label);
     addRow('算法', e.algo + ' · ' + e.period + 's · ' + e.digits + '位');
     addRow('密钥', formatSecret(e.secret));
+  } else if (e.type === 'login') {
+    addRow('平台', PLATFORMS[e.platform].label);
+    addRow('账号', e.account);
+    if (e.password) addPwRow(e.password);
+    if (e.note) addRow('备注', e.note, true);
   } else {
     addRow('类型', '密钥笔记');
     addRow('内容', e.note, true);
@@ -965,6 +1008,28 @@ function openDetail(id) {
 
 function formatSecret(s) {
   return (s || '').replace(/(.{4})/g, '$1 ').trim();
+}
+
+/* 生成随机口令：四类字符各至少一个，不出现易混字符 */
+function randomPassword(len = 20) {
+  const sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnopqrstuvwxyz', '23456789', '!@#$%^&*-_=+?'];
+  const all = sets.join('');
+  const pick = set => set[secureRandInt(set.length)];
+  const chars = sets.map(pick);
+  while (chars.length < len) chars.push(pick(all));
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = secureRandInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.slice(0, len).join('');
+}
+
+function secureRandInt(max) {
+  const buf = new Uint32Array(1);
+  const limit = Math.floor(0xFFFFFFFF / max) * max;
+  let v;
+  do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+  return v % max;
 }
 
 function updateDetailLive() {
@@ -1034,6 +1099,7 @@ function buildPlatformGrid() {
   grid.addEventListener('click', ev => {
     const btn = ev.target.closest('.pf-opt');
     if (!btn) return;
+    state.platformTouched = true;
     selectPlatform(btn.dataset.pf);
     haptic(6);
   });
@@ -1059,6 +1125,8 @@ function setEditorKind(kind) {
   $$('#editorSeg button').forEach(b => b.classList.toggle('is-on', b.dataset.kind === kind));
   $('#secretField').hidden = kind !== 'code';
   $('#noteField').hidden = kind !== 'note';
+  $('#passwordField').hidden = kind !== 'login';
+  if (kind !== 'login') { $('#fPassword').type = 'password'; $('#togglePassword').textContent = '显示'; }
   $('#advToggle').hidden = kind !== 'code';
   if (kind !== 'code') { $('#advBody').hidden = true; $('#advToggle').classList.remove('is-open'); }
 }
@@ -1066,7 +1134,7 @@ function setEditorKind(kind) {
 function openEditor(id = null) {
   state.editingId = id;
   const isEdit = !!id;
-  $('#editorTitle').textContent = isEdit ? '编辑令牌' : '添加令牌';
+  $('#editorTitle').textContent = isEdit ? '编辑条目' : '添加条目';
 
   const e = isEdit ? state.entries.find(x => x.id === id) : null;
   state.editorPlatform = e ? e.platform : 'google';
@@ -1074,6 +1142,9 @@ function openEditor(id = null) {
   $('#fName').value = e ? e.name : '';
   $('#fAccount').value = e ? e.account : '';
   $('#fSecret').value = e ? e.secret : '';
+  $('#fPassword').value = e ? (e.password || '') : '';
+  $('#fPassword').type = 'password';
+  $('#togglePassword').textContent = '显示';
   $('#fNote').value = e ? e.note : '';
   $('#fDigits').value = String(e ? e.digits : 6);
   $('#fPeriod').value = String(e ? e.period : 30);
@@ -1082,6 +1153,7 @@ function openEditor(id = null) {
   $('#advToggle').classList.remove('is-open');
 
   setEditorKind(e ? e.type : 'code');
+  state.platformTouched = !!e;
   selectPlatform(state.editorPlatform);
   $$('#platformGrid .pf-opt').forEach(b => b.classList.toggle('is-on', b.dataset.pf === state.editorPlatform));
 
@@ -1094,13 +1166,19 @@ async function saveEditor() {
   const kind = state.editorKind;
   const err = m => { toast(m, 'err'); return false; };
 
+  // 没手动点过平台徽标时，按名称 / 账号自动归位（例如输入 GitHub 就落到 GitHub）
+  let platform = state.editorPlatform;
+  if (!state.platformTouched) {
+    const guess = _guessPlatform($('#fName').value.trim() || $('#fAccount').value.trim());
+    if (guess && guess !== 'custom') platform = guess;
+  }
+
   if (kind === 'code') {
     const name = $('#fName').value.trim();
     if (!name) return err('请填写名称');
     const rawSecret = $('#fSecret').value.trim();
     if (!rawSecret) return err('请填写密钥');
     if (!isValidSecret(rawSecret)) return err('密钥格式不正确（应为 Base32）');
-    const platform = state.editorPlatform;
     const item = normalizeEntry({
       id: state.editingId || uid(),
       type: 'code',
@@ -1118,6 +1196,25 @@ async function saveEditor() {
     // 先验证能算出码
     try { await totp(item.secret, item); } catch (ex) { return err('密钥无法生成验证码，请检查'); }
     upsertEntry(item);
+  } else if (kind === 'login') {
+    const name = $('#fName').value.trim();
+    const account = $('#fAccount').value.trim();
+    const password = $('#fPassword').value;
+    if (!name) return err('请填写名称');
+    if (!account && !password.trim()) return err('账号和密码至少填一项');
+    const prev = state.editingId ? state.entries.find(x => x.id === state.editingId) : null;
+    const item = normalizeEntry({
+      id: state.editingId || uid(),
+      type: 'login',
+      platform,
+      name,
+      account,
+      password,
+      note: prev ? prev.note : '',
+      favorite: prev ? prev.favorite : false,
+      createdAt: prev ? prev.createdAt : Date.now()
+    });
+    upsertEntry(item);
   } else {
     const name = $('#fName').value.trim();
     const note = $('#fNote').value;
@@ -1126,7 +1223,7 @@ async function saveEditor() {
     const item = normalizeEntry({
       id: state.editingId || uid(),
       type: 'note',
-      platform: state.editorPlatform,
+      platform,
       name,
       account: $('#fAccount').value.trim(),
       note,
@@ -1265,6 +1362,7 @@ async function enableBiometric() {
     cfg.bio = true;
     saveCfg();
     await refreshBioButton();
+    updateLockHint();
     if (typeof bindSettingsPage === 'function' && $('#pageHost')) bindSettingsPage($('#pageHost'));
     haptic(14);
     toast('指纹解锁已开启', 'ok');
@@ -1282,13 +1380,18 @@ function disableBiometric(silent) {
   cfg.bioKey = '';
   saveCfg();
   refreshBioButton();
+  updateLockHint();
   if (typeof bindSettingsPage === 'function' && $('#pageHost')) bindSettingsPage($('#pageHost'));
   if (had && !silent) toast('指纹解锁已关闭');
 }
 
-async function bioUnlock() {
-  if (!cfg.bio || !cfg.bioId) return;
-  if (!await bioAvailable()) { toast('这台设备当前不支持指纹或面容', 'err'); return; }
+async function bioUnlock(opts) {
+  const silent = !!(opts && opts.silent);
+  if (!cfg.bio || !cfg.bioId) return false;
+  if (!await bioAvailable()) {
+    if (!silent) toast('这台设备当前不支持指纹或面容', 'err');
+    return false;
+  }
   try {
     const cred = await navigator.credentials.get({
       publicKey: {
@@ -1299,7 +1402,7 @@ async function bioUnlock() {
         extensions: { prf: { eval: { first: BIO_PRF_SALT } } }
       }
     });
-    if (!cred) return;
+    if (!cred) return false;
     const key = await _bioWrapKey(_bioPrfOf(cred), false);
     if (!key) throw new Error('包裹密钥不可用');
     const pin = await _bioUnseal(cfg.bioPin, key);
@@ -1308,10 +1411,31 @@ async function bioUnlock() {
       disableBiometric(true);
       pinShake('指纹解锁已失效，请用密码进入后重新开启');
     }
+    return ok;
   } catch (e) {
-    if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) return;
-    toast('指纹验证失败：' + ((e && e.message) || '未知错误'), 'err');
+    if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) return false;
+    if (!silent) toast('指纹验证失败：' + ((e && e.message) || '未知错误'), 'err');
+    return false;
   }
+}
+
+/* 指纹优先级最高：进入应用时先自动唤起系统指纹，用户取消才落到 PIN 键盘 */
+let bioAutoTried = false;
+async function autoBioPrompt() {
+  if (bioAutoTried || !cfg.bio || !cfg.bioId || state.unlocked) return;
+  if (!await bioAvailable()) return;
+  bioAutoTried = true;
+  await new Promise(r => setTimeout(r, 380));
+  if (state.unlocked) return;
+  bioUnlock({ silent: true });
+}
+
+function updateLockHint() {
+  const bio = !!(cfg.bio && cfg.bioId);
+  $('#lockSub').textContent = bio ? '指纹一键进入，或输入访问密码' : '输入访问密码';
+  const foot = $('.lock-foot');
+  if (foot && !HAS_SUBTLE) foot.textContent = '⚠ 当前为 file:// 打开，仅 SHA-1 与降级加密生效';
+  else if (foot && bio) foot.textContent = '指纹验证由系统完成 · 数据仅加密保存在本机';
 }
 
 /* 用密码解锁（PIN 与指纹共用） */
@@ -1397,7 +1521,7 @@ async function onPinComplete() {
       state.entries = [];
       currentPin = pin;
       await unlock();
-      toast('令牌库已创建', 'ok');
+      toast('保险箱已创建', 'ok');
     } catch (e) {
       pinShake('创建失败：' + e.message);
     }
@@ -1473,8 +1597,8 @@ function lockApp() {
   pinMode = 'unlock';
   pinBuffer = '';
   renderPinDots();
-  $('#lockTitle').textContent = '令牌库';
-  $('#lockSub').textContent = '输入访问密码';
+  $('#lockTitle').textContent = '钥匣';
+  updateLockHint();
   $('#pinError').textContent = '';
   const lock = $('#lockScreen');
   lock.hidden = false;
@@ -1496,7 +1620,7 @@ function syncTopbar(tab) {
   const isVault = tab === 'vault';
   const title = $('#pageTitle');
   const tn = Array.prototype.find.call(title.childNodes, n => n.nodeType === 3);
-  if (tn) tn.nodeValue = isVault ? '令牌库' : (tab === 'generator' ? '安全工具' : '设置');
+  if (tn) tn.nodeValue = isVault ? '钥匣' : (tab === 'generator' ? '安全工具' : '设置');
   $('#vaultCount').hidden = !isVault;
   $('#filterChips').hidden = !isVault;
   $('#searchBtn').hidden = !isVault;
@@ -1671,7 +1795,7 @@ function settingsPageHtml() {
       <div class="set-group-label">关于</div>
       <div class="set-row">
         <div class="set-row-main">
-          <span>令牌库 TokenVault</span>
+          <span>钥匣 KeyCoffer</span>
           <em>v1.0 · 纯本地 · 无网络请求 · ${HAS_SUBTLE ? 'WebCrypto 已启用' : '降级模式'}</em>
         </div>
       </div>
@@ -2130,7 +2254,7 @@ function handleCardTap(card, ev) {
   // 点左侧图标 → 详情
   if (ev.target.closest('.pf-icon')) { openDetail(id); return; }
 
-  if (e.type === 'note') { openDetail(id); return; }
+  if (e.type === 'note' || e.type === 'login') { openDetail(id); return; }
 
   // 隐藏模式下第一次点击 = 显示
   if (cfg.hideCode && !state.revealed.has(id)) {
@@ -2278,6 +2402,21 @@ function bindGlobal() {
     }
   };
 
+  // 密码显示 / 随机生成
+  $('#togglePassword').onclick = () => {
+    const f = $('#fPassword');
+    f.type = f.type === 'password' ? 'text' : 'password';
+    $('#togglePassword').textContent = f.type === 'password' ? '显示' : '隐藏';
+    haptic(6);
+  };
+  $('#genPassword').onclick = () => {
+    const pw = randomPassword(20);
+    $('#fPassword').value = pw;
+    $('#fPassword').type = 'text';
+    $('#togglePassword').textContent = '隐藏';
+    copyText(pw, '已生成并复制');
+  };
+
   // 顶部齿轮 → 设置页
   $('#settingsBtn').onclick = () => switchTab('settings');
 
@@ -2350,12 +2489,13 @@ async function boot() {
     $('#lockSub').textContent = '6 位数字 · 用于保护你的令牌';
   } else {
     pinMode = 'unlock';
-    $('#lockTitle').textContent = '令牌库';
-    $('#lockSub').textContent = '输入访问密码';
+    $('#lockTitle').textContent = '钥匣';
+    updateLockHint();
   }
   renderPinDots();
   reloadFallbackHint();
   refreshBioButton();
+  if (pinMode === 'unlock') autoBioPrompt();
 
   // 预热：无数据的空库也需要 key 已存在
   if (hasData && cfg.salt && HAS_SUBTLE) { /* 等用户输入 PIN 后派生 */ }
@@ -2363,5 +2503,5 @@ async function boot() {
 
 document.addEventListener('DOMContentLoaded', boot);
 window.addEventListener('error', ev => {
-  console.error('[TokenVault]', ev.error || ev.message);
+  console.error('[KeyCoffer]', ev.error || ev.message);
 });

@@ -124,6 +124,28 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
         bioOn = BiometricVault.isEnabled(appContext)
     }
 
+    // 指纹优先：已开启指纹时，落到锁屏就直接弹系统生物识别，PIN 只作兜底
+    var bioAutoAsked by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(bioOn, bioOk, state.unlocked, state.hasVault) {
+        if (state.unlocked) {
+            bioAutoAsked = false
+            return@LaunchedEffect
+        }
+        if (bioAutoAsked) return@LaunchedEffect
+        if (!state.hasVault || !bioOn || !bioOk) return@LaunchedEffect
+        val act = hostActivity ?: return@LaunchedEffect
+        bioAutoAsked = true
+        delay(420)
+        BiometricVault.unlock(
+            activity = act,
+            onPin = { pin -> if (pin != null) vm.unlock(pin) },
+            onNotice = { msg ->
+                vm.toast(msg)
+                bioOn = BiometricVault.isEnabled(appContext)
+            }
+        )
+    }
+
     // 消息流 → 轻提示
     androidx.compose.runtime.LaunchedEffect(Unit) {
         vm.messages.collect { msg ->
@@ -358,7 +380,8 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                     vm.deleteEntry(id)
                     editorId = null
                 },
-                onGenerateSecret = { vm.generateSecret(20) }
+                onGenerateSecret = { vm.generateSecret(20) },
+                onGeneratePassword = { vm.generatePassword(20) }
             )
         }
     }

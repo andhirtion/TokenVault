@@ -136,7 +136,7 @@ fun LockScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            text = "TokenVault",
+            text = "钥匣",
             style = MaterialTheme.typography.headlineMedium,
             color = pal.text
         )
@@ -147,8 +147,8 @@ fun LockScreen(
             text = when (stage) {
                 Stage.SETUP -> "设置 6 位访问 PIN"
                 Stage.CONFIRM -> "再次输入以确认"
-                Stage.UNLOCK -> if (onBiometric != null) "输入 PIN，或点指纹直接进入"
-                else "输入 PIN 解锁保险库"
+                Stage.UNLOCK -> if (onBiometric != null) "指纹一键进入，或输入 PIN"
+                else "输入 PIN 解锁保险箱"
             },
             style = MaterialTheme.typography.bodyMedium,
             color = pal.text2,

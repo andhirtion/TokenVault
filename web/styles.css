@@ -509,6 +509,13 @@ html[data-theme="light"] .detail-ring .ring-bg { stroke: rgba(15,23,42,.13); }
 .detail-row b.note-val { font-family: var(--font); white-space: pre-wrap; word-break: break-all;
   text-align: left; max-height: 130px; overflow: auto; font-weight: 400; line-height: 1.55; }
 
+/* 账号密码条目的密码行：圆点占位 + 显示/复制 */
+.detail-row.pw-row b { letter-spacing: .10em; font-size: 13.5px; }
+.pw-btns { display: flex; gap: 6px; flex: none; }
+.pw-btns .mini-btn { height: 28px; padding: 0 11px; font-size: 12px; }
+.card-code.pwd-code { font-family: var(--font); font-size: 13px; letter-spacing: 0;
+  color: var(--accent); font-weight: 600; }
+
 .detail-actions { display: flex; gap: 9px; margin-top: 18px; }
 .btn {
   flex: 1; height: 46px; border-radius: var(--r-sm); font-size: 14.5px; font-weight: 600;

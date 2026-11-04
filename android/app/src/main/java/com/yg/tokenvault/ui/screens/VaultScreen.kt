@@ -98,13 +98,13 @@ fun VaultScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "令牌库",
+                        text = "钥匣",
                         style = MaterialTheme.typography.headlineMedium,
                         color = pal.text
                     )
                     Text(
-                        text = if (state.entries.isEmpty()) "离线生成 · 仅存本机"
-                        else "${state.entries.size} 个令牌 · 离线生成",
+                        text = if (state.entries.isEmpty()) "令牌 · 账号密码 · 笔记，仅存本机"
+                        else "${state.entries.size} 个条目 · 仅存本机",
                         style = MaterialTheme.typography.bodyMedium,
                         color = pal.text3
                     )
@@ -162,6 +162,30 @@ fun VaultScreen(
                             selected = state.filter == VaultViewModel.FILTER_FAV,
                             onClick = { onFilter(VaultViewModel.FILTER_FAV) },
                             icon = true
+                        )
+                    }
+                    if (state.entries.any { it.type == EntryType.LOGIN }) {
+                        FilterChip(
+                            label = "账号密码",
+                            selected = state.filter == VaultViewModel.FILTER_LOGIN,
+                            onClick = {
+                                onFilter(
+                                    if (state.filter == VaultViewModel.FILTER_LOGIN) null
+                                    else VaultViewModel.FILTER_LOGIN
+                                )
+                            }
+                        )
+                    }
+                    if (state.entries.any { it.type == EntryType.CODE }) {
+                        FilterChip(
+                            label = "动态码",
+                            selected = state.filter == VaultViewModel.FILTER_CODE,
+                            onClick = {
+                                onFilter(
+                                    if (state.filter == VaultViewModel.FILTER_CODE) null
+                                    else VaultViewModel.FILTER_CODE
+                                )
+                            }
                         )
                     }
                     used.forEach { key ->

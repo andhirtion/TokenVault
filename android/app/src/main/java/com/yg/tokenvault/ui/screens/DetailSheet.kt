@@ -243,8 +243,17 @@ fun DetailSheet(
 
             // 信息表
             InfoRow("账号", entry.account.ifBlank { "—" })
-            InfoRow("类型", if (entry.type == EntryType.CODE) "TOTP 动态验证码" else "密钥笔记")
-            if (entry.type == EntryType.CODE) {
+            InfoRow(
+                "类型",
+                when (entry.type) {
+                    EntryType.CODE -> "TOTP 动态验证码"
+                    EntryType.LOGIN -> "账号密码"
+                    EntryType.NOTE -> "密钥笔记"
+                }
+            )
+            if (entry.type == EntryType.LOGIN) {
+                PwRow(entry.password)
+            } else if (entry.type == EntryType.CODE) {
                 InfoRow("算法", "${entry.algo} · ${entry.digits} 位 · ${entry.period}s")
                 InfoRow("密钥", maskSecret(entry.secret))
             }
@@ -295,6 +304,60 @@ private fun InfoRow(label: String, value: String) {
             modifier = Modifier.weight(1f)
         )
     }
+}
+
+@Composable
+private fun PwRow(password: String) {
+    val pal = LocalPalette.current
+    val clipboard = LocalClipboardManager.current
+    var show by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "密码",
+            style = MaterialTheme.typography.bodyMedium,
+            color = pal.text3,
+            modifier = Modifier.width(64.dp)
+        )
+        Text(
+            text = when {
+                password.isBlank() -> "—"
+                show -> password
+                else -> "•".repeat(password.length.coerceIn(6, 16))
+            },
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                letterSpacing = if (show) 0.sp else 1.4.sp
+            ),
+            color = if (password.isBlank()) pal.text3 else pal.text,
+            modifier = Modifier.weight(1f)
+        )
+        if (password.isNotBlank()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                PwChip(if (show) "隐藏" else "显示") { show = !show }
+                PwChip("复制") { clipboard.setText(AnnotatedString(password)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PwChip(label: String, onClick: () -> Unit) {
+    val pal = LocalPalette.current
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelLarge.copy(fontSize = 11.sp),
+        color = pal.accent,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(pal.surfaceHi)
+            .androidClickable(onClick)
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    )
 }
 
 @Composable
