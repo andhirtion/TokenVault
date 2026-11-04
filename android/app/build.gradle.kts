@@ -10,6 +10,26 @@ android {
     // AGP 8.7 的默认 build-tools 是 34.0.0，这里跟 compileSdk 对齐用 35.0.0
     buildToolsVersion = "35.0.0"
 
+    signingConfigs {
+        // Fixed keystore: every build is signed by the same keycoffer.jks.
+        // Changing it breaks in-place upgrades: users would have to uninstall (and lose data).
+        create("release") {
+            val fixed = file("../keystore/keycoffer.jks")
+            // 固定签名文件不进公开仓库：本机有就用它，没有就退回本机 debug 签名（能构建，但签名会变）
+            if (fixed.exists()) {
+                storeFile = fixed
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            } else {
+                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.yg.tokenvault"
         minSdk = 26
@@ -28,7 +48,7 @@ android {
                 "proguard-rules.pro"
             )
             // 用 debug 签名方便本地直接生成可安装包；正式发布请替换为自有 keystore
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             applicationIdSuffix = ".debug"

@@ -10,7 +10,8 @@
     "新增「检查更新」：自动比对线上最新版本，有新版就显示版本号与更新说明",
     "应用内更新：下载好安装包后直接拉起系统安装器，不用再跳浏览器手动装",
     "版本清单与安装包都会自动切镜像（GitHub / gh-proxy / ghfast / ghproxy），哪个通用哪个",
-    "网页版 1.4.0 同步上线：主界面先选后进、平台图标全部换成官方版、可自定义图标、WebDAV 云备份"
+    "网页版 1.4.0 同步上线：主界面先选后进、平台图标全部换成官方版、可自定义图标、WebDAV 云备份",
+    "签名已固定成与 1.3.0 同一把：从旧版直接覆盖安装即可，不用卸载，本地数据保留"
   ],
   "repo": "https://github.com/andhirtion/TokenVault",
   "web": "https://andhirtion.github.io/TokenVault/",
@@ -18,7 +19,7 @@
   "apk": {
     "name": "TokenVault-1.4.0.apk",
     "size": 2443013,
-    "sha256": "e1c248d7cabd3336fa373d7b9b4f8f98452bea68081f9877eaacfedf238b6a4e",
+    "sha256": "1256f4a30e6309bf44032961764bac6d7caa641a3e8586f67ac6b748f370c6b4",
     "urls": [
       "https://github.com/andhirtion/TokenVault/releases/download/v1.4.0/TokenVault-1.4.0.apk",
       "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.4.0/TokenVault-1.4.0.apk",

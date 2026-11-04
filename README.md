@@ -68,7 +68,9 @@
 国内网络会自己切镜像。
 
 - 要求 **Android 8.0（API 26）** 及以上；指纹解锁需要设备有可用的生物识别硬件并录入过指纹
-- debug 证书签名，上不了 Play 商店，自己用没问题
+- 签名固定为仓库里的 `android/keystore/keycoffer.jks`（自签，上不了 Play 商店，自己用没问题）。
+  **这把 keystore 不能换** —— 换签名后已装的版本无法覆盖升级，只能卸载重装，本地加密库会跟着丢；
+  换电脑构建时请把它一起带走，或在 `android/app/build.gradle.kts` 的 `signingConfigs` 里指回它
 - 装之前先联网同步一次系统时间 —— TOTP 严格依赖时间
 
 ### ③ 本地跑源码
@@ -431,7 +433,9 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
    Pages → jsDelivr → raw → gh-proxy → ghfast → GitHub API。哪个通用哪个，所以国内直连不了
    GitHub 也能更新（清单首选 `docs/version.json`，跟着 Pages 走）；
 3. **全失败会告诉你每个源的具体错误**，点「重试」再试一次；装完的包留在 `cache/update/`，不用管；
-4. **更新是覆盖安装，数据不动** —— 加密库在应用私有目录，安装包只写进 cache；
+4. **更新是覆盖安装，数据不动** —— 加密库在应用私有目录，安装包只写进 cache。前提是新包与旧包
+   **签名一致**，仓库里那把 `android/keystore/keycoffer.jks` 就是为了保证这点；万一还是提示
+   「签名不一致」，说明设备上那个包是别的密钥签的，只能：旧版里「导出备份」→ 卸载 → 装新包 → 导入备份；
 5. **网页版不用手动更新**：刷新就是最新；点「立即更新」会清掉全部 CacheStorage 并带时间戳重载。
 
 **网页版扫码没反应？**
