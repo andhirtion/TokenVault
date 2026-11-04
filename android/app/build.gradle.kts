@@ -92,4 +92,6 @@ dependencies {
 
     // 本地 JVM 单元测试：验证 TOTP/Base32 算法（不依赖 Android 框架）
     testImplementation("junit:junit:4.13.2")
+    // local JVM test dep: real org.json instead of Android stub
+    testImplementation(files("libs/json-20240303.jar"))
 }

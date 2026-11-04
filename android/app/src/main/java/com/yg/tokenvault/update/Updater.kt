@@ -51,7 +51,7 @@ object Updater {
         "https://ghproxy.net/"
     )
 
-    private fun verSources(stamp: Long): List<Pair<String, String>> = listOf(
+    internal fun verSources(stamp: Long): List<Pair<String, String>> = listOf(
         "Pages" to "${PAGES_URL}version.json?v=$stamp",
         "jsDelivr" to "https://cdn.jsdelivr.net/gh/$REPO_SLUG@main/docs/version.json?v=$stamp",
         "raw" to "https://raw.githubusercontent.com/$REPO_SLUG/main/docs/version.json?v=$stamp",
@@ -97,7 +97,7 @@ object Updater {
         }
     }
 
-    private fun parseInfo(raw: String, source: String): UpdateInfo? {
+    internal fun parseInfo(raw: String, source: String): UpdateInfo? {
         val j = try { JSONObject(raw) } catch (e: Exception) { return null }
         val version = j.optString("version").ifBlank {
             j.optString("tag_name").removePrefix("v")

@@ -93,7 +93,7 @@ python tools/serve.py 8777     # 必须是它，不能用 python -m http.server�
 ```bash
 bash tools/build_apk.sh            # debug 包
 bash tools/build_apk.sh release    # 正式包
-bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
+bash tools/build_apk.sh test       # 跑 50 项 JVM 单元测试
 ```
 
 `.toolchain/` 已备好 **JDK 17 + Android SDK Platform 35 + Build-Tools 35.0.0 + Gradle 8.11.1**，
@@ -467,7 +467,7 @@ Telegram 的两步验证是**自设密码**，不是 TOTP 动态码，没有二�
 ```bash
 node tools/verify.js             # Web 版算法（30 项）
 node tools/verify_web_import.js  # Web 版「获取令牌」解析层（39 项）
-bash tools/build_apk.sh test     # 安卓版（33 项 JVM 单元测试）
+bash tools/build_apk.sh test     # 安卓版（50 项 JVM 单元测试）
 ```
 
 | 覆盖项 | Web 算法 | Web 导入 | 安卓 |
@@ -618,7 +618,7 @@ TokenVault/
   只暴露 `cache/update/`）、`REQUEST_INSTALL_PACKAGES` 权限；`SettingsScreen` 增加关于组、
   检查更新入口与带进度条的更新弹窗。
 
-自检 30 + 39 项全过（`verify.js` / `verify_web_import.js`），安卓 33 项单测全过，
+自检 30 + 39 项全过（`verify.js` / `verify_web_import.js`），安卓 50 项单测全过（TOTP 21 / 导入 12 / 更新 17），
 网页端关于页三态用 `tools/shoot_v16.py` 跑通（发现有新版本 / 已是最新 / 全源不可达）。
 
 **v1.3.0** — 平台从 26 个扩到 **60 个**（新增国内 20 + 国际 14，每套配矢量品牌图标，网页与安卓同源）；
