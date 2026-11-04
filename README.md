@@ -6,14 +6,14 @@
 
 ## 👉 <https://andhirtion.github.io/TokenVault/> 👈
 
-60 个平台（含 20 个国内） · 折叠搜索选平台 · 指纹优先进入 · AES-256-GCM 本地加密 · 数据永不上传
+60 个平台（含 20 个国内） · 折叠搜索选平台 · 主界面先选后进 · 自定义图标 · 指纹优先进入 · WebDAV 云备份 · AES-256-GCM 本地加密
 
 <br>
 
+<img src="shots/34-home.png" width="248" alt="主界面">
 <img src="shots/32-list-cn.png" width="248" alt="国内平台列表">
-<img src="shots/28-platform-panel.png" width="248" alt="平台面板">
-<img src="shots/25-detail-login.png" width="248" alt="账号密码详情">
-<img src="shots/18-lock-bio.png" width="248" alt="指纹锁屏">
+<img src="shots/36-editor-icon.png" width="248" alt="自定义图标">
+<img src="shots/39-settings-webdav.png" width="248" alt="WebDAV 备份">
 
 </div>
 
@@ -103,12 +103,12 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 
 <div align="center">
 
+<img src="shots/34-home.png" width="196" alt="主界面">
+<img src="shots/35-home-entered.png" width="196" alt="进入保险箱">
 <img src="shots/01-lock-setup.png" width="196" alt="锁屏">
 <img src="shots/08-list-light.png" width="196" alt="浅色主题">
-<img src="shots/26-editor-login.png" width="196" alt="账号密码编辑器">
-<img src="shots/09-toolbox.png" width="196" alt="安全工具">
 
-<sub>PIN 锁屏 · 浅色主题 · 账号密码编辑器 · 安全工具（随机口令 / Base32 生成 / 验证码试算）</sub>
+<sub>**主界面（首屏）**：先选入口再解锁，不点就不加载 app.js · 进入后的保险箱 · PIN 锁屏 · 浅色主题</sub>
 
 </div>
 
@@ -117,8 +117,9 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 <img src="shots/21-list-login.png" width="196" alt="竖向列表">
 <img src="shots/24-mixed-list.png" width="196" alt="混合列表">
 <img src="shots/25-detail-login.png" width="196" alt="账号密码详情">
+<img src="shots/09-toolbox.png" width="196" alt="安全工具">
 
-<sub>「账号密码」筛选项 · 验证码 / 账号密码 / 密钥笔记混在一个列表 · 密码默认打码，可展开可复制</sub>
+<sub>「账号密码」筛选项 · 验证码 / 账号密码 / 密钥笔记混在一个列表 · 密码默认打码，可展开可复制 · 安全工具</sub>
 
 </div>
 
@@ -127,8 +128,19 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 <img src="shots/27-editor-platform-collapsed.png" width="196" alt="平台栏折叠">
 <img src="shots/28-platform-panel.png" width="196" alt="平台面板展开">
 <img src="shots/29b-platform-cn.png" width="196" alt="国内平台">
+<img src="shots/36-editor-icon.png" width="196" alt="自定义图标">
 
-<sub>平台只占一行，点开才展开 · 展开后能搜索、能按国内 / 国际分类 · 20 个国内平台配好图标与品牌色</sub>
+<sub>平台只占一行，点开才展开 · 展开后能搜索、能按国内 / 国际分类 · 20 个国内平台 · **自定义图标**（上传 / 在线抓取）</sub>
+
+</div>
+
+<div align="center">
+
+<img src="shots/37-icon-uploaded.png" width="196" alt="上传图标后">
+<img src="shots/38-list-custom-icon.png" width="196" alt="列表里的自定义图标">
+<img src="shots/39-settings-webdav.png" width="196" alt="WebDAV 设置">
+
+<sub>上传图标后预览实时更新 · 列表与详情都用你的图 · **WebDAV 云端备份**（测试连接 / 立即备份 / 从云端恢复 / 自动备份）</sub>
 
 </div>
 
@@ -143,9 +155,12 @@ bash tools/build_apk.sh test       # 跑 33 项 JVM 单元测试
 </div>
 
 - 深色为默认（`#07080c` 底 + 紫青渐变），可切浅色或跟随系统
-- **60 个平台**的品牌图标（国内 20 + 国际 14 + 原有 26），全是手写内联 SVG / VectorDrawable，**不加载任何网络图片**
+- **首屏主界面**：四张卡（动态验证码 / 账号密码 / 密钥笔记 / 设置与备份），点哪张进哪块；app.js 按需加载，弱网三秒内也能看到界面，不再白屏转圈
+- **60 个平台**的品牌图标（国内 20 + 国际 14 + 原有 26），55 个取自 [Simple Icons](https://simpleicons.org/)（CC0）官方 path，4 个品牌无官方图标的手写，全部内联 SVG / VectorDrawable，**不加载任何网络图片**
+- **自定义图标**：添加条目时可以从相册上传一张图（自动裁方缩到 128×128 存进条目），或输入域名在线抓 favicon；随时「用默认」还原
 - 环形倒计时，剩 5 秒变红；点验证码即复制，可设 15/30/60 秒后自动清剪贴板
 - **指纹优先**：开了生物解锁，锁屏一出现就自动调起指纹，验证通过直接进；浏览器不给无手势调用时，第一次触碰锁屏就立刻补弹；指纹失败或取消才轮到 PIN
+- **WebDAV 云端备份**：Nextcloud / Alist / 自建 WebDAV 直连，上传前用 PIN 再加密一层，本地改动 6 秒后自动上传
 - 「隐藏验证码」模式：列表只显圆点，点开详情才显示
 - 搜索（名称 / 账号 / 备注）+ 类型筛选（全部 / 收藏 / 动态码 / 账号密码 / 密钥本）
 
@@ -310,10 +325,12 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 | 换 PIN | 新盐 + 全量重加密；已绑定的指纹同步作废，需要重新开启 |
 | 密码显示 | 详情页默认圆点；只有点「显示」才临时渲染明文，锁屏或切后台即清 |
 | 备份 | 独立密码再加密一次，明文永不落盘 |
+| WebDAV 云备份 | 上传的 `payload` 与本地库同构（PBKDF2 + AES-256-GCM），凭证只在本机 `localStorage`；服务器只见到密文文件名与字节数；连接走 `fetch` + Basic 认证，不含任何中转服务 |
+| 自定义图标 | 只在你本机做 `canvas` 裁切缩放后存进条目；「在线抓取」只请求你填的那个域名的 favicon，请求不带任何条目数据 |
 | 系统备份 | 安卓 `allowBackup=false` + `dataExtractionRules` 全排除 |
 | 生物解锁（安卓） | `AndroidKeyStore` 里一把「每次使用都需认证」的 AES-256-GCM 密钥封住 PIN（`setUserAuthenticationRequired` + `setInvalidatedByBiometricEnrollment`），密钥不出安全区，新增/删除指纹即失效 |
 | 生物解锁（网页） | WebAuthn platform authenticator；支持 PRF 时包裹密钥不落盘，不支持时用本机随机密钥包裹 —— 属便利层，等价于把 PIN 加密存在本机 |
-| 网络 | Web 版零请求；安卓 `INTERNET` 权限只服务于内置浏览器登录页，代码里没有任何上传逻辑 |
+| 网络 | Web 版：主界面与本地使用零请求；只有你主动点「在线抓取图标」或配置 WebDAV 备份时才联网。安卓 `INTERNET` 权限只服务于内置浏览器登录页 |
 
 **没有找回通道。** 忘了 PIN 只能靠之前导出的加密备份 —— 能找回就等于别人也能找回。
 
@@ -351,7 +368,36 @@ Cloudflare · Notion · Proton · Epic Games · Instagram · Xbox · Twitter · 
 只能靠加密备份恢复。请务必先导出一份。
 
 **能不能云端同步？**
-不做。数据不上云，只能手动导出 / 导入加密备份。
+只有 **WebDAV 备份**（见下一节），而且它只做「整库加密覆盖上传」，不做多端合并同步 ——
+两台设备各存一份，谁后上传谁覆盖，冲突时靠导出的本地文件回滚。真正的多端同步要有人做冲突合并，
+那是另一个工程，也是本应用刻意不碰的部分。
+
+### WebDAV 云端备份怎么配
+
+设置 → **WebDAV 云端备份**，四个字段：
+
+| 字段 | 举例（Nextcloud） | 说明 |
+| --- | --- | --- |
+| 服务器地址 | `https://cloud.example.com/remote.php/dav/files/你的用户名/` | 末尾斜杠可有可无，不写 `https://` 会自动补 |
+| 账号 | `yourname` | |
+| 密码 / 应用密码 | `xxxxx-xxxxx-xxxxx` | Nextcloud / 坚果云建议用「应用专用密码」，不要用登录密码 |
+| 远程文件路径 | `KeyCoffer/backup.json` | 目录不存在会自动 `MKCOL` 建出来 |
+
+「备份加密密码」留空就用**本次解锁的 PIN**。点「测试连接」先验一遍（走 `PROPFIND`），
+401/403 说明账号密码不对，`Failed to fetch` 说明**服务器没放行跨域（CORS）**：
+
+- **能直连的**：Nextcloud（装 `Access-Control-Allow-Origin` 或同源）、Alist、rclone serve webdav、自建 Nginx 加 CORS 头；
+- **会被浏览器拦的**：坚果云（默认不放行）、部分只给客户端用的 WebDAV 服务。
+- 打开「自动备份」后，本地任何改动 **6 秒后自动上传一次**（防抖，避免边打字边传）。
+
+上传的文件长这样（外面一层是 WebDAV 传输，里面这层才是真加密）：
+
+```json
+{ "app": "TokenVault", "version": 1, "exportedAt": 1762300000000, "count": 12,
+  "payload": { "v": 1, "alg": "AES-256-GCM", "salt": "…", "iv": "…", "ct": "…" } }
+```
+
+`payload` 是用你的 PIN 派生的密钥加密的，**服务器管理员拿到文件也解不开**。
 
 **网页版扫码没反应？**
 `BarcodeDetector` 只有 Chrome / Edge 新版和部分 Safari 支持。不支持时点「扫二维码」会自动改为
@@ -422,6 +468,15 @@ python tools/shoot_v12.py    # 三类条目混合列表 / 密码详情 / 密码�
 python tools/shoot_v121.py   # 平台折叠 + 搜索 + 分类 + 指纹优先冷启动（CDP 虚拟认证器）
 python tools/shoot_bio.py    # 指纹开启 + 指纹解锁全流程（CDP 虚拟认证器）
 python tools/shoot_v13.py    # 国内平台列表（微信 / 支付宝 / 哔哩哔哩 / 京东）
+python tools/shoot_v14.py    # 主界面 → 进入 → 自定义图标上传 → 列表图标 → WebDAV 设置页
+```
+
+图标与素材脚本：
+
+```bash
+python tools/fetch_icons.py  # 从 Simple Icons（CC0）拉 55 个官方品牌 path，重写 web/app.js 的 ICONS
+python tools/export_icons.py # 把 web/app.js 的内联 SVG 转成安卓 VectorDrawable（60 个图标）
+python tools/fix_icon_fill.py # 单色图标 fill 改 currentColor，避免同色底上看不见
 ```
 
 ---
@@ -436,7 +491,7 @@ TokenVault/
 │  ├─ index.html
 │  ├─ styles.css              # 设计系统：深色 #07080c / 紫青渐变
 │  ├─ app.js                  # TOTP 算法 + AES-GCM 保险库 + 导入解析 + WebAuthn + 全部交互
-│  ├─ sw.js                   # Service Worker，离线优先（缓存 keycoffer-v1）
+│  ├─ sw.js                   # Service Worker：逐个缓存 + network-first 超时回退（缓存 keycoffer-v2）
 │  ├─ manifest.webmanifest
 │  └─ icon.svg
 ├─ android/
@@ -469,6 +524,8 @@ TokenVault/
 │  ├─ shoot_v12.py            # 三类条目混合截图
 │  ├─ shoot_v121.py           # 平台折叠 / 搜索 / 分类 / 指纹优先冷启动
 │  ├─ shoot_v13.py            # 国内平台列表截图
+│  ├─ shoot_v14.py            # 主界面 / 自定义图标 / WebDAV 设置页截图
+│  ├─ fetch_icons.py          # 从 Simple Icons（CC0）拉官方品牌 path 重写 ICONS
 │  ├─ shoot_bio.py            # 指纹流程截图（CDP 虚拟认证器）
 │  └─ dbg_bio.py              # 指纹调试脚本
 ├─ shots/                     # README 与验收用截图
@@ -478,6 +535,27 @@ TokenVault/
 ---
 
 ## 更新日志
+
+**v1.4.0** — 网页端大改造（安卓端不出新包，功能不变）：
+
+- **新增主界面（首屏）**：打开先看到四张大卡（动态验证码 / 账号密码 / 密钥笔记 / 设置与备份），
+  **点哪张才加载 app.js 并进哪块**。以前是一进来就同步拉 `app.js` 再解锁，弱网会长时间白屏转圈；
+  现在首屏是内联 HTML + CSS，不依赖任何 JS 文件，离线也能立刻出来；
+- **Service Worker 重写**：缓存从 `addAll` 改为逐个 `add` 且每个都 try/catch（原来任一文件失败就整体失败，
+  导致反复重装、白屏），导航与 `app.js` 走 network-first + 2.6s / 4s 超时回退缓存，其余仍缓存优先；
+- **图标全部纠错**：55 个品牌换成 [Simple Icons](https://simpleicons.org/)（CC0）官方 path，
+  4 个没有官方图标的（京东 / 腾讯云 / 钉钉 / 拼多多）手写；单色图标统一 `currentColor`，
+  修掉 v1.3.0 里「一半图标显示成纯色方块」的问题；
+- **自定义图标**：添加 / 编辑条目时可以**上传本地图片**（自动居中裁方、缩到 128×128、存进条目），
+  或**输入域名在线抓 favicon**（DuckDuckGo → Google S2 → `/favicon.ico` 三路依次试），
+  随时「用默认」还原成平台图标；
+- **WebDAV 云端备份**：设置里填服务器 / 账号 / 应用密码 / 远程路径，支持测试连接（PROPFIND）、
+  立即备份（PUT）、从云端恢复（GET）、6 秒防抖自动备份；上传内容用 PIN 再加密一层（AES-256-GCM），
+  服务器端只看到密文。同时保留原来的本地文件导出 / 导入；
+- **UI 打磨**：主界面标题分两行不再挤出孤字、四张卡收紧、加「AES-256 本地加密 / 指纹·面容解锁 /
+  WebDAV 备份」三枚特性标签；图标行与预览方块对齐；关于页版本号跟上。
+
+自检 30 + 39 项全过（`verify.js` / `verify_web_import.js`）。
 
 **v1.3.0** — 平台从 26 个扩到 **60 个**（新增国内 20 + 国际 14，每套配矢量品牌图标，网页与安卓同源）；
 **平台栏改成折叠 + 搜索**：默认只占一行，点开展开网格，支持中英文域名搜索与「全部 / 国内 / 国际 / 其他」分类；
