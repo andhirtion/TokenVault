@@ -1,5 +1,9 @@
 package com.yg.tokenvault.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,8 +30,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -61,10 +68,14 @@ import androidx.compose.ui.unit.sp
 import com.yg.tokenvault.data.EntryType
 import com.yg.tokenvault.data.Platforms
 import com.yg.tokenvault.data.TokenEntry
-import com.yg.tokenvault.util.Base32
 import com.yg.tokenvault.ui.components.BrandTile
 import com.yg.tokenvault.ui.theme.Accent
 import com.yg.tokenvault.ui.theme.LocalPalette
+import com.yg.tokenvault.util.Base32
+import com.yg.tokenvault.util.IconStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 添加 / 编辑令牌。
@@ -99,8 +110,31 @@ fun EditorSheet(
     var showAdvanced by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var pfOpen by remember { mutableStateOf(false) }
-    var pfQuery by remember { mutableStateOf("") }
-    var pfCat by remember { mutableStateOf("all") }
+
+    // 条目自定义图标：上传本地图片，或按账号里的域名联网抓取
+    var iconPath by remember { mutableStateOf(existing?.iconPath ?: "") }
+    var iconBusy by remember { mutableStateOf(false) }
+    var iconMsg by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
+
+    val pickIcon = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        iconBusy = true
+        iconMsg = "正在处理图片…"
+        scope.launch {
+            val saved = withContext(Dispatchers.IO) { IconStore.saveIconFromUri(ctx, uri) }
+            iconBusy = false
+            if (saved != null) {
+                iconPath = saved
+                iconMsg = "图标已更新"
+            } else {
+                iconMsg = "这张图片读不出来，换一张试试"
+            }
+        }
+    }
 
     val isSteam = platformKey == "steam"
     val secretOk = secret.isNotBlank() && Base32.isValid(secret)
@@ -132,7 +166,8 @@ fun EditorSheet(
             period = period,
             algo = algo,
             charset = if (isSteam) "STEAM" else "NUM",
-            note = note.trim()
+            note = note.trim(),
+            iconPath = iconPath
         )
         onSave(entry)
     }
@@ -177,7 +212,7 @@ fun EditorSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            // 平台选择：默认折叠成一行（当前平台），点开才展开网格 + 搜索
+            // 平台选择：默认折叠成一行，点开才展开（内置 4 个 + 自定义压尾）
             SectionTitle("平台")
             Spacer(Modifier.height(9.dp))
             val curPlatform = Platforms.of(platformKey)
@@ -195,19 +230,22 @@ fun EditorSheet(
                     .padding(horizontal = 12.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BrandTile(platform = curPlatform, size = 32.dp)
+                BrandTile(platform = curPlatform, size = 32.dp, iconName = iconPath)
                 Spacer(Modifier.width(11.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = curPlatform.label,
+                        text = if (Platforms.isCustom(platformKey) && name.isNotBlank())
+                            "自定义 · $name" else curPlatform.label,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = pal.text
+                        color = pal.text,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = if (pfOpen) "收起" else "点击更换 · ${Platforms.picker.size} 个平台",
+                        text = if (pfOpen) "收起" else "点击更换（内置 4 个 + 自定义）",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
                         color = pal.text3
                     )
@@ -224,114 +262,64 @@ fun EditorSheet(
 
             AnimatedVisibility(visible = pfOpen) {
                 Column(modifier = Modifier.padding(top = 10.dp)) {
-                    OutlinedTextField(
-                        value = pfQuery,
-                        onValueChange = { pfQuery = it },
-                        singleLine = true,
-                        placeholder = { Text("搜索平台：微信 / GitHub", color = pal.text3) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Search,
-                                contentDescription = null,
-                                tint = pal.text3,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        },
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = pal.text, fontSize = 13.5.sp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = pal.accent,
-                            unfocusedBorderColor = pal.border,
-                            cursorColor = pal.accent,
-                            focusedContainerColor = pal.surfaceHi.copy(alpha = 0.4f),
-                            unfocusedContainerColor = Color.Transparent
-                        ),
-                        shape = RoundedCornerShape(13.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(Modifier.height(9.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        listOf(
-                            "all" to "全部",
-                            "cn" to "国内",
-                            "intl" to "国际",
-                            "other" to "其他"
-                        ).forEach { (c, t) ->
-                            val on = pfCat == c
-                            Text(
-                                text = t,
-                                style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
-                                color = if (on) Color.White else pal.text2,
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Platforms.picker.forEach { p ->
+                            val on = p.key == platformKey
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
-                                    .clip(CircleShape)
-                                    .background(if (on) Accent else pal.surfaceHi.copy(alpha = 0.6f))
-                                    .androidClickable { pfCat = c }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(11.dp))
-
-                    val shown = Platforms.search(pfQuery, pfCat)
-                    if (shown.isEmpty()) {
-                        Text(
-                            text = "没有匹配的平台，可先用「自定义」",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
-                            color = pal.text3,
-                            modifier = Modifier.padding(vertical = 10.dp)
-                        )
-                    } else {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(9.dp),
-                            verticalArrangement = Arrangement.spacedBy(9.dp),
-                            maxItemsInEachRow = 6
-                        ) {
-                            shown.forEach { p ->
-                                val on = p.key == platformKey
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .androidClickable {
+                                        platformKey = p.key
+                                        if (p.key == Platforms.KEY_STEAM) {
+                                            digits = 5
+                                            algo = "SHA1"
+                                        }
+                                        pfOpen = false
+                                        error = null
+                                    }
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(14.dp))
-                                        .androidClickable {
-                                            platformKey = p.key
-                                            if (p.key == "steam") {
-                                                digits = 5
-                                                algo = "SHA1"
-                                            }
-                                            pfOpen = false
-                                            pfQuery = ""
-                                        }
-                                        .padding(4.dp)
+                                        .border(
+                                            width = if (on) 2.dp else 0.dp,
+                                            color = if (on) Accent else Color.Transparent,
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                        .padding(if (on) 1.5.dp else 3.5.dp)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(14.dp))
-                                            .border(
-                                                width = if (on) 2.dp else 0.dp,
-                                                color = if (on) Accent else Color.Transparent,
-                                                shape = RoundedCornerShape(14.dp)
-                                            )
-                                            .padding(if (on) 1.5.dp else 3.dp)
-                                    ) {
-                                        BrandTile(platform = p, size = 38.dp)
-                                    }
-                                    Spacer(Modifier.height(3.dp))
-                                    Text(
-                                        text = p.label,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 9.sp,
-                                            letterSpacing = 0.sp
-                                        ),
-                                        color = if (on) pal.accent else pal.text3,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                    BrandTile(
+                                        platform = p,
+                                        size = 40.dp,
+                                        iconName = if (on) iconPath else null
                                     )
                                 }
+                                Spacer(Modifier.height(3.dp))
+                                Text(
+                                    text = p.label,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        letterSpacing = 0.sp
+                                    ),
+                                    color = if (on) pal.accent else pal.text3,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }
+                    Spacer(Modifier.height(7.dp))
+                    Text(
+                        text = "只用这四个常用平台；其它服务选「自定义」，下面的图标区可以传自己的图",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                        color = pal.text3
+                    )
                 }
             }
 
@@ -353,6 +341,71 @@ fun EditorSheet(
                 placeholder = "you@example.com",
                 keyboardType = KeyboardType.Email
             )
+
+            Spacer(Modifier.height(14.dp))
+
+            // 图标：上传本地图片 / 按账号域名联网抓取 / 重置为平台内置
+            SectionTitle("图标")
+            Spacer(Modifier.height(9.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(pal.surfaceHi.copy(alpha = 0.5f))
+                    .border(1.dp, pal.border, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 12.dp, vertical = 11.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BrandTile(platform = Platforms.of(platformKey), size = 46.dp, iconName = iconPath)
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = iconMsg ?: if (iconPath.isBlank()) "用平台内置图标" else "已用自定义图标",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.5.sp),
+                        color = if (iconBusy) pal.accent else pal.text2,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        MiniAction("上传图片") {
+                            pickIcon.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                        MiniAction(if (iconBusy) "处理中…" else "联网抓取") {
+                            if (!iconBusy) {
+                                val host = IconStore.guessHost(account, name)
+                                if (host.isNullOrBlank()) {
+                                    iconMsg = "先在「账号」里填邮箱或域名"
+                                } else {
+                                    iconBusy = true
+                                    iconMsg = "正在抓取 $host …"
+                                    scope.launch {
+                                        val saved = withContext(Dispatchers.IO) {
+                                            IconStore.fetchIconFromHost(ctx, host)
+                                        }
+                                        iconBusy = false
+                                        if (saved != null) {
+                                            iconPath = saved
+                                            iconMsg = "已抓取 $host 的图标"
+                                        } else {
+                                            iconMsg = "没抓到 $host，可手动上传"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (iconPath.isNotBlank()) {
+                            MiniAction("重置") {
+                                IconStore.deleteIcon(ctx, iconPath)
+                                iconPath = ""
+                                iconMsg = null
+                            }
+                        }
+                    }
+                }
+            }
 
             if (type == EntryType.LOGIN) {
                 Spacer(Modifier.height(11.dp))
@@ -675,5 +728,24 @@ private fun Field(
         ),
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth()
+    )
+}
+
+/** 图标区用的小胶囊按钮 */
+@Composable
+private fun MiniAction(text: String, onClick: () -> Unit) {
+    val pal = LocalPalette.current
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium.copy(
+            fontSize = 11.5.sp,
+            fontWeight = FontWeight.SemiBold
+        ),
+        color = pal.accent,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(pal.accent.copy(alpha = 0.12f))
+            .androidClickable { onClick() }
+            .padding(horizontal = 10.dp, vertical = 5.dp)
     )
 }

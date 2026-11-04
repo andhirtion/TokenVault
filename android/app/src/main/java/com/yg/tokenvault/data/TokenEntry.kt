@@ -26,7 +26,12 @@ data class TokenEntry(
     val note: String = "",
     val favorite: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    /**
+     * 条目自己的图标：app 私有目录 `files/icons/` 下的文件名。
+     * 空串表示用平台内置图标；自定义平台上传或联网抓取的图标都存这里。
+     */
+    val iconPath: String = ""
 ) {
     val platform: Platform get() = Platforms.of(platformKey)
 

@@ -1,9 +1,12 @@
-﻿package com.yg.tokenvault.ui.screens
+package com.yg.tokenvault.ui.screens
 
 import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,8 +25,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Key
@@ -59,6 +65,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yg.tokenvault.VaultViewModel
+import com.yg.tokenvault.data.DavCfg
 import com.yg.tokenvault.ui.theme.LocalPalette
 import com.yg.tokenvault.ui.theme.ThemeMode
 import com.yg.tokenvault.update.CheckResult
@@ -86,7 +93,15 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     bioEnabled: Boolean = false,
     bioAvailable: Boolean = false,
-    onToggleBio: (Boolean) -> Unit = {}
+    onToggleBio: (Boolean) -> Unit = {},
+    hasBg: Boolean = false,
+    onPickBg: (Uri) -> Unit = {},
+    onClearBg: () -> Unit = {},
+    davCfg: DavCfg = DavCfg(),
+    onDavSave: (DavCfg) -> Unit = {},
+    onDavTest: (DavCfg, (Boolean, String) -> Unit) -> Unit = { _, _ -> },
+    onDavUpload: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> },
+    onDavRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val pal = LocalPalette.current
     val clipboard = LocalClipboardManager.current
@@ -94,6 +109,11 @@ fun SettingsScreen(
     var showPinDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
+    var showDav by remember { mutableStateOf(false) }
+
+    val pickBg = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) onPickBg(uri)
+    }
 
     // ── 关于 / 更新 ────────────────────────────
     val ctx = LocalContext.current
@@ -252,6 +272,26 @@ fun SettingsScreen(
                 checked = state.showRing,
                 onCheckedChange = onShowRing
             )
+            Divider()
+            ActionRow(
+                title = "自定义背景",
+                subtitle = if (hasBg) "已设置 · 点击换一张" else "挑一张本地图片当背景",
+                icon = Icons.Outlined.Image,
+                onClick = {
+                    pickBg.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
+            )
+            if (hasBg) {
+                Divider()
+                ActionRow(
+                    title = "恢复默认背景",
+                    subtitle = "移除已设置的背景图",
+                    icon = Icons.Outlined.Close,
+                    onClick = onClearBg
+                )
+            }
         }
 
         Spacer(Modifier.height(14.dp))
@@ -320,6 +360,17 @@ fun SettingsScreen(
                 icon = Icons.Outlined.Download,
                 onClick = { showImportDialog = true }
             )
+            Divider()
+            ActionRow(
+                title = "WebDAV 云备份",
+                subtitle = when {
+                    davCfg.configured && davCfg.auto -> "已连接 · 自动备份开 · ${davCfg.url}"
+                    davCfg.configured -> "已连接 · ${davCfg.url}"
+                    else -> "同步到坚果云 / Nextcloud / Alist"
+                },
+                icon = Icons.Outlined.Cloud,
+                onClick = { showDav = true }
+            )
         }
 
         Spacer(Modifier.height(14.dp))
@@ -377,6 +428,18 @@ fun SettingsScreen(
         }
 
         Spacer(Modifier.height(20.dp))
+    }
+
+    // ── WebDAV 云备份 ───────────────────────────
+    if (showDav) {
+        DavSheet(
+            cfg0 = davCfg,
+            onDismiss = { showDav = false },
+            onSave = onDavSave,
+            onTest = onDavTest,
+            onUpload = onDavUpload,
+            onRestore = onDavRestore
+        )
     }
 
     // ── 修改 PIN ────────────────────────────────

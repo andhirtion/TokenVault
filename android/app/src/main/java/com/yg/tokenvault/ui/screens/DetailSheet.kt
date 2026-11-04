@@ -115,7 +115,7 @@ fun DetailSheet(
         ) {
             // 头部
             Row(verticalAlignment = Alignment.CenterVertically) {
-                BrandTile(platform = entry.platform, size = 46.dp)
+                BrandTile(platform = entry.platform, size = 46.dp, iconName = entry.iconPath)
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(

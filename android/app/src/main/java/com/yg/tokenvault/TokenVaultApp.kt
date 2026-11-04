@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -41,7 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,11 +55,13 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.yg.tokenvault.data.EntryType
 import com.yg.tokenvault.data.OtpImporter
 import com.yg.tokenvault.data.TokenEntry
 import com.yg.tokenvault.ui.components.AppLogo
 import com.yg.tokenvault.ui.screens.DetailSheet
 import com.yg.tokenvault.ui.screens.EditorSheet
+import com.yg.tokenvault.ui.screens.HomeScreen
 import com.yg.tokenvault.ui.screens.ImportSheet
 import com.yg.tokenvault.ui.screens.LockScreen
 import com.yg.tokenvault.ui.screens.LoginScreen
@@ -66,6 +72,7 @@ import com.yg.tokenvault.ui.screens.ToolsScreen
 import com.yg.tokenvault.ui.screens.VaultScreen
 import com.yg.tokenvault.ui.screens.androidClickable
 import com.yg.tokenvault.ui.theme.LocalPalette
+import com.yg.tokenvault.util.IconStore
 import com.yg.tokenvault.util.QrDecoder
 import com.yg.tokenvault.ui.theme.TokenVaultTheme
 import kotlinx.coroutines.delay
@@ -186,11 +193,35 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
     TokenVaultTheme(mode = state.themeMode) {
         val pal = LocalPalette.current
 
+        // 自定义背景：随 hasBg / bgTick 变化重新加载
+        val bgBitmap = remember(state.hasBg, state.bgTick) {
+            if (state.hasBg) IconStore.loadBackground(appContext) else null
+        }
+
+        // WebDAV 配置：保存后 +1 触发重读
+        var davRev by remember { mutableStateOf(0) }
+        val davNow = remember(davRev) { vm.davCfg() }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(pal.bg)
         ) {
+            if (bgBitmap != null) {
+                Image(
+                    bitmap = bgBitmap.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                // 压一层主题底色，保证前景文字始终读得清
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(pal.bg.copy(alpha = if (pal.isDark) 0.62f else 0.58f))
+                )
+            }
+
             if (!state.unlocked) {
                 LockScreen(
                     hasVault = state.hasVault,
@@ -217,6 +248,22 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
                         when (state.tab) {
+                            VaultViewModel.Tab.HOME -> HomeScreen(
+                                total = state.entries.size,
+                                codes = state.entries.count { it.type == EntryType.CODE },
+                                logins = state.entries.count { it.type == EntryType.LOGIN },
+                                onCode = {
+                                    vm.setFilter(VaultViewModel.FILTER_CODE)
+                                    vm.setTab(VaultViewModel.Tab.VAULT)
+                                },
+                                onLogin = {
+                                    vm.setFilter(VaultViewModel.FILTER_LOGIN)
+                                    vm.setTab(VaultViewModel.Tab.VAULT)
+                                },
+                                onTools = { vm.setTab(VaultViewModel.Tab.TOOLS) },
+                                onSettings = { vm.setTab(VaultViewModel.Tab.SETTINGS) }
+                            )
+
                             VaultViewModel.Tab.VAULT -> VaultScreen(
                                 state = state,
                                 now = now,
@@ -274,7 +321,18 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                     detailId = null
                                     editorId = null
                                     vm.lock()
-                                }
+                                },
+                                hasBg = state.hasBg,
+                                onPickBg = { uri -> vm.setBackground(uri) },
+                                onClearBg = { vm.clearBackground() },
+                                davCfg = davNow,
+                                onDavSave = { cfg ->
+                                    vm.davSave(cfg)
+                                    davRev++
+                                },
+                                onDavTest = { cfg, done -> vm.davTest(cfg, done) },
+                                onDavUpload = { cfg, pin, done -> vm.davUpload(cfg, pin, done) },
+                                onDavRestore = { cfg, pin, done -> vm.davRestore(cfg, pin, done) }
                             )
                         }
                     }
@@ -416,6 +474,13 @@ private fun BottomBar(
                 .padding(horizontal = 7.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            TabItem(
+                label = "首页",
+                icon = Icons.Filled.Home,
+                selected = tab == VaultViewModel.Tab.HOME,
+                modifier = Modifier.weight(1f)
+            ) { onTab(VaultViewModel.Tab.HOME) }
+
             TabItem(
                 label = "令牌",
                 icon = Icons.Filled.Key,

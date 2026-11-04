@@ -2,15 +2,21 @@ package com.yg.tokenvault
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.yg.tokenvault.data.DavCfg
+import com.yg.tokenvault.data.DavStore
 import com.yg.tokenvault.data.EntryType
 import com.yg.tokenvault.data.OtpImporter
 import com.yg.tokenvault.data.Platforms
 import com.yg.tokenvault.data.TokenEntry
 import com.yg.tokenvault.data.Totp
 import com.yg.tokenvault.data.VaultRepository
+import com.yg.tokenvault.data.WebDavClient
 import com.yg.tokenvault.ui.theme.ThemeMode
+import com.yg.tokenvault.util.IconStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,6 +27,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 全部界面状态的唯一来源。
@@ -32,7 +39,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = VaultRepository(app)
     private val settings = app.getSharedPreferences("tokenvault_settings", Context.MODE_PRIVATE)
 
-    enum class Tab { VAULT, TOOLS, SETTINGS }
+    enum class Tab { HOME, VAULT, TOOLS, SETTINGS }
 
     data class State(
         val hasVault: Boolean = false,
@@ -40,13 +47,17 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
         val entries: List<TokenEntry> = emptyList(),
         val query: String = "",
         val filter: String? = null,
-        val tab: Tab = Tab.VAULT,
+        val tab: Tab = Tab.HOME,
         val themeMode: ThemeMode = ThemeMode.SYSTEM,
         val hideCode: Boolean = false,
         val showRing: Boolean = true,
         val autoLockMin: Int = 3,
         val clipClearSec: Int = 30,
-        val busy: Boolean = false
+        val busy: Boolean = false,
+        /** 是否设置了自定义背景 */
+        val hasBg: Boolean = false,
+        /** 背景变更计数：变化时主题层重新加载背景图 */
+        val bgTick: Int = 0
     ) {
         val filtered: List<TokenEntry>
             get() {
@@ -84,7 +95,8 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
             hideCode = settings.getBoolean(K_HIDE, false),
             showRing = settings.getBoolean(K_RING, true),
             autoLockMin = settings.getInt(K_AUTOLOCK, 3),
-            clipClearSec = settings.getInt(K_CLIP, 30)
+            clipClearSec = settings.getInt(K_CLIP, 30),
+            hasBg = IconStore.hasBackground(app)
         )
     )
     val state: StateFlow<State> = _state.asStateFlow()
@@ -140,7 +152,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
         sessionPin = null
         ticker?.cancel()
         ticker = null
-        _state.value = _state.value.copy(unlocked = false, entries = emptyList(), query = "", filter = null, tab = Tab.VAULT)
+        _state.value = _state.value.copy(unlocked = false, entries = emptyList(), query = "", filter = null, tab = Tab.HOME)
     }
 
     private fun startTicker() {
@@ -159,12 +171,14 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
         repo.upsert(entry)
         refresh()
         toast("已保存")
+        autoDavBackup()
     }
 
     fun deleteEntry(id: String) {
         repo.delete(id)
         refresh()
         toast("已删除")
+        autoDavBackup()
     }
 
     fun toggleFavorite(id: String) {
@@ -224,6 +238,115 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
         if (ok) sessionPin = new
         toast(if (ok) "PIN 已更新" else "原 PIN 不正确")
         return ok
+    }
+
+    // ── 自定义背景 ───────────────────────────────────────────
+
+    fun setBackground(uri: Uri) {
+        viewModelScope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                IconStore.saveBackground(getApplication(), uri)
+            }
+            if (ok) {
+                _state.value = _state.value.copy(
+                    hasBg = true,
+                    bgTick = _state.value.bgTick + 1
+                )
+                toast("背景已更新")
+            } else {
+                toast("这张图片读不出来，换一张")
+            }
+        }
+    }
+
+    fun clearBackground() {
+        IconStore.clearBackground(getApplication())
+        _state.value = _state.value.copy(hasBg = false, bgTick = _state.value.bgTick + 1)
+        toast("已恢复默认背景")
+    }
+
+    // ── WebDAV 云备份 ────────────────────────────────────────
+
+    fun davCfg(): DavCfg = DavStore.load(getApplication())
+
+    fun davSave(cfg: DavCfg) = DavStore.save(getApplication(), cfg)
+
+    /** 测连通：[done] 在主线程回调 (成功?, 文案) */
+    fun davTest(cfg: DavCfg, done: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val (ok, msg) = when (val out = withContext(Dispatchers.IO) { WebDavClient.test(cfg) }) {
+                is WebDavClient.Out.Ok -> true to out.text
+                is WebDavClient.Out.Err -> false to out.msg
+            }
+            done(ok, msg)
+        }
+    }
+
+    /** 立即备份到云端。[pin] 为空则用当前解锁用的 PIN 作备份密码 */
+    fun davUpload(cfg: DavCfg, pin: String?, done: (Boolean, String) -> Unit) {
+        val usePin = pin?.takeIf { it.length >= 4 } ?: currentPin() ?: ""
+        if (usePin.length < 4) {
+            done(false, "备份密码至少 4 位（留空则用解锁 PIN）")
+            return
+        }
+        viewModelScope.launch {
+            val json = repo.exportEncrypted(usePin.toCharArray())
+            if (json == null) {
+                done(false, "生成备份内容失败")
+                return@launch
+            }
+            val (ok, msg) = when (val out = withContext(Dispatchers.IO) { WebDavClient.upload(cfg, json) }) {
+                is WebDavClient.Out.Ok -> true to out.text
+                is WebDavClient.Out.Err -> false to out.msg
+            }
+            if (ok) DavStore.mark(getApplication(), System.currentTimeMillis(), msg)
+            done(ok, msg)
+        }
+    }
+
+    /** 从云端恢复（合并进现有库，不覆盖已有条目） */
+    fun davRestore(cfg: DavCfg, pin: String?, done: (Boolean, String) -> Unit) {
+        val usePin = pin?.takeIf { it.length >= 4 } ?: currentPin() ?: ""
+        if (usePin.length < 4) {
+            done(false, "备份密码至少 4 位（留空则用解锁 PIN）")
+            return
+        }
+        viewModelScope.launch {
+            val out = withContext(Dispatchers.IO) { WebDavClient.download(cfg) }
+            if (out is WebDavClient.Out.Err) {
+                done(false, out.msg)
+                return@launch
+            }
+            val text = (out as WebDavClient.Out.Ok).text
+            val list = repo.importEncrypted(text, usePin.toCharArray())
+            if (list == null) {
+                done(false, "密码不对或云端文件已损坏")
+                return@launch
+            }
+            val added = repo.mergeAll(list)
+            refresh()
+            done(true, "已从云端恢复 $added 条")
+        }
+    }
+
+    /** 自动备份：改动后等 8 秒再传，连续编辑只上传最后一份 */
+    private var davJob: Job? = null
+
+    private fun autoDavBackup() {
+        val cfg = DavStore.load(getApplication())
+        if (!cfg.configured || !cfg.auto) return
+        val pin = currentPin() ?: return
+        davJob?.cancel()
+        davJob = viewModelScope.launch {
+            delay(8000)
+            if (!isActive) return@launch
+            val json = repo.exportEncrypted(pin.toCharArray()) ?: return@launch
+            val msg = when (val out = withContext(Dispatchers.IO) { WebDavClient.upload(cfg, json) }) {
+                is WebDavClient.Out.Ok -> out.text
+                is WebDavClient.Out.Err -> out.msg
+            }
+            DavStore.mark(getApplication(), System.currentTimeMillis(), msg)
+        }
     }
 
     // ── 导入 / 导出 ──────────────────────────────────────────

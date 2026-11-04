@@ -5,6 +5,7 @@ import com.yg.tokenvault.data.OtpMigration
 import com.yg.tokenvault.data.Platforms
 import com.yg.tokenvault.util.Base32
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -195,18 +196,35 @@ class OtpImportTest {
     fun platforms_guessesByAlias() {
         assertEquals("google", Platforms.guess("Gmail").key)
         assertEquals("microsoft", Platforms.guess("Outlook").key)
-        assertEquals("apple", Platforms.guess("iCloud").key)
-        assertEquals("amazon", Platforms.guess("AWS").key)
-        assertEquals("proton", Platforms.guess("ProtonMail").key)
-        assertEquals("epic", Platforms.guess("Epic Games").key)
+        assertEquals("github", Platforms.guess("GitHub:andhirtion").key)
+        assertEquals("steam", Platforms.guess("Steam Guard").key)
+        // 平台已精简到 4 个：其余品牌一律落到自定义
+        assertEquals("custom", Platforms.guess("iCloud").key)
+        assertEquals("custom", Platforms.guess("AWS").key)
+        assertEquals("custom", Platforms.guess("ProtonMail").key)
+        assertEquals("custom", Platforms.guess("Epic Games").key)
+    }
+
+    @Test
+    fun platforms_onlyFourBuiltInPlusCustom() {
+        assertEquals(5, Platforms.picker.size)
+        assertEquals("custom", Platforms.picker.last().key)
+        assertEquals(
+            listOf("google", "microsoft", "steam", "github", "custom"),
+            Platforms.picker.map { it.key }
+        )
+        assertTrue(Platforms.isCustom(null))
+        assertTrue(Platforms.isCustom("custom"))
+        assertFalse(Platforms.isCustom("google"))
     }
 
     @Test
     fun platforms_doesNotMisreadShortKeys() {
-        // key "x" 只有一个字符，不能参与包含匹配，否则 Xbox 会被判成 X
-        assertEquals("xbox", Platforms.guess("Xbox Live").key)
+        // Xbox 属于微软，别名表里映射到 microsoft
+        assertEquals("microsoft", Platforms.guess("Xbox Live").key)
+        // 未知品牌一律自定义，不会因为短 key 误判
         assertEquals("custom", Platforms.guess("某个小网站").key)
         assertEquals("custom", Platforms.guess(null).key)
-        assertEquals("x", Platforms.guess("x").key)
+        assertEquals("custom", Platforms.guess("x").key)
     }
 }

@@ -1,52 +1,78 @@
 package com.yg.tokenvault.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yg.tokenvault.data.Platform
+import com.yg.tokenvault.util.IconStore
 
 /**
  * 品牌方块：品牌色调的圆角底 + 单色图标。
  * 比直接贴彩色 logo 在深色界面上更整齐，也更接近现代认证器的观感。
+ *
+ * [iconName] 非空时用条目自己的图标（相册上传或联网抓取），铺满整个方块；
+ * 否则退回平台内置 glyph。
  */
 @Composable
 fun BrandTile(
     platform: Platform,
     size: Dp = 44.dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconName: String? = null
 ) {
+    val ctx = LocalContext.current
+    val bitmap = remember(iconName) {
+        if (iconName.isNullOrBlank()) null else IconStore.loadIcon(ctx, iconName)
+    }
+
     val base = Color(platform.tileColor)
     val fg = Color(platform.fgColor)
     val darken = if (base.luminance() > 0.5f) 0.05f else 0.22f
     val brush = Brush.linearGradient(
         listOf(base, base.blend(Color.Black, darken))
     )
+    val shape = RoundedCornerShape(size * 0.29f)
 
     Box(
         modifier = modifier
             .size(size)
-            .clip(RoundedCornerShape(size * 0.29f))
+            .clip(shape)
             .background(brush),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = painterResource(platform.icon),
-            contentDescription = platform.label,
-            tint = fg,
-            modifier = Modifier.size(size * 0.56f)
-        )
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = platform.label,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize().clip(shape)
+            )
+        } else {
+            Icon(
+                painter = painterResource(platform.icon),
+                contentDescription = platform.label,
+                tint = fg,
+                modifier = Modifier.size(size * 0.56f)
+            )
+        }
     }
 }
 

@@ -227,9 +227,11 @@ class CoreLogicTest {
 
     @Test
     fun all_builtin_platforms_have_sane_defaults() {
-        assertEquals(60, Platforms.picker.size)
+        // 平台已精简：只留 4 个高频内置 + 自定义（其余服务走「自定义」+ 自传图标）
+        assertEquals(5, Platforms.picker.size)
         val keys = Platforms.picker.map { it.key }
         assertEquals("平台 key 不应重复", keys.size, keys.toSet().size)
+        assertEquals("自定义必须压尾", "custom", keys.last())
         for (p in Platforms.picker) {
             assertTrue("${p.key} 的位数不合法：${p.digits}", p.digits in 5..8)
             assertTrue("${p.key} 的周期不合法：${p.period}", p.period in 15..120)
@@ -241,10 +243,9 @@ class CoreLogicTest {
         val steam = Platforms.of("steam")
         assertEquals(5, steam.digits)
         assertEquals("STEAM", steam.charset)
-        // 国内平台要能搜到，且搜索默认覆盖全部
-        assertEquals("wechat", Platforms.search("微信").first().key)
-        assertTrue("搜「云」应命中阿里云/腾讯云", Platforms.search("云").size >= 2)
-        assertEquals(20, Platforms.search("", "cn").size)
+        // 未知 key 一律回落自定义
+        assertEquals("custom", Platforms.of("wechat").key)
+        assertEquals("custom", Platforms.of(null).key)
         assertTrue("空搜索返回全部", Platforms.search("").size == Platforms.picker.size)
     }
 

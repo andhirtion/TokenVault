@@ -66,7 +66,7 @@ fun TokenCard(
             .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BrandTile(platform = entry.platform, size = 42.dp)
+        BrandTile(platform = entry.platform, size = 42.dp, iconName = entry.iconPath)
 
         Spacer(Modifier.width(12.dp))
 
