@@ -269,7 +269,7 @@ fun DavSheet(
             // ── 历史版本：选哪一次恢复 ──────────────────────
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "历史版本",
+                    text = "历史版本 · 只列云端现有的",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = pal.text,
@@ -348,11 +348,12 @@ private fun DavHistRow(item: DavBackup, enabled: Boolean, onPick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = label, fontSize = 13.sp, color = pal.text)
             val sub = buildString {
+                if (item.local) append("本机记录（云端没查到） · ")
                 if (item.size > 0) append("%.1f KB".format(item.size / 1024.0))
                 if (item.size > 0) append(" · ")
                 append(item.name)
             }
-            Text(text = sub, fontSize = 10.5.sp, color = pal.text3)
+            Text(text = sub, fontSize = 10.5.sp, color = if (item.local) pal.warning else pal.text3)
         }
         Box(
             modifier = Modifier

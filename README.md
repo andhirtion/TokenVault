@@ -4,7 +4,7 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.7.1 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.7.2 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
 安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密 · 全套交互动画
 
@@ -48,18 +48,18 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.7.1.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk) | 2.4 MB（2 459 097 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.7.2.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk) | 2.4 MB（2 459 097 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
-> 包信息：`com.yg.tokenvault` · versionCode 16 · minSdk 26（安卓 8.0）· targetSdk 35 ·
+> 包信息：`com.yg.tokenvault` · versionCode 17 · minSdk 26（安卓 8.0）· targetSdk 35 ·
 > **不需要 INTERNET 权限也能出码**（联网只用于检查更新、内置浏览器登录、WebDAV 备份这三件事，都由你主动触发）
 
 ### 数据在哪
@@ -389,6 +389,14 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.7.2 — 历史版本只列云端真实存在的（2026-11-05）
+
+- **修「云端 5 条显示 7 条」**：原来刷新会把「本机记账」和云端结果合并，云端没有的本地记录也照样列出来。现在以云端为准 —— 能列出时**只显示云端真实存在的文件**
+- 走清单兜底时（服务器不支持 PROPFIND）逐个 **HEAD 核对**文件还在不在，云端删掉的不会残留在列表里
+- 云端完全查不到时才退回本机记录，并且每行标注「本机记录（云端没查到）」，颜色也换成警示色
+- 标题改为「历史版本 · 只列云端现有的」，这一栏的口径一眼可见
+- 单测 74 项全过
 
 ### v1.7.1 — 恢复改成整份覆盖、图标再清晰一点（2026-11-05）
 

@@ -1,31 +1,28 @@
 {
   "app": "TokenVault",
   "name": "钥匣 KeyCoffer",
-  "version": "1.7.1",
-  "code": 16,
+  "version": "1.7.2",
+  "code": 17,
   "minCode": 1,
-  "publishedAt": "2026-11-05T14:30:00+08:00",
+  "publishedAt": "2026-11-05T14:45:00+08:00",
   "notes": [
-    "恢复改成整份覆盖：条目和设置一起还原（主题、隐藏验证码、进度环、自动锁、剪贴板清理），不再是「只往里加」",
-    "备份文件升级到 v2，加密内容里同时带 entries 和 settings；旧备份仍能读",
-    "修「历史版本 → 刷新」一直卡在「刷新中…」：现在无论成功失败都一定会回调，列表回来就收",
-    "云备份上传时顺手写一份 index.json 清单，服务器不支持 PROPFIND 也能列出历史版本",
-    "删掉「从剪贴板导入」，导入只走文件选择",
-    "图标抓取再加 Clearbit 512px 与 apple-touch-icon-precomposed 两个源，拿到 192px 就收工",
-    "小图不再放大保存（原来 32px 会被拉成 512 存下来），显示改用高质量采样，不再二次发糊",
+    "历史版本只显示云端真实存在的文件：原来会把本机记账也混进来，云端 5 条会显示成 7 条",
+    "PROPFIND 拿不到时改读清单 index.json，并逐个 HEAD 核对文件还在不在，云端删掉的不会残留",
+    "云端完全查不到时才退回本机记录，并且每行明确标「本机记录（云端没查到）」",
+    "标题改成「历史版本 · 只列云端现有的」，一眼知道这一栏的口径",
     "单测 74 项全过；签名与前几版同一把，可直接覆盖安装"
   ],
   "repo": "https://github.com/andhirtion/TokenVault",
-  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.7.1",
+  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.7.2",
   "apk": {
-    "name": "TokenVault-1.7.1.apk",
+    "name": "TokenVault-1.7.2.apk",
     "size": 2459097,
-    "sha256": "6180b1c0051725320890a9e7c17413fbf93c2d14a4e51e72e4bfcf53a8b596a2",
+    "sha256": "6d82e8093d4b3ea8f9fbdc57ac24b26bbe7011348bec70bae7a48c4387196fb9",
     "urls": [
-      "https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk",
-      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk",
-      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk",
-      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk"
+      "https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk",
+      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk",
+      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk",
+      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk"
     ]
   }
 }

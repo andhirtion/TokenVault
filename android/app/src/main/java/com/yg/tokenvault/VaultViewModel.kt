@@ -314,10 +314,15 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
     /** 本地记账的历史（不联网，主线程安全） */
     fun davLocalHistory(): List<DavBackup> = DavStore.history(getApplication())
 
-    /** 列云端可恢复的备份：远端列不出来就用本地记账兜底（无论如何都会回调，避免界面卡住） */
+    /**
+     * 列云端可恢复的备份。
+     *
+     * 以云端为准：PROPFIND 或 index.json 能列出时，**只显示云端真实存在的那些**，
+     * 不再把本机记账混进来（否则云端 5 条会显示成 7 条）。
+     * 只有云端完全查不到时才退回本机记录，并标上 [DavBackup.local] 让界面说明来源。
+     */
     fun davList(cfg: DavCfg, done: (List<DavBackup>) -> Unit) {
         viewModelScope.launch {
-            val local = DavStore.history(getApplication())
             val remote = try {
                 withContext(Dispatchers.IO) {
                     if (cfg.configured) WebDavClient.list(cfg) else emptyList()
@@ -325,10 +330,12 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Exception) {
                 emptyList()
             }
-            // 远端列表里带真实修改时间，优先用它；再补上只在本地记过的名字
-            val merged = (remote + local.filter { l -> remote.none { it.name == l.name } })
-                .sortedWith(compareByDescending<DavBackup> { it.main }.thenByDescending { it.at })
-            done(merged)
+            val shown = if (remote.isNotEmpty()) {
+                remote
+            } else {
+                DavStore.history(getApplication()).map { it.copy(local = true) }
+            }
+            done(shown)
         }
     }
 

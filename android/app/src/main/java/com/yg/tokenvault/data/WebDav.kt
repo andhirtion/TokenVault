@@ -33,7 +33,9 @@ data class DavBackup(
     val name: String,
     val at: Long = 0L,
     val size: Long = 0L,
-    val main: Boolean = false
+    val main: Boolean = false,
+    /** 只在本机记过账、云端查不到：界面上单独标注，不能当成云端文件 */
+    val local: Boolean = false
 )
 
 /** WebDAV 配置的本地存取（app 私有目录，卸载即消失） */
@@ -305,15 +307,31 @@ object WebDavClient {
     }
 
     /**
-     * 列备份历史：服务器能 PROPFIND 就用远端真实列表；
-     * 不能（或反射被挡、返回 405/501）就读我们上传时自己写的 `index.json`。
+     * 列备份历史。
+     *
+     * 1. 服务器能 PROPFIND → 直接用远端真实列表（最准，删掉的不会出现）
+     * 2. 不能 → 读上传时自己写的 `index.json`，并逐个 HEAD 校验文件还在不在
+     *    （清单会残留「云端已删」的条目，不校验就会出现「云端 5 条显示 7 条」）
      */
     fun list(cfg: DavCfg): List<DavBackup> {
         if (base(cfg).isEmpty()) return emptyList()
         val byProp = runCatching { propfind(dirUrlOf(target(cfg)), cfg) }.getOrNull().orEmpty()
         if (byProp.isNotEmpty()) return byProp
-        return readIndex(cfg)
+        val idx = readIndex(cfg)
+        if (idx.isEmpty()) return emptyList()
+        return pruneIndex(cfg, idx)
     }
+
+    /** 用 HEAD 核对清单里每个文件是否真的还在；HEAD 被拒（405/501）时按「还在」处理 */
+    private fun pruneIndex(cfg: DavCfg, list: List<DavBackup>): List<DavBackup> =
+        list.take(24).filter { item ->
+            runCatching {
+                val c = open(dirUrlOf(target(cfg)) + encSeg(item.name), cfg, "HEAD")
+                val code = c.responseCode
+                c.disconnect()
+                code in 200..299 || code == 405 || code == 501
+            }.getOrDefault(true)
+        }
 
     /** 恢复指定名字的那一份；名字是主文件就走配置路径，其余按同目录拼 */
     fun restoreNamed(cfg: DavCfg, name: String): Out {
