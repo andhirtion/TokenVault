@@ -4,7 +4,7 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.7.0 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.7.1 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
 安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密 · 全套交互动画
 
@@ -48,18 +48,18 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.7.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk) | 2.4 MB（2 442 709 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.7.1.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk) | 2.4 MB（2 459 097 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.1/TokenVault-1.7.1.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
-> 包信息：`com.yg.tokenvault` · versionCode 15 · minSdk 26（安卓 8.0）· targetSdk 35 ·
+> 包信息：`com.yg.tokenvault` · versionCode 16 · minSdk 26（安卓 8.0）· targetSdk 35 ·
 > **不需要 INTERNET 权限也能出码**（联网只用于检查更新、内置浏览器登录、WebDAV 备份这三件事，都由你主动触发）
 
 ### 数据在哪
@@ -389,6 +389,17 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.7.1 — 恢复改成整份覆盖、图标再清晰一点（2026-11-05）
+
+- **恢复 = 覆盖**：从云端或文件恢复时，现在用备份**整体替换**本地条目与设置（主题、隐藏验证码、进度环、自动锁、剪贴板清理都一起还原），不再是「只往里加、旧的留着」
+- **备份格式升级 v2**：加密内容从「一个条目数组」变成 `{entries, settings}`；读旧备份照旧能识
+- **修「历史版本 → 刷新」卡死**：原来只有列表内容真的变化才收「刷新中…」，列表为空或请求抛异常就一直转；现在无论成败都回调，点下去必然收
+- **云备份多写一份清单**：每次上传顺带写同目录 `index.json`（最多 40 条），服务器不支持 PROPFIND 时靠它列历史；能 PROPFIND 时仍优先用远端真实列表
+- **删掉「从剪贴板导入」**：导入只保留「选文件」一条路，少一处容易误碰的入口
+- **图标再加两个高清源**：`apple-touch-icon-precomposed`（180）与 Clearbit Logo（512），拿到 192px 就收工
+- **小图不再放大保存**：原来 32px 的 favicon 会被拉成 512 存下来，等于糊两次；现在按原尺寸存，显示用高质量采样
+- 单测 74 项全过（`WebDavTest` 补了 index.json 与覆盖语义的断言）
 
 ### v1.7.0 — 图标更清楚、官方配色、默认自定义（2026-11-05）
 

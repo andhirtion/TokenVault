@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -313,12 +314,16 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
     /** 本地记账的历史（不联网，主线程安全） */
     fun davLocalHistory(): List<DavBackup> = DavStore.history(getApplication())
 
-    /** 列云端可恢复的备份：远端列不出来就用本地记账兜底 */
+    /** 列云端可恢复的备份：远端列不出来就用本地记账兜底（无论如何都会回调，避免界面卡住） */
     fun davList(cfg: DavCfg, done: (List<DavBackup>) -> Unit) {
         viewModelScope.launch {
             val local = DavStore.history(getApplication())
-            val remote = withContext(Dispatchers.IO) {
-                if (cfg.configured) WebDavClient.list(cfg) else emptyList()
+            val remote = try {
+                withContext(Dispatchers.IO) {
+                    if (cfg.configured) WebDavClient.list(cfg) else emptyList()
+                }
+            } catch (e: Exception) {
+                emptyList()
             }
             // 远端列表里带真实修改时间，优先用它；再补上只在本地记过的名字
             val merged = (remote + local.filter { l -> remote.none { it.name == l.name } })
@@ -341,18 +346,19 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
                 return@launch
             }
             val text = (out as WebDavClient.Out.Ok).text
-            val list = repo.importEncrypted(text, usePin.toCharArray())
-            if (list == null) {
+            val env = repo.importEnvelope(text, usePin.toCharArray())
+            if (env == null) {
                 done(false, "密码不对或那份备份已损坏")
                 return@launch
             }
-            val added = repo.mergeAll(list)
+            val n = repo.replaceAll(env.first)
+            applySettings(env.second)
             refresh()
-            done(true, "已恢复 $name（$added 条）")
+            done(true, "已用 $name 覆盖：$n 条" + if (env.second.isNotEmpty()) " · 设置已还原" else "")
         }
     }
 
-    /** 从云端恢复（合并进现有库，不覆盖已有条目） */
+    /** 从云端恢复：整份覆盖本地库与设置 */
     fun davRestore(cfg: DavCfg, pin: String?, done: (Boolean, String) -> Unit) {
         val usePin = pin?.takeIf { it.length >= 4 } ?: currentPin() ?: ""
         if (usePin.length < 4) {
@@ -366,16 +372,47 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
                 return@launch
             }
             val text = (out as WebDavClient.Out.Ok).text
-            val list = repo.importEncrypted(text, usePin.toCharArray())
-            if (list == null) {
+            val env = repo.importEnvelope(text, usePin.toCharArray())
+            if (env == null) {
                 done(false, "密码不对或云端文件已损坏")
                 return@launch
             }
-            val added = repo.mergeAll(list)
+            val n = repo.replaceAll(env.first)
+            applySettings(env.second)
             refresh()
-            done(true, "已从云端恢复 $added 条")
+            done(true, "已从云端覆盖：$n 条" + if (env.second.isNotEmpty()) " · 设置已还原" else "")
         }
     }
+
+    /** 备份里带回来的设置：写回 prefs 并同步界面状态 */
+    private fun applySettings(s: Map<String, String>) {
+        if (s.isEmpty()) return
+        val e = settings.edit()
+        s[K_THEME]?.let { e.putString(K_THEME, it) }
+        s[K_HIDE]?.let { e.putBoolean(K_HIDE, it == "true") }
+        s[K_RING]?.let { e.putBoolean(K_RING, it == "true") }
+        s[K_AUTOLOCK]?.let { e.putInt(K_AUTOLOCK, it.toIntOrNull() ?: 3) }
+        s[K_CLIP]?.let { e.putInt(K_CLIP, it.toIntOrNull() ?: 30) }
+        e.apply()
+        _state.update {
+            it.copy(
+                themeMode = loadTheme(),
+                hideCode = settings.getBoolean(K_HIDE, false),
+                showRing = settings.getBoolean(K_RING, true),
+                autoLockMin = settings.getInt(K_AUTOLOCK, 3),
+                clipClearSec = settings.getInt(K_CLIP, 30)
+            )
+        }
+    }
+
+    /** 导出时带上的设置快照 */
+    private fun settingsSnapshot(): Map<String, String> = mapOf(
+        K_THEME to loadTheme().name,
+        K_HIDE to settings.getBoolean(K_HIDE, false).toString(),
+        K_RING to settings.getBoolean(K_RING, true).toString(),
+        K_AUTOLOCK to settings.getInt(K_AUTOLOCK, 3).toString(),
+        K_CLIP to settings.getInt(K_CLIP, 30).toString()
+    )
 
     /** 自动备份：改动后等 8 秒再传，连续编辑只上传最后一份 */
     private var davJob: Job? = null
@@ -405,20 +442,22 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
     // ── 导入 / 导出 ──────────────────────────────────────────
 
     fun exportBackup(pin: String): String? {
-        val text = repo.exportEncrypted(pin.toCharArray())
+        val text = repo.exportEncrypted(pin.toCharArray(), settingsSnapshot())
         if (text == null) toast("导出失败")
         return text
     }
 
+    /** 从文件导入：整份覆盖条目与设置 */
     fun importBackup(text: String, pin: String) {
-        val list = repo.importEncrypted(text, pin.toCharArray())
-        if (list == null) {
+        val env = repo.importEnvelope(text, pin.toCharArray())
+        if (env == null) {
             toast("导入失败：密码错误或文件损坏")
             return
         }
-        val added = repo.mergeAll(list)
+        val n = repo.replaceAll(env.first)
+        applySettings(env.second)
         refresh()
-        toast("已导入 $added 条")
+        toast("已用备份覆盖：$n 条" + if (env.second.isNotEmpty()) " · 设置已还原" else "")
     }
 
     fun importOtpAuthText(text: String) {

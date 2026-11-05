@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -34,8 +34,8 @@ android {
         applicationId = "com.yg.tokenvault"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "1.7.0"
+        versionCode = 16
+        versionName = "1.7.1"
         resourceConfigurations += listOf("zh", "en")
     }
 

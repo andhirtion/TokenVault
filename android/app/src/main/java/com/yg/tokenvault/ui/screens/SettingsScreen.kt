@@ -27,7 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Image
@@ -111,7 +110,6 @@ fun SettingsScreen(
     onToast: (String) -> Unit = {}
 ) {
     val pal = LocalPalette.current
-    val clipboard = LocalClipboardManager.current
 
     var showPinDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
@@ -403,13 +401,6 @@ fun SettingsScreen(
             )
             Divider()
             ActionRow(
-                title = "从剪贴板导入",
-                subtitle = "备份内容在剪贴板里时用这个",
-                icon = Icons.Outlined.ContentPaste,
-                onClick = { pendingImport = null; showImportDialog = true }
-            )
-            Divider()
-            ActionRow(
                 title = "WebDAV 云备份",
                 subtitle = when {
                     davCfg.configured && davCfg.auto -> "已连接 · 自动备份开 · ${davCfg.url}"
@@ -488,7 +479,7 @@ fun SettingsScreen(
             onUpload = onDavUpload,
             onRestore = onDavRestore,
             history = davHistory,
-            onRefreshHistory = { c -> onDavRefreshHistory(c) { } },
+            onRefreshHistory = { c, done -> onDavRefreshHistory(c) { done() } },
             onRestoreNamed = { name, pin, done -> onDavRestoreNamed(davCfg, name, pin, done) }
         )
     }
@@ -526,16 +517,15 @@ fun SettingsScreen(
         )
     }
 
-    // ── 导入：文件里读到的文本，或剪贴板 ──────────
+    // ── 导入：从选中的文件里读到的文本 ──────────
     if (showImportDialog) {
-        val fromFile = pendingImport != null
         SecretDialog(
             title = "输入备份密码",
-            hint = if (fromFile) "输入导出这份备份时设的密码" else "将从剪贴板读取备份内容",
-            confirmLabel = "导入",
+            hint = "输入导出这份备份时设的密码",
+            confirmLabel = "导入并覆盖",
             onDismiss = { showImportDialog = false; pendingImport = null },
             onConfirm = { pw ->
-                val src = pendingImport ?: clipboard.getText()?.text
+                val src = pendingImport
                 showImportDialog = false
                 pendingImport = null
                 if (!src.isNullOrBlank()) onImport(src, pw) else onToast("没有读到备份内容")

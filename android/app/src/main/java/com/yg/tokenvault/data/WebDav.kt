@@ -271,7 +271,9 @@ object WebDavClient {
                     val snapOk = runCatching {
                         put(dirUrlOf(target(cfg)) + encSeg(snap), cfg, body) in 200..299
                     }.getOrDefault(false)
-                    Out.Ok("已上传 $size KB", savedAs = if (snapOk) snap else primary)
+                    val savedAs = if (snapOk) snap else primary
+                    touchIndex(cfg, DavBackup(savedAs, System.currentTimeMillis(), body.size.toLong(), false))
+                    Out.Ok("已上传 $size KB", savedAs = savedAs)
                 }
                 code == 401 -> Out.Err("账号或应用密码不对（401）")
                 code == 403 -> Out.Err("没有写入权限（403），应用密码可能是只读的")
@@ -281,6 +283,10 @@ object WebDavClient {
                     val flat = cfg.copy(path = flatPath(cfg))
                     val code2 = put(target(flat), cfg, body)
                     if (code2 in 200..299) {
+                        touchIndex(
+                            flat,
+                            DavBackup(flatPath(cfg), System.currentTimeMillis(), body.size.toLong(), true)
+                        )
                         Out.Ok(
                             "已上传 $size KB（服务器不允许建目录，已存到根目录 ${flatPath(cfg)}）",
                             savedAs = flatPath(cfg)
@@ -298,10 +304,15 @@ object WebDavClient {
         }
     }
 
-    /** 列备份历史：服务器能 PROPFIND 就用远端真实列表，否则返回空让调用方用本地记账 */
+    /**
+     * 列备份历史：服务器能 PROPFIND 就用远端真实列表；
+     * 不能（或反射被挡、返回 405/501）就读我们上传时自己写的 `index.json`。
+     */
     fun list(cfg: DavCfg): List<DavBackup> {
         if (base(cfg).isEmpty()) return emptyList()
-        return runCatching { propfind(dirUrlOf(target(cfg)), cfg) }.getOrNull() ?: emptyList()
+        val byProp = runCatching { propfind(dirUrlOf(target(cfg)), cfg) }.getOrNull().orEmpty()
+        if (byProp.isNotEmpty()) return byProp
+        return readIndex(cfg)
     }
 
     /** 恢复指定名字的那一份；名字是主文件就走配置路径，其余按同目录拼 */
@@ -344,6 +355,59 @@ object WebDavClient {
     /** 文件 URL → 它所在目录的 URL（保留结尾斜杠） */
     private fun dirUrlOf(fileUrl: String): String =
         fileUrl.substringBeforeLast('/', "") + "/"
+
+    /** 同目录下的清单文件名：服务器不支持 PROPFIND 时靠它列历史 */
+    private const val INDEX_NAME = "index.json"
+
+    private fun indexUrl(cfg: DavCfg): String = dirUrlOf(target(cfg)) + INDEX_NAME
+
+    /** 读我们自己的清单（不会抛异常；拿不到就返回空表） */
+    private fun readIndex(cfg: DavCfg): List<DavBackup> {
+        val text = runCatching {
+            val c = open(indexUrl(cfg), cfg, "GET")
+            val code = c.responseCode
+            val body = if (code in 200..299) {
+                c.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            } else null
+            c.disconnect()
+            body
+        }.getOrNull() ?: return emptyList()
+        return runCatching {
+            val arr = org.json.JSONObject(text).optJSONArray("items") ?: return emptyList()
+            (0 until arr.length()).mapNotNull { i ->
+                val o = arr.optJSONObject(i) ?: return@mapNotNull null
+                val name = o.optString("name")
+                if (name.isBlank()) return@mapNotNull null
+                DavBackup(
+                    name = name,
+                    at = o.optLong("at"),
+                    size = o.optLong("size"),
+                    main = o.optBoolean("main")
+                )
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /** 把本次上传记进清单（尽力而为，失败不影响备份本身） */
+    private fun touchIndex(cfg: DavCfg, item: DavBackup) {
+        runCatching {
+            val merged = (listOf(item) + readIndex(cfg).filter { it.name != item.name })
+                .sortedByDescending { it.at }
+                .take(40)
+            val arr = org.json.JSONArray()
+            merged.forEach {
+                arr.put(
+                    org.json.JSONObject()
+                        .put("name", it.name)
+                        .put("at", it.at)
+                        .put("size", it.size)
+                        .put("main", it.main)
+                )
+            }
+            val body = org.json.JSONObject().put("items", arr).toString().toByteArray(Charsets.UTF_8)
+            put(indexUrl(cfg), cfg, body)
+        }
+    }
 
     private const val PROPFIND_BODY =
         "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +

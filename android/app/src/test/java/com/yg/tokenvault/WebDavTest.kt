@@ -252,7 +252,7 @@ class WebDavTest {
         val out = WebDavClient.upload(cfg(), json)
         assertTrue("应当成功：$out", out is WebDavClient.Out.Ok)
         assertTrue((out as WebDavClient.Out.Ok).text.startsWith("已上传"))
-        assertEquals("服务端收到的 body 要一致", json, lastBody)
+        assertEquals("服务端收到的 body 要一致", json, files["/dav/KeyCoffer/backup.json"])
         // 第一个 PUT 必须是主文件（之前还会有 MKCOL）
         val firstPut = paths[methods.indexOfFirst { it == "PUT" }]
         assertEquals("主文件要写配置里的路径", "/dav/KeyCoffer/backup.json", firstPut)
@@ -263,6 +263,8 @@ class WebDavTest {
             paths.any { it.startsWith("/dav/KeyCoffer/backup-") && it.endsWith(".json") }
         )
         assertEquals("主文件内容要正确落盘", json, files["/dav/KeyCoffer/backup.json"])
+        // 上传后还会写一份清单（index.json），服务器不支持 PROPFIND 时靠它列历史
+        assertTrue("应当写下 index.json：$paths", files.containsKey("/dav/KeyCoffer/index.json"))
     }
 
     @Test
@@ -272,7 +274,7 @@ class WebDavTest {
         assertTrue("应当成功：$out", out is WebDavClient.Out.Ok)
         val text = (out as WebDavClient.Out.Ok).text
         assertTrue("要说清存到哪了：$text", text.contains("根目录"))
-        assertEquals("回退到根目录", "/dav/backup.json", paths.last())
+        assertTrue("回退到根目录：$paths", paths.contains("/dav/backup.json"))
     }
 
     @Test

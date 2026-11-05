@@ -67,7 +67,7 @@ fun DavSheet(
     onUpload: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit,
     onRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit,
     history: List<DavBackup> = emptyList(),
-    onRefreshHistory: (DavCfg) -> Unit = {},
+    onRefreshHistory: (DavCfg, () -> Unit) -> Unit = { _, done -> done() },
     onRestoreNamed: (String, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val pal = LocalPalette.current
@@ -87,10 +87,7 @@ fun DavSheet(
     val cur: () -> DavCfg = { DavCfg(url = url, user = user, pass = pass, path = path, auto = auto) }
 
     // 打开面板就把历史拉一遍（用表单里的当前值，用户刚改地址也能立刻生效）
-    LaunchedEffect(Unit) { onRefreshHistory(cur()) }
-
-    // 列表回来了就收掉「刷新中」
-    LaunchedEffect(history) { if (busy == "hist") busy = "" }
+    LaunchedEffect(Unit) { onRefreshHistory(cur()) { } }
 
     fun finish(ok: Boolean, text: String) {
         msg = text
@@ -213,7 +210,7 @@ fun DavSheet(
                     onUpload(cur(), pwd.ifBlank { null }) { ok, text -> finish(ok, text) }
                 }
                 DavButton(
-                    text = if (busy == "down") "读取中…" else "恢复最新",
+                    text = if (busy == "down") "读取中…" else "覆盖最新",
                     primary = false,
                     enabled = busy.isEmpty(),
                     modifier = Modifier.weight(0.9f)
@@ -287,7 +284,7 @@ fun DavSheet(
                         .androidClickable {
                             if (busy.isEmpty()) {
                                 busy = "hist"
-                                onRefreshHistory(cur())
+                                onRefreshHistory(cur()) { busy = "" }
                             }
                         }
                         .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -365,7 +362,7 @@ private fun DavHistRow(item: DavBackup, enabled: Boolean, onPick: () -> Unit) {
                 .padding(horizontal = 10.dp, vertical = 6.dp)
         ) {
             Text(
-                text = "恢复",
+                text = "覆盖",
                 fontSize = 12.sp,
                 color = if (enabled) pal.accent else pal.text3
             )

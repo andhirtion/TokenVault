@@ -52,7 +52,9 @@ object IconStore {
     }
 
     fun saveIconBitmap(ctx: Context, src: Bitmap): String? = runCatching {
-        val square = centerSquare(src, ICON_SIZE)
+        // 只缩不放：小图放大只会更糊，交给显示层按原尺寸高质量采样
+        val edge = minOf(ICON_SIZE, maxOf(src.width, src.height))
+        val square = centerSquare(src, edge)
         val name = "e_${System.currentTimeMillis()}.png"
         File(iconDir(ctx), name).outputStream().use {
             square.compress(Bitmap.CompressFormat.PNG, 100, it)
@@ -97,16 +99,18 @@ object IconStore {
      * 联网抓站点图标，按「分辨率从高到低」试，最后留最清楚的那张。
      *
      * 顺序：站点自己声明的 touch-icon / manifest 图标（通常 192~512px）
-     * → 根目录 apple-touch-icon.png（180）→ Google s2（256）
-     * → DuckDuckGo（32）→ 站点根 favicon.ico（16/32，最糊）。
+     * → apple-touch-icon(.precomposed).png（180）→ Clearbit Logo（512）
+     * → Google s2（256）→ DuckDuckGo（32）→ 站点根 favicon.ico（16/32，最糊）。
      *
-     * 拿到 ≥128px 的就提前收工；都只拿到小图时会把实际像素数告诉用户。
+     * 拿到 ≥192px 的就提前收工；都只拿到小图时会把实际像素数告诉用户。
      */
     fun fetchIconDetailed(ctx: Context, rawHost: String): IconFetch {
         val h = parseHost(rawHost) ?: return IconFetch(null, 0, "域名格式不对")
         val sources = buildList {
             addAll(pageIcons(h))
+            add("https://$h/apple-touch-icon-precomposed.png")
             add("https://$h/apple-touch-icon.png")
+            add("https://logo.clearbit.com/$h?size=512")
             add("https://www.google.com/s2/favicons?domain=$h&sz=256")
             add("https://icons.duckduckgo.com/ip3/$h.ico")
             add("https://$h/favicon.ico")
@@ -136,7 +140,7 @@ object IconStore {
             } else {
                 bmp.recycle()
             }
-            if (bestPx >= 128) break
+            if (bestPx >= 192) break
         }
 
         val win = best ?: return IconFetch(null, tried, "试了 $tried 个源都没拿到（$last）")
@@ -144,7 +148,7 @@ object IconStore {
         val name = saveIconBitmap(ctx, win)
         win.recycle()
         if (name == null) return IconFetch(null, tried, "存盘失败")
-        return if (px < 96) {
+        return if (px < 128) {
             IconFetch(name, tried, "只抓到 ${px}px，放大后会糊；想要清晰点就「上传图片」用自己的图")
         } else {
             IconFetch(name, tried, "已抓到 ${px}px 的图标")

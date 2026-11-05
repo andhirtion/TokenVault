@@ -119,6 +119,14 @@ class VaultRepository(context: Context) {
         return added
     }
 
+    /** 用备份整体覆盖本地库（恢复云端备份时用），返回覆盖后的条数 */
+    fun replaceAll(incoming: List<TokenEntry>): Int {
+        cache.clear()
+        incoming.forEachIndexed { i, e -> cache.add(e.copy(sortOrder = i)) }
+        persist()
+        return cache.size
+    }
+
     private fun persist(): Boolean {
         val k = key ?: return false
         val json = encodeEntries(cache)
@@ -190,14 +198,22 @@ class VaultRepository(context: Context) {
 
     // ── 导出 / 导入 ───────────────────────────────────────────
 
-    /** 导出为「不含明文密钥」的加密备份（独立密码，可与主密码不同） */
-    fun exportEncrypted(backupPin: CharArray): String? {
+    /**
+     * 导出为加密备份（独立密码，可与主密码不同）。
+     * 备份里除了条目，还带 App 设置（主题 / 隐藏验证码 / 环 / 自动锁 / 剪贴板清理），
+     * 恢复时整份覆盖，换机才真正等于「和原来一模一样」。
+     */
+    fun exportEncrypted(backupPin: CharArray, settings: Map<String, String> = emptyMap()): String? {
         val salt = VaultCrypto.newSalt()
         val k = VaultCrypto.deriveKey(backupPin, salt)
-        val sealed = VaultCrypto.encrypt(k, encodeEntries(cache).toByteArray(Charsets.UTF_8))
+        val payload = JSONObject().apply {
+            put("entries", JSONArray(encodeEntries(cache)))
+            put("settings", JSONObject().apply { settings.forEach { (key, v) -> put(key, v) } })
+        }
+        val sealed = VaultCrypto.encrypt(k, payload.toString().toByteArray(Charsets.UTF_8))
         val root = JSONObject().apply {
             put("app", "TokenVault")
-            put("version", 1)
+            put("version", 2)
             put("salt", VaultCrypto.b64(salt))
             put("iv", VaultCrypto.b64(sealed.iv))
             put("data", VaultCrypto.b64(sealed.cipherText))
@@ -205,7 +221,14 @@ class VaultRepository(context: Context) {
         return root.toString(2)
     }
 
-    fun importEncrypted(json: String, backupPin: CharArray): List<TokenEntry>? {
+    /**
+     * 解出备份里的条目与设置。
+     * 兼容 version 1（加密内容就是条目数组）与 version 2（`{entries, settings}`）。
+     */
+    fun importEnvelope(
+        json: String,
+        backupPin: CharArray
+    ): Pair<List<TokenEntry>, Map<String, String>>? {
         val root = runCatching { JSONObject(json) }.getOrNull() ?: return null
         if (root.optString("app") != "TokenVault") return null
         val salt = VaultCrypto.unb64(root.optString("salt")) ?: return null
@@ -213,8 +236,25 @@ class VaultRepository(context: Context) {
         val data = VaultCrypto.unb64(root.optString("data")) ?: return null
         val key = runCatching { VaultCrypto.deriveKey(backupPin, salt) }.getOrNull() ?: return null
         val plain = VaultCrypto.decrypt(key, iv, data) ?: return null
-        return runCatching { decodeEntries(String(plain, Charsets.UTF_8)) }.getOrNull()
+        val text = String(plain, Charsets.UTF_8)
+        return runCatching<Pair<List<TokenEntry>, Map<String, String>>> {
+            val obj = JSONObject(text)
+            val arr = obj.optJSONArray("entries")
+            if (arr != null) {
+                val map = LinkedHashMap<String, String>()
+                obj.optJSONObject("settings")?.let { st ->
+                    st.keys().forEach { k2 -> map[k2] = st.optString(k2) }
+                }
+                decodeEntries(arr.toString()) to (map as Map<String, String>)
+            } else {
+                decodeEntries(text) to emptyMap<String, String>()
+            }
+        }.getOrNull()
     }
+
+    /** 只要条目（老调用方用） */
+    fun importEncrypted(json: String, backupPin: CharArray): List<TokenEntry>? =
+        importEnvelope(json, backupPin)?.first
 
     /** 解析纯文本：每行一条 otpauth:// 链接 */
     fun parseOtpAuthList(text: String): List<TokenEntry> {
