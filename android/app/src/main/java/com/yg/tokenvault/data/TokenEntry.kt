@@ -31,7 +31,12 @@ data class TokenEntry(
      * 条目自己的图标：app 私有目录 `files/icons/` 下的文件名。
      * 空串表示用平台内置图标；自定义平台上传或联网抓取的图标都存这里。
      */
-    val iconPath: String = ""
+    val iconPath: String = "",
+    /**
+     * 抓图标用的域名，例如 `github.com`。用户手填过一次就记住，
+     * 下次编辑还在，不必再从账号里猜。空串表示没填。
+     */
+    val iconHost: String = ""
 ) {
     val platform: Platform get() = Platforms.of(platformKey)
 

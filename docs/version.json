@@ -1,31 +1,29 @@
 {
   "app": "TokenVault",
   "name": "钥匣 KeyCoffer",
-  "version": "1.6.0",
-  "code": 13,
+  "version": "1.6.1",
+  "code": 14,
   "minCode": 1,
-  "publishedAt": "2026-11-06T13:20:00+08:00",
+  "publishedAt": "2026-11-05T13:45:00+08:00",
   "notes": [
-    "全新应用图标：深紫渐变底 + 白色钥匙，钥匙环、齿、匣托三层细节，桌面上一眼认出",
-    "首页重做：背景两团呼吸光晕，标题与四张入口卡依次淡入上浮，卡片右上加了指示箭头",
-    "列表更有手感：卡片按下会轻微回缩，验证码换号时淡入上滑，剩余圆环颜色平滑过渡",
-    "切页动画：四个页面之间左右轻推 + 淡入，底部导航选中项弹一下并展开文字",
-    "锁屏更好看：呼吸光晕、Logo 弹入、阶段提示切换有过渡，PIN 输错提示淡入抖动",
-    "详情页验证码、复制状态、编辑器平台折叠、设置页分组都加了过渡动画",
-    "轻提示改成带紫点 + 投影的气泡，从底部弹入",
-    "单测 66 项全过；签名与 1.3.0 起同一把，可直接覆盖安装"
+    "修「联网抓取图标」：编辑器「图标」区新增「图标域名」输入栏，填 github.com 就能取到它的图标",
+    "域名写法很宽松：github.com、https://mail.qq.com/a?x=1、192.168.1.10:8080 都能直接粘，会自动归一化",
+    "留空也能用：不填域名时点「联网抓取」，仍会从上面的账号邮箱里猜（例：me@163.com → 163.com）",
+    "抓取失败会说清原因：域名格式不对、HTTP 404、图标太小、超时、域名解析失败，不再只有一句「没抓到」",
+    "填过的域名会跟着条目一起保存，下次编辑还在，备份导出也带上",
+    "单测 74 项全过（新增 8 项域名归一化用例）；签名与前几版同一把，可直接覆盖安装"
   ],
   "repo": "https://github.com/andhirtion/TokenVault",
-  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.6.0",
+  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.6.1",
   "apk": {
-    "name": "TokenVault-1.6.0.apk",
+    "name": "TokenVault-1.6.1.apk",
     "size": 2442657,
-    "sha256": "d83e88a55deed9bd70c98aba81e629f7dbac34d6b0ee4502b9de1fedfb1a3b4d",
+    "sha256": "0c7c258131c91621c8710111805307c02830cbd1ca910d0ecdd720663a571773",
     "urls": [
-      "https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk",
-      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk",
-      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk",
-      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk"
+      "https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk",
+      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk",
+      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk",
+      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk"
     ]
   }
 }

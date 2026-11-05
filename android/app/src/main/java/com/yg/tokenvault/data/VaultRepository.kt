@@ -150,6 +150,7 @@ class VaultRepository(context: Context) {
                 put("createdAt", e.createdAt)
                 put("sortOrder", e.sortOrder)
                 if (e.iconPath.isNotBlank()) put("icon", e.iconPath)
+                if (e.iconHost.isNotBlank()) put("iconHost", e.iconHost)
             })
         }
         return arr.toString()
@@ -179,7 +180,8 @@ class VaultRepository(context: Context) {
                     favorite = o.optBoolean("favorite", false),
                     createdAt = o.optLong("createdAt", System.currentTimeMillis()),
                     sortOrder = o.optInt("sortOrder", i),
-                    iconPath = o.optString("icon")
+                    iconPath = o.optString("icon"),
+                    iconHost = o.optString("iconHost")
                 )
             )
         }

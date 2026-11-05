@@ -4,7 +4,7 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.6.0 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.6.1 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
 安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密 · 全套交互动画
 
@@ -48,18 +48,18 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.6.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk) | 2.4 MB（2 442 657 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.6.1.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk) | 2.4 MB（2 442 657 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
-> 包信息：`com.yg.tokenvault` · versionCode 13 · minSdk 26（安卓 8.0）· targetSdk 35 ·
+> 包信息：`com.yg.tokenvault` · versionCode 14 · minSdk 26（安卓 8.0）· targetSdk 35 ·
 > **不需要 INTERNET 权限也能出码**（联网只用于检查更新、内置浏览器登录、WebDAV 备份这三件事，都由你主动触发）
 
 ### 数据在哪
@@ -126,9 +126,11 @@
 ### 自定义图标
 
 - 添加/编辑条目时点「上传图片」→ 从相册选 → 自动居中裁成正方形存成 256×256 PNG；
-- 或者填了邮箱/域名后点「联网抓取」→ 依次尝试 `站点/favicon.ico` → DuckDuckGo → Google s2，抓到就用；
+- 或者在「**图标域名**」栏里填站点（`github.com`、`https://mail.qq.com/a?x=1`、`192.168.1.10:8080` 都行）再点「联网抓取」→ 依次尝试 `站点/favicon.ico` → DuckDuckGo → Google s2，抓到就用；
+- 域名栏留空也能抓：会退一步从上面「账号 / 邮箱」里猜（`me@163.com` → `163.com`）；
+- 抓不到会说明原因（`HTTP 404` / 图标太小 / 超时 / 域名解析失败），不是只回一句「没抓到」；
 - 「重置」回到平台内置图标；
-- 图标存在 App 私有目录，不进备份明文。
+- 图标存在 App 私有目录，填过的域名随条目一起加密保存，都不进备份明文。
 
 ### 自定义背景
 
@@ -320,7 +322,7 @@ $env:GRADLE_USER_HOME = "$TC\gradle-home"
 & "$TC\gradle-8.11.1\bin\gradle.bat" --no-daemon -p android :app:testReleaseUnitTest
 ```
 
-共 **63 项**：`CoreLogicTest` 21（TOTP / Base32 / 平台 / 密码生成）、`OtpImportTest` 13（otpauth、migration protobuf、平台猜测）、`UpdaterTest` 17（版本比较、两种版本清单解析、镜像顺序）、`WebDavTest` 12（假 WebDAV 服务器上的 OPTIONS 测连、PUT 落点、409 回退根目录、404 回退恢复）。
+共 **74 项**：`CoreLogicTest` 21（TOTP / Base32 / 平台 / 密码生成）、`OtpImportTest` 13（otpauth、migration protobuf、平台猜测）、`UpdaterTest` 17（版本比较、两种版本清单解析、镜像顺序）、`WebDavTest` 15（假 WebDAV 服务器上的 OPTIONS 测连、PUT 落点、409 回退根目录、404 回退恢复、PROPFIND 列表解析）、`IconHostTest` 8（图标域名的归一化：协议/路径/端口/`www.`/邮箱/IP/中文标点）。
 
 `WebDavTest` 不依赖外网、也不需要 `com.sun.net.httpserver`（Android 单测的 bootclasspath 里没有它）：直接用 `ServerSocket` 起一个只会说 HTTP/1.1 的假服务器，记录收到的方法名、路径、`Authorization` 头与 body 再断言。
 
@@ -372,7 +374,7 @@ TokenVault/
 │   │       ├── components/            BrandTile / TokenCard / PinPad / RingProgress …
 │   │       ├── screens/               Home / Vault / Detail / Editor / Scan / Login / Tools / Settings
 │   │       └── theme/                 Color / Type / Theme
-│   ├── app/src/test/                  CoreLogicTest / OtpImportTest / UpdaterTest / WebDavTest（63 项）
+│   ├── app/src/test/                  CoreLogicTest / OtpImportTest / UpdaterTest / WebDavTest / IconHostTest（74 项）
 │   └── app/src/main/res/drawable/     ic_brand_{google,microsoft,steam,github,custom}.xml
 ├── docs/version.json                  版本清单（检查更新的首选源）
 ├── dist/                              打好的 APK（不入库）
@@ -383,6 +385,15 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.6.1 — 图标抓取加了域名栏（2026-11-05）
+
+- **修「联网抓取不可用」**：编辑器「图标」区新增 **图标域名** 输入栏，填 `github.com` 就能取到它的图标，不再只能靠账号里的邮箱去猜
+- **域名写法很宽松**：`github.com`、`https://mail.qq.com/a?x=1`、`www.qq.com`、`example.com:8443`、`192.168.1.10:8080` 甚至整串邮箱 `me@163.com` 都能直接粘，抓取前会归一化成干净的 host
+- **留空仍可用**：不填域名时点「联网抓取」，还是从上面的「账号 / 邮箱」里猜（`me@163.com` → `163.com`）
+- **失败会说清原因**：域名格式不对 / `HTTP 404` / 图标太小 / 超时 / 域名解析失败 / 连接被重置 —— 三个源各试一遍，最后把卡在哪一句报出来
+- **域名跟着条目走**：填过的域名随条目一起加密保存，下次编辑还在，导出备份也带着
+- 单测 **74 项**全过（新增 8 项域名归一化用例）；签名与 1.3.0 起同一把，可直接覆盖安装
 
 ### v1.6.0 — 新图标 + 全套动效（2026-11-06）
 

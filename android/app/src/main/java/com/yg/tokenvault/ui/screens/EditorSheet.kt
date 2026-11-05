@@ -117,8 +117,9 @@ fun EditorSheet(
     var error by remember { mutableStateOf<String?>(null) }
     var pfOpen by remember { mutableStateOf(false) }
 
-    // 条目自定义图标：上传本地图片，或按账号里的域名联网抓取
+    // 条目自定义图标：上传本地图片，或按手填的域名联网抓取
     var iconPath by remember { mutableStateOf(existing?.iconPath ?: "") }
+    var iconHost by remember { mutableStateOf(existing?.iconHost ?: "") }
     var iconBusy by remember { mutableStateOf(false) }
     var iconMsg by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -173,7 +174,8 @@ fun EditorSheet(
             algo = algo,
             charset = if (isSteam) "STEAM" else "NUM",
             note = note.trim(),
-            iconPath = iconPath
+            iconPath = iconPath,
+            iconHost = iconHost.trim().let { IconStore.parseHost(it) ?: "" }
         )
         onSave(entry)
     }
@@ -361,7 +363,7 @@ fun EditorSheet(
 
             Spacer(Modifier.height(14.dp))
 
-            // 图标：上传本地图片 / 按账号域名联网抓取 / 重置为平台内置
+            // 图标：上传本地图片 / 按手填域名联网抓取 / 重置为平台内置
             SectionTitle("图标")
             Spacer(Modifier.height(9.dp))
             Row(
@@ -392,22 +394,25 @@ fun EditorSheet(
                         }
                         MiniAction(if (iconBusy) "处理中…" else "联网抓取") {
                             if (!iconBusy) {
-                                val host = IconStore.guessHost(account, name)
+                                // 优先用这个显式填的域名；没填才从「账号」里的邮箱猜
+                                val host = IconStore.parseHost(iconHost)
+                                    ?: IconStore.guessHost(account, name)
                                 if (host.isNullOrBlank()) {
-                                    iconMsg = "先在「账号」里填邮箱或域名"
+                                    iconMsg = "先在下面「图标域名」里填一个，例如 github.com"
                                 } else {
                                     iconBusy = true
                                     iconMsg = "正在抓取 $host …"
                                     scope.launch {
-                                        val saved = withContext(Dispatchers.IO) {
-                                            IconStore.fetchIconFromHost(ctx, host)
+                                        val r = withContext(Dispatchers.IO) {
+                                            IconStore.fetchIconDetailed(ctx, host)
                                         }
                                         iconBusy = false
-                                        if (saved != null) {
-                                            iconPath = saved
-                                            iconMsg = "已抓取 $host 的图标"
+                                        if (r.saved != null) {
+                                            iconPath = r.saved
+                                            iconHost = host
+                                            iconMsg = "已抓到 $host 的图标"
                                         } else {
-                                            iconMsg = "没抓到 $host，可手动上传"
+                                            iconMsg = r.detail
                                         }
                                     }
                                 }
@@ -423,6 +428,22 @@ fun EditorSheet(
                     }
                 }
             }
+
+            Spacer(Modifier.height(10.dp))
+            Field(
+                label = "图标域名",
+                value = iconHost,
+                onChange = { iconHost = it; iconMsg = null },
+                placeholder = "github.com",
+                keyboardType = KeyboardType.Uri
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "填站点域名即可联网取它的图标：github.com、https://mail.qq.com 都能直接粘。" +
+                    "留空时点「联网抓取」会从上面的账号邮箱里猜。",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp),
+                color = pal.text3
+            )
 
             if (type == EntryType.LOGIN) {
                 Spacer(Modifier.height(11.dp))

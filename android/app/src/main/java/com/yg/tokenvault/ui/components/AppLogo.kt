@@ -94,7 +94,7 @@ fun AppLogo(size: Dp = 58.dp, modifier: Modifier = Modifier) {
             // 匣底托弧
             val tray = Path().apply {
                 moveTo(39f * u, 82.5f * u)
-                quadraticBezierTo(54f * u, 88.5f * u, 69f * u, 82.5f * u)
+                quadraticTo(54f * u, 88.5f * u, 69f * u, 82.5f * u)
             }
             drawPath(
                 path = tray,
