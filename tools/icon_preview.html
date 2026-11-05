@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; background: #0a0b10; }
+  .wrap {
+    width: 900px; height: 520px; box-sizing: border-box; padding: 46px 40px 30px;
+    display: flex; flex-direction: column; align-items: center;
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    background:
+      radial-gradient(680px 420px at 18% 0%, rgba(139,92,246,.20), transparent 65%),
+      radial-gradient(560px 380px at 92% 100%, rgba(56,189,248,.14), transparent 62%),
+      #0a0b10;
+  }
+  .row { display: flex; gap: 74px; align-items: flex-start; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .cap { color: #9ba3b0; font-size: 15px; letter-spacing: .3px; }
+  .title { color: #f2f4f8; font-size: 21px; font-weight: 700; margin-bottom: 34px; letter-spacing: 1px; }
+  .title span { color: #8b5cf6; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">钥匣 · <span>KeyCoffer</span> 新图标</div>
+  <div class="row">
+    <div class="cell">
+      <svg width="248" height="248" viewBox="0 0 108 108">
+        <defs>
+          <linearGradient id="bgA" x1="8" y1="4" x2="100" y2="108" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#35215C"/>
+            <stop offset="0.52" stop-color="#1C1730"/>
+            <stop offset="1" stop-color="#0A0B14"/>
+          </linearGradient>
+          <radialGradient id="gA1" cx="30" cy="24" r="74" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.40"/>
+            <stop offset="0.45" stop-color="#8B5CF6" stop-opacity="0.12"/>
+            <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="gA2" cx="92" cy="96" r="62" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#38BDF8" stop-opacity="0.30"/>
+            <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="keyA" x1="41" y1="34" x2="66" y2="78" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FFFFFF"/>
+            <stop offset="1" stop-color="#D9C8FF"/>
+          </linearGradient>
+          <clipPath id="sq"><rect x="0" y="0" width="108" height="108" rx="24" ry="24"/></clipPath>
+        </defs>
+        <g clip-path="url(#sq)">
+          <rect width="108" height="108" fill="url(#bgA)"/>
+          <rect width="108" height="108" fill="url(#gA1)"/>
+          <rect width="108" height="108" fill="url(#gA2)"/>
+          <circle cx="54" cy="46" r="12.5" fill="none" stroke="url(#keyA)" stroke-width="6.5" stroke-linecap="round"/>
+          <line x1="54" y1="58.5" x2="54" y2="76" stroke="url(#keyA)" stroke-width="6.5" stroke-linecap="round"/>
+          <line x1="54" y1="68" x2="65" y2="68" stroke="url(#keyA)" stroke-width="6" stroke-linecap="round"/>
+          <line x1="54" y1="76" x2="61" y2="76" stroke="url(#keyA)" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M39,82.5 Q54,88.5 69,82.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="3.6" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <div class="cap">方形遮罩（多数启动器）</div>
+    </div>
+
+    <div class="cell">
+      <svg width="248" height="248" viewBox="0 0 108 108">
+        <defs>
+          <linearGradient id="bgB" x1="8" y1="4" x2="100" y2="108" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#35215C"/>
+            <stop offset="0.52" stop-color="#1C1730"/>
+            <stop offset="1" stop-color="#0A0B14"/>
+          </linearGradient>
+          <radialGradient id="gB1" cx="30" cy="24" r="74" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.40"/>
+            <stop offset="0.45" stop-color="#8B5CF6" stop-opacity="0.12"/>
+            <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="gB2" cx="92" cy="96" r="62" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#38BDF8" stop-opacity="0.30"/>
+            <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="keyB" x1="41" y1="34" x2="66" y2="78" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FFFFFF"/>
+            <stop offset="1" stop-color="#D9C8FF"/>
+          </linearGradient>
+          <clipPath id="ci"><circle cx="54" cy="54" r="54"/></clipPath>
+        </defs>
+        <g clip-path="url(#ci)">
+          <rect width="108" height="108" fill="url(#bgB)"/>
+          <rect width="108" height="108" fill="url(#gB1)"/>
+          <rect width="108" height="108" fill="url(#gB2)"/>
+          <circle cx="54" cy="46" r="12.5" fill="none" stroke="url(#keyB)" stroke-width="6.5" stroke-linecap="round"/>
+          <line x1="54" y1="58.5" x2="54" y2="76" stroke="url(#keyB)" stroke-width="6.5" stroke-linecap="round"/>
+          <line x1="54" y1="68" x2="65" y2="68" stroke="url(#keyB)" stroke-width="6" stroke-linecap="round"/>
+          <line x1="54" y1="76" x2="61" y2="76" stroke="url(#keyB)" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M39,82.5 Q54,88.5 69,82.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="3.6" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <div class="cap">圆形遮罩（部分系统）</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

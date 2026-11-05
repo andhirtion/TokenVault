@@ -5,6 +5,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +74,7 @@ import com.yg.tokenvault.data.EntryType
 import com.yg.tokenvault.data.Platforms
 import com.yg.tokenvault.data.TokenEntry
 import com.yg.tokenvault.ui.components.BrandTile
+import com.yg.tokenvault.ui.components.tactile
 import com.yg.tokenvault.ui.theme.Accent
 import com.yg.tokenvault.ui.theme.LocalPalette
 import com.yg.tokenvault.util.Base32
@@ -216,17 +222,28 @@ fun EditorSheet(
             SectionTitle("平台")
             Spacer(Modifier.height(9.dp))
             val curPlatform = Platforms.of(platformKey)
+            val pfBg by animateColorAsState(
+                targetValue = pal.surfaceHi.copy(alpha = if (pfOpen) 0.85f else 0.5f),
+                animationSpec = tween(200),
+                label = "pfBg"
+            )
+            val pfBorder by animateColorAsState(
+                targetValue = if (pfOpen) Accent.copy(alpha = 0.8f) else pal.border,
+                animationSpec = tween(200),
+                label = "pfBorder"
+            )
+            val arrow by animateFloatAsState(
+                targetValue = if (pfOpen) 180f else 0f,
+                animationSpec = spring(dampingRatio = 0.62f, stiffness = 420f),
+                label = "pfArrow"
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .tactile({ pfOpen = !pfOpen }, scaleTo = 0.985f)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(pal.surfaceHi.copy(alpha = if (pfOpen) 0.85f else 0.5f))
-                    .border(
-                        width = 1.dp,
-                        color = if (pfOpen) Accent.copy(alpha = 0.8f) else pal.border,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .androidClickable { pfOpen = !pfOpen }
+                    .background(pfBg)
+                    .border(width = 1.dp, color = pfBorder, shape = RoundedCornerShape(16.dp))
                     .padding(horizontal = 12.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -256,7 +273,7 @@ fun EditorSheet(
                     tint = pal.text2,
                     modifier = Modifier
                         .size(20.dp)
-                        .rotate(if (pfOpen) 180f else 0f)
+                        .rotate(arrow)
                 )
             }
 
@@ -568,13 +585,14 @@ fun EditorSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
+                    .shadow(14.dp, RoundedCornerShape(16.dp), ambientColor = Accent, spotColor = Accent)
+                    .tactile({ commit() }, scaleTo = 0.975f)
                     .clip(RoundedCornerShape(16.dp))
                     .background(
                         androidx.compose.ui.graphics.Brush.linearGradient(
                             listOf(Accent, com.yg.tokenvault.ui.theme.Accent2)
                         )
-                    )
-                    .androidClickable { commit() },
+                    ),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {

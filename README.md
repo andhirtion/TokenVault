@@ -4,9 +4,9 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.5.3 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.6.0 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
-安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密
+安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密 · 全套交互动画
 
 <br>
 
@@ -16,6 +16,12 @@
 <img src="shots/43-update-available.png" width="248" alt="检查更新">
 
 <sub>界面示意：与 App 端共用同一套设计语言（深色玻璃卡、紫青渐变、四宫格主界面）</sub>
+
+<br><br>
+
+<img src="shots/46-icon.png" width="600" alt="应用图标">
+
+<sub>v1.6.0 新图标：深紫渐变底 + 白色钥匙，方形与圆形遮罩都成立</sub>
 
 </div>
 
@@ -42,18 +48,18 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.5.3.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk) | 2.4 MB（2 424 909 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.6.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk) | 2.4 MB（2 442 657 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.6.0/TokenVault-1.6.0.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
-> 包信息：`com.yg.tokenvault` · versionCode 10 · minSdk 26（安卓 8.0）· targetSdk 35 ·
+> 包信息：`com.yg.tokenvault` · versionCode 13 · minSdk 26（安卓 8.0）· targetSdk 35 ·
 > **不需要 INTERNET 权限也能出码**（联网只用于检查更新、内置浏览器登录、WebDAV 备份这三件事，都由你主动触发）
 
 ### 数据在哪
@@ -377,6 +383,17 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.6.0 — 新图标 + 全套动效（2026-11-06）
+
+- **重画应用图标**：深紫渐变底（左上紫光、右下青光）+ 手绘白色钥匙。钥匙环 / 柄 / 长齿 / 短齿 / 匣底托弧一共五层，全部落在自适应图标的安全区内，圆角遮罩怎么裁都不会切到图形
+- **首页有呼吸感**：背景两团径向光晕以 5.2 秒周期明暗呼吸；标题、四张入口卡、底部特性标签依次淡入上浮（每张错开 34ms）
+- **卡片会回缩**：主界面的入口卡、列表条目、底部导航、PIN 键盘、设置项按下时轻微缩小再弹回（弹簧曲线，不是线性缩放）
+- **验证码换号有过渡**：列表与详情页的 6 位码到点换新时，新码淡入并轻微上滑，旧码淡出；剩余圆环的颜色从紫到红是渐变过去的，不会突然跳红
+- **切页左右轻推**：四个页面之间按 Tab 顺序方向滑动 + 淡入，底部导航选中项图标弹一下并展开文字标签
+- **锁屏更好看**：同样的呼吸光晕、Logo 从 0.82 倍弹到 1 倍并淡入、「设置 / 确认 / 解锁」提示切换有过渡，PIN 输错时圆点变红并抖动、提示文字淡入
+- **小细节**：编辑器平台折叠行的箭头会转、边框颜色渐变；设置页分组逐块淡入；轻提示改成带紫点与投影的气泡，从底部弹入
+- 单测 **66 项**全过；签名与 1.3.0 起同一把，可直接覆盖安装
 
 ### v1.5.3 — 备份走文件、云备份可选版本（2026-11-05）
 

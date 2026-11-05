@@ -1,8 +1,11 @@
 package com.yg.tokenvault.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -15,7 +18,8 @@ import androidx.compose.ui.unit.dp
 /**
  * 剩余时间环：从 12 点方向顺时针走一圈。
  *
- * [progress] 为剩余比例 0..1。剩得越少颜色越急（由调用方传入 active 控制）。
+ * [progress] 为剩余比例 0..1。剩得越少颜色越急（由调用方传入 active 控制），
+ * 进入最后几秒时颜色是渐变过去的，不会突然跳红。
  */
 @Composable
 fun RingProgress(
@@ -27,6 +31,7 @@ fun RingProgress(
     track: Color
 ) {
     val p = progress.coerceIn(0f, 1f)
+    val ringColor by animateColorAsState(active, tween(420), label = "ringColor")
     Canvas(modifier = modifier.size(size)) {
         val sw = stroke.toPx()
         val inset = sw / 2f
@@ -44,7 +49,7 @@ fun RingProgress(
         )
         if (p > 0.001f) {
             drawArc(
-                color = active,
+                color = ringColor,
                 startAngle = -90f,
                 sweepAngle = 360f * p,
                 useCenter = false,

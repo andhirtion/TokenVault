@@ -4,11 +4,21 @@ import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -42,8 +53,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -58,7 +71,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yg.tokenvault.data.EntryType
 import com.yg.tokenvault.data.OtpImporter
 import com.yg.tokenvault.data.TokenEntry
+import com.yg.tokenvault.ui.components.AppEase
 import com.yg.tokenvault.ui.components.AppLogo
+import com.yg.tokenvault.ui.components.tactile
 import com.yg.tokenvault.ui.screens.DetailSheet
 import com.yg.tokenvault.ui.screens.EditorSheet
 import com.yg.tokenvault.ui.screens.HomeScreen
@@ -253,7 +268,21 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                         .statusBarsPadding()
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
-                        when (state.tab) {
+                        AnimatedContent(
+                            targetState = state.tab,
+                            transitionSpec = {
+                                val forward = targetState.ordinal >= initialState.ordinal
+                                val shift = if (forward) 1 else -1
+                                (fadeIn(tween(230)) +
+                                    slideInHorizontally(tween(280, easing = AppEase)) { it / 14 * shift })
+                                    .togetherWith(
+                                        fadeOut(tween(140)) +
+                                            slideOutHorizontally(tween(220)) { -it / 14 * shift }
+                                    )
+                            },
+                            label = "tabSwitch"
+                        ) { tab ->
+                            when (tab) {
                             VaultViewModel.Tab.HOME -> HomeScreen(
                                 total = state.entries.size,
                                 codes = state.entries.count { it.type == EntryType.CODE },
@@ -354,6 +383,7 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 },
                                 onToast = vm::toast
                             )
+                            }
                         }
                     }
 
@@ -367,8 +397,10 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
             // 轻提示
             AnimatedVisibility(
                 visible = toastText != null,
-                enter = fadeIn() + slideInVertically { it / 2 },
-                exit = fadeOut() + slideOutVertically { it / 2 },
+                enter = fadeIn(tween(160, easing = AppEase)) +
+                    slideInVertically(tween(260, easing = AppEase)) { it / 3 } +
+                    scaleIn(tween(260, easing = AppEase), initialScale = 0.9f),
+                exit = fadeOut(tween(120)) + slideOutVertically(tween(160)) { it / 4 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
@@ -376,16 +408,31 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(13.dp))
+                        .shadow(
+                            16.dp,
+                            RoundedCornerShape(14.dp),
+                            ambientColor = pal.accent,
+                            spotColor = pal.accent
+                        )
+                        .clip(RoundedCornerShape(14.dp))
                         .background(pal.surfaceHi)
-                        .border(1.dp, pal.border, RoundedCornerShape(13.dp))
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .border(1.dp, pal.accent.copy(alpha = 0.26f), RoundedCornerShape(14.dp))
+                        .padding(horizontal = 16.dp, vertical = 11.dp)
                 ) {
-                    Text(
-                        text = toastText ?: "",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = pal.text
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(pal.accent)
+                        )
+                        Spacer(Modifier.width(9.dp))
+                        Text(
+                            text = toastText ?: "",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = pal.text
+                        )
+                    }
                 }
             }
         }
@@ -545,20 +592,40 @@ private fun TabItem(
     onClick: () -> Unit
 ) {
     val pal = LocalPalette.current
+    val bg by animateColorAsState(
+        targetValue = if (selected) pal.accent.copy(alpha = 0.14f) else Color.Transparent,
+        animationSpec = tween(220),
+        label = "tabBg"
+    )
+    val tint by animateColorAsState(
+        targetValue = if (selected) pal.accent else pal.text3,
+        animationSpec = tween(220),
+        label = "tabTint"
+    )
+    val lift by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "tabLift"
+    )
     Box(
         modifier = modifier
             .height(46.dp)
+            .tactile(onClick, scaleTo = 0.94f)
             .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) pal.accent.copy(alpha = 0.14f) else Color.Transparent)
-            .androidClickable(onClick),
+            .background(bg),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (selected) pal.accent else pal.text3,
-                modifier = Modifier.size(17.dp)
+                tint = tint,
+                modifier = Modifier
+                    .size(17.dp)
+                    .graphicsLayer {
+                        scaleX = 1f + lift * 0.06f
+                        scaleY = 1f + lift * 0.06f
+                    }
             )
             if (selected) {
                 Spacer(Modifier.width(6.dp))

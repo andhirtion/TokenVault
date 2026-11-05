@@ -1,10 +1,20 @@
 package com.yg.tokenvault.ui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,10 +30,12 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -50,9 +62,22 @@ fun TokenCard(
 ) {
     val pal = LocalPalette.current
     val interaction = MutableInteractionSource()
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.977f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "cardPress"
+    )
 
     Row(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .background(pal.surface)
@@ -122,13 +147,22 @@ fun TokenCard(
                 color = pal.accent
             )
         } else {
-            CodeBlock(
-                code = code,
-                hidden = hideCode,
-                style = CodeStyle,
-                color = codeColor(remaining, pal.text, pal.danger),
-                gap = 7.dp
-            )
+            AnimatedContent(
+                targetState = code,
+                transitionSpec = {
+                    (fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 })
+                        .togetherWith(fadeOut(tween(140)))
+                },
+                label = "codeSwap"
+            ) { shown ->
+                CodeBlock(
+                    code = shown,
+                    hidden = hideCode,
+                    style = CodeStyle,
+                    color = codeColor(remaining, pal.text, pal.danger),
+                    gap = 7.dp
+                )
+            }
             Spacer(Modifier.width(10.dp))
             RingProgress(
                 progress = remaining,

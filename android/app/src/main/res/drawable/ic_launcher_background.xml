@@ -1,36 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  钥匣图标背景：深紫底 + 左上偏中的紫青双光。
+  比纯线性渐变多一点纵深：整体仍然很暗，白色前景在任何遮罩下都够亮。
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
+    <!-- 底色：左上偏亮，右下压到近黑 -->
     <path android:pathData="M0,0h108v108h-108z">
-        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+        <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="0"
-                android:startY="0"
-                android:endX="108"
+                android:startX="8"
+                android:startY="4"
+                android:endX="100"
                 android:endY="108"
                 android:type="linear">
-                <item android:offset="0" android:color="#FF2A1B4D" />
-                <item android:offset="0.55" android:color="#FF1B1730" />
-                <item android:offset="1" android:color="#FF0B1220" />
+                <item android:offset="0" android:color="#FF35215C" />
+                <item android:offset="0.5" android:color="#FF1C1730" />
+                <item android:offset="1" android:color="#FF0A0B14" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- 顶部一抹紫光，让图标在有光背景上也有层次 -->
-    <path android:pathData="M0,0h108v54h-108z">
-        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+    <!-- 左上紫光 -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="20"
-                android:startY="0"
-                android:endX="88"
-                android:endY="60"
-                android:type="linear">
-                <item android:offset="0" android:color="#5C8B5CF6" />
+                android:centerX="30"
+                android:centerY="24"
+                android:gradientRadius="74"
+                android:type="radial">
+                <item android:offset="0" android:color="#668B5CF6" />
+                <item android:offset="0.6" android:color="#1F8B5CF6" />
                 <item android:offset="1" android:color="#008B5CF6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 右下青光，和被遮住的边角呼应 -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="92"
+                android:centerY="96"
+                android:gradientRadius="62"
+                android:type="radial">
+                <item android:offset="0" android:color="#4D38BDF8" />
+                <item android:offset="1" android:color="#0038BDF8" />
             </gradient>
         </aapt:attr>
     </path>

@@ -1,7 +1,13 @@
 package com.yg.tokenvault.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.yg.tokenvault.data.EntryType
 import com.yg.tokenvault.data.TokenEntry
 import com.yg.tokenvault.data.Totp
+import com.yg.tokenvault.ui.components.AppEase
 import com.yg.tokenvault.ui.components.BrandTile
 import com.yg.tokenvault.ui.components.RingProgress
 import com.yg.tokenvault.ui.theme.BigCodeStyle
@@ -167,32 +174,52 @@ fun DetailSheet(
                         .padding(horizontal = 18.dp, vertical = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val groups = if (code.isEmpty()) listOf("———") else Totp.format(code).split(' ')
-                    Row(
+                    AnimatedContent(
+                        targetState = code,
                         modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(13.dp)
-                    ) {
-                        groups.forEach { g ->
-                            Text(
-                                text = g,
-                                style = BigCodeStyle,
-                                color = if (remaining <= 0.16f) pal.danger else pal.text
-                            )
+                        transitionSpec = {
+                            (fadeIn(tween(200, easing = AppEase)) +
+                                slideInVertically(tween(230, easing = AppEase)) { it / 3 })
+                                .togetherWith(fadeOut(tween(120)))
+                        },
+                        label = "bigCode"
+                    ) { shown ->
+                        val groups =
+                            if (shown.isEmpty()) listOf("———") else Totp.format(shown).split(' ')
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(13.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            groups.forEach { g ->
+                                Text(
+                                    text = g,
+                                    style = BigCodeStyle,
+                                    color = if (remaining <= 0.16f) pal.danger else pal.text
+                                )
+                            }
                         }
                     }
-                    if (justCopied) {
-                        Text(
-                            text = "已复制",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = pal.success
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.ContentCopy,
-                            contentDescription = "复制",
-                            tint = pal.text3,
-                            modifier = Modifier.size(19.dp)
-                        )
+                    AnimatedContent(
+                        targetState = justCopied,
+                        transitionSpec = {
+                            fadeIn(tween(180, easing = AppEase)).togetherWith(fadeOut(tween(120)))
+                        },
+                        label = "copyHint"
+                    ) { copied ->
+                        if (copied) {
+                            Text(
+                                text = "已复制",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = pal.success
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Outlined.ContentCopy,
+                                contentDescription = "复制",
+                                tint = pal.text3,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
                     }
                 }
 

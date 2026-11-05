@@ -187,10 +187,16 @@ private fun KeyCell(
     val pal = LocalPalette.current
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.9f else 1f,
+        animationSpec = spring(stiffness = 1200f),
+        label = "keyScale"
+    )
 
     Box(
         modifier = modifier
             .height(58.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
             .background(if (pressed) pal.surfaceHi else Color.Transparent)
             .then(if (enabled) Modifier.clickableNoRipple(source, onClick) else Modifier),

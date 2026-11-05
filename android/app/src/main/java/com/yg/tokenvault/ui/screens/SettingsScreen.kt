@@ -67,6 +67,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yg.tokenvault.VaultViewModel
 import com.yg.tokenvault.data.DavCfg
+import com.yg.tokenvault.ui.components.riseIn
+import com.yg.tokenvault.ui.components.tactile
 import com.yg.tokenvault.ui.theme.LocalPalette
 import com.yg.tokenvault.ui.theme.ThemeMode
 import com.yg.tokenvault.update.CheckResult
@@ -672,6 +674,7 @@ private fun Section(content: @Composable androidx.compose.foundation.layout.Colu
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .riseIn(durationMs = 280)
             .clip(RoundedCornerShape(20.dp))
             .background(pal.surface)
             .border(1.dp, pal.border, RoundedCornerShape(20.dp))
@@ -769,8 +772,8 @@ private fun ActionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .tactile(onClick, scaleTo = 0.985f)
             .clip(RoundedCornerShape(12.dp))
-            .androidClickable(onClick)
             .padding(vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

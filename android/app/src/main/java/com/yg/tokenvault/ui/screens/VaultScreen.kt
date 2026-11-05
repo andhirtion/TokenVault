@@ -1,10 +1,17 @@
 package com.yg.tokenvault.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,8 +71,12 @@ import androidx.compose.ui.unit.sp
 import com.yg.tokenvault.VaultViewModel
 import com.yg.tokenvault.data.EntryType
 import com.yg.tokenvault.data.Platforms
+import com.yg.tokenvault.ui.components.AppEase
 import com.yg.tokenvault.ui.components.RingProgress
 import com.yg.tokenvault.ui.components.TokenCard
+import com.yg.tokenvault.ui.components.riseIn
+import com.yg.tokenvault.ui.components.staggerIn
+import com.yg.tokenvault.ui.components.tactile
 import com.yg.tokenvault.ui.theme.Accent
 import com.yg.tokenvault.ui.theme.Accent2
 import com.yg.tokenvault.ui.theme.LocalPalette
@@ -139,7 +151,11 @@ fun VaultScreen(
             }
 
             // ── 搜索框 ──────────────────────────────────
-            AnimatedVisibility(visible = searching, enter = fadeIn(), exit = fadeOut()) {
+            AnimatedVisibility(
+                visible = searching,
+                enter = fadeIn(tween(180)) + expandVertically(tween(220, easing = AppEase)),
+                exit = fadeOut(tween(140)) + shrinkVertically(tween(200, easing = AppEase))
+            ) {
                 SearchField(
                     value = state.query,
                     onValueChange = onSearch,
@@ -223,13 +239,13 @@ fun VaultScreen(
                 ) {
                     if (favs.isNotEmpty()) {
                         item { SectionLabel("收藏") }
-                        items(favs, key = { it.id }) { e ->
-                            EntryRow(e, now, state.hideCode, onOpen, onToggleFav)
+                        itemsIndexed(favs, key = { _, e -> e.id }) { i, e ->
+                            EntryRow(e, now, state.hideCode, onOpen, onToggleFav, i)
                         }
                         if (rest.isNotEmpty()) item { SectionLabel("全部令牌") }
                     }
-                    items(rest, key = { it.id }) { e ->
-                        EntryRow(e, now, state.hideCode, onOpen, onToggleFav)
+                    itemsIndexed(rest, key = { _, e -> e.id }) { i, e ->
+                        EntryRow(e, now, state.hideCode, onOpen, onToggleFav, favs.size + i)
                     }
                 }
             }
@@ -240,8 +256,10 @@ fun VaultScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 104.dp)
-                .shadow(18.dp, RoundedCornerShape(20.dp), ambientColor = Accent, spotColor = Accent)
+                .shadow(20.dp, RoundedCornerShape(20.dp), ambientColor = Accent, spotColor = Accent)
                 .size(56.dp)
+                .riseIn(durationMs = 380)
+                .tactile(onAdd, scaleTo = 0.9f)
                 .clip(RoundedCornerShape(20.dp))
                 .background(
                     Brush.linearGradient(
@@ -249,8 +267,7 @@ fun VaultScreen(
                         start = Offset(0f, 0f),
                         end = Offset(150f, 150f)
                     )
-                )
-                .androidClickable(onAdd),
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -269,7 +286,8 @@ private fun EntryRow(
     now: Long,
     hideCode: Boolean,
     onOpen: (String) -> Unit,
-    onToggleFav: (String) -> Unit
+    onToggleFav: (String) -> Unit,
+    index: Int = 0
 ) {
     val result = entry.currentCode(now)
     TokenCard(
@@ -279,7 +297,8 @@ private fun EntryRow(
         hideCode = hideCode,
         onClick = { onOpen(entry.id) },
         onLongClick = { onToggleFav(entry.id) },
-        onToggleFavorite = { onToggleFav(entry.id) }
+        onToggleFavorite = { onToggleFav(entry.id) },
+        modifier = Modifier.staggerIn(index, stepMs = 26)
     )
 }
 
@@ -302,16 +321,27 @@ private fun FilterChip(
     icon: Boolean = false
 ) {
     val pal = LocalPalette.current
+    val bg by animateColorAsState(
+        targetValue = if (selected) pal.accent.copy(alpha = 0.16f) else pal.surface,
+        animationSpec = tween(200),
+        label = "chipBg"
+    )
+    val bd by animateColorAsState(
+        targetValue = if (selected) pal.accent.copy(alpha = 0.55f) else pal.border,
+        animationSpec = tween(200),
+        label = "chipBorder"
+    )
+    val fg by animateColorAsState(
+        targetValue = if (selected) pal.accent else pal.text2,
+        animationSpec = tween(200),
+        label = "chipFg"
+    )
     Row(
         modifier = Modifier
             .clip(CircleShape)
-            .background(if (selected) pal.accent.copy(alpha = 0.16f) else pal.surface)
-            .border(
-                width = 1.dp,
-                color = if (selected) pal.accent.copy(alpha = 0.55f) else pal.border,
-                shape = CircleShape
-            )
-            .androidClickable(onClick)
+            .background(bg)
+            .border(width = 1.dp, color = bd, shape = CircleShape)
+            .tactile(onClick, scaleTo = 0.94f)
             .padding(horizontal = 13.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -330,7 +360,7 @@ private fun FilterChip(
                 fontSize = 12.5.sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
             ),
-            color = if (selected) pal.accent else pal.text2
+            color = fg
         )
     }
 }
