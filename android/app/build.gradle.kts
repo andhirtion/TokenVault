@@ -34,8 +34,8 @@ android {
         applicationId = "com.yg.tokenvault"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.5.2"
+        versionCode = 12
+        versionName = "1.5.3"
         resourceConfigurations += listOf("zh", "en")
     }
 
@@ -67,6 +67,18 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    testOptions {
+        unitTests.all {
+            // 单测里要复现「PROPFIND 靠反射落方法名」这条路：
+            // JDK 17 的模块系统默认不许 setAccessible，真机 Android 没这个限制
+            it.jvmArgs(
+                "--add-opens", "java.base/java.net=ALL-UNNAMED",
+                "--add-opens", "java.base/sun.net.www.protocol.http=ALL-UNNAMED",
+                "--add-opens", "java.base/sun.net.www.protocol.https=ALL-UNNAMED"
+            )
+        }
     }
 
     packaging {

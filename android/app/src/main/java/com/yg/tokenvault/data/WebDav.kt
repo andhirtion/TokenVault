@@ -23,6 +23,19 @@ data class DavCfg(
     val configured: Boolean get() = url.isNotBlank() && user.isNotBlank()
 }
 
+/**
+ * 云端的一次备份。
+ *
+ * [name] 是文件名（`backup.json` 是主文件，`backup-20261105-124500.json` 是历史快照）；
+ * [main] 标记主文件 —— 界面上单独一行「当前版本」。
+ */
+data class DavBackup(
+    val name: String,
+    val at: Long = 0L,
+    val size: Long = 0L,
+    val main: Boolean = false
+)
+
 /** WebDAV 配置的本地存取（app 私有目录，卸载即消失） */
 object DavStore {
 
@@ -34,6 +47,8 @@ object DavStore {
     private const val K_AUTO = "auto"
     private const val K_AT = "lastAt"
     private const val K_MSG = "lastMsg"
+    private const val K_HIST = "history"
+    private const val HIST_MAX = 40
 
     fun load(ctx: Context): DavCfg {
         val p = ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
@@ -70,6 +85,49 @@ object DavStore {
             .clear()
             .apply()
     }
+
+    // ── 历史备份（本地记账，服务器列不出来时兜底）──────
+
+    fun history(ctx: Context): List<DavBackup> {
+        val raw = ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            .getString(K_HIST, "") ?: ""
+        if (raw.isBlank()) return emptyList()
+        return runCatching {
+            val arr = org.json.JSONArray(raw)
+            (0 until arr.length()).mapNotNull { i ->
+                val o = arr.optJSONObject(i) ?: return@mapNotNull null
+                val n = o.optString("name", "")
+                if (n.isBlank()) null
+                else DavBackup(n, o.optLong("at", 0L), o.optLong("size", 0L), n == "backup.json")
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /** 记一次成功上传，返回更新后的列表（新的在前，只留最近 40 条） */
+    fun addHistory(ctx: Context, item: DavBackup): List<DavBackup> {
+        val merged = (listOf(item) + history(ctx).filter { it.name != item.name })
+            .sortedByDescending { it.at }
+            .take(HIST_MAX)
+        writeHistory(ctx, merged)
+        return merged
+    }
+
+    fun clearHistory(ctx: Context) = writeHistory(ctx, emptyList())
+
+    private fun writeHistory(ctx: Context, list: List<DavBackup>) {
+        val arr = org.json.JSONArray()
+        list.forEach { b ->
+            arr.put(
+                org.json.JSONObject()
+                    .put("name", b.name)
+                    .put("at", b.at)
+                    .put("size", b.size)
+            )
+        }
+        ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putString(K_HIST, arr.toString())
+            .apply()
+    }
 }
 
 /**
@@ -82,7 +140,8 @@ object WebDavClient {
     private const val UA = "KeyCoffer-Android"
 
     sealed interface Out {
-        data class Ok(val text: String = "") : Out
+        /** [savedAs] 是这次实际落盘的文件名，用来记历史 */
+        data class Ok(val text: String = "", val savedAs: String = "") : Out
         data class Err(val msg: String) : Out
     }
 
@@ -205,7 +264,15 @@ object WebDavClient {
         return try {
             val code = put(target(cfg), cfg, body)
             when {
-                code in 200..299 -> Out.Ok("已上传 $size KB")
+                code in 200..299 -> {
+                    val primary = fileNameOf(cfg)
+                    // 顺手留一版历史快照；这份失败不影响本次备份
+                    val snap = snapName(primary)
+                    val snapOk = runCatching {
+                        put(dirUrlOf(target(cfg)) + encSeg(snap), cfg, body) in 200..299
+                    }.getOrDefault(false)
+                    Out.Ok("已上传 $size KB", savedAs = if (snapOk) snap else primary)
+                }
                 code == 401 -> Out.Err("账号或应用密码不对（401）")
                 code == 403 -> Out.Err("没有写入权限（403），应用密码可能是只读的")
                 code == 507 -> Out.Err("网盘空间不足（507）")
@@ -214,7 +281,10 @@ object WebDavClient {
                     val flat = cfg.copy(path = flatPath(cfg))
                     val code2 = put(target(flat), cfg, body)
                     if (code2 in 200..299) {
-                        Out.Ok("已上传 $size KB（服务器不允许建目录，已存到根目录 ${flatPath(cfg)}）")
+                        Out.Ok(
+                            "已上传 $size KB（服务器不允许建目录，已存到根目录 ${flatPath(cfg)}）",
+                            savedAs = flatPath(cfg)
+                        )
                     } else {
                         Out.Err(dirHint(cfg, dirErr))
                     }
@@ -223,6 +293,24 @@ object WebDavClient {
                     "上传失败（HTTP $code）" + if (dirErr != null) " · $dirErr" else ""
                 )
             }
+        } catch (e: Exception) {
+            Out.Err(netErr(e))
+        }
+    }
+
+    /** 列备份历史：服务器能 PROPFIND 就用远端真实列表，否则返回空让调用方用本地记账 */
+    fun list(cfg: DavCfg): List<DavBackup> {
+        if (base(cfg).isEmpty()) return emptyList()
+        return runCatching { propfind(dirUrlOf(target(cfg)), cfg) }.getOrNull() ?: emptyList()
+    }
+
+    /** 恢复指定名字的那一份；名字是主文件就走配置路径，其余按同目录拼 */
+    fun restoreNamed(cfg: DavCfg, name: String): Out {
+        if (base(cfg).isEmpty()) return Out.Err("先填服务器地址")
+        val primary = fileNameOf(cfg)
+        return try {
+            val url = if (name == primary) target(cfg) else dirUrlOf(target(cfg)) + encSeg(name)
+            readOne(url, cfg) ?: Out.Err("云端的 $name 已经不在了")
         } catch (e: Exception) {
             Out.Err(netErr(e))
         }
@@ -242,6 +330,75 @@ object WebDavClient {
     /** 远端路径的最后一段，用来在不能建目录时存到根目录 */
     private fun flatPath(cfg: DavCfg): String =
         cfg.path.trim().trimStart('/').substringAfterLast('/').ifBlank { "backup.json" }
+
+    private fun fileNameOf(cfg: DavCfg): String = flatPath(cfg)
+
+    /** 历史快照名：backup.json → backup-20261105-124500.json */
+    private fun snapName(primary: String): String {
+        val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US)
+            .format(java.util.Date())
+        val stem = primary.substringBeforeLast('.', primary)
+        return "$stem-$stamp.json"
+    }
+
+    /** 文件 URL → 它所在目录的 URL（保留结尾斜杠） */
+    private fun dirUrlOf(fileUrl: String): String =
+        fileUrl.substringBeforeLast('/', "") + "/"
+
+    private const val PROPFIND_BODY =
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+            "<d:propfind xmlns:d=\"DAV:\"><d:prop>" +
+            "<d:getlastmodified/><d:getcontentlength/>" +
+            "</d:prop></d:propfind>"
+
+    private val RE_RESP = Regex(
+        "<(?:\\w+:)?response\\b.*?</(?:\\w+:)?response>",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+    )
+    private val RE_HREF = Regex("<(?:\\w+:)?href>(.*?)</(?:\\w+:)?href>", RegexOption.IGNORE_CASE)
+    private val RE_LEN = Regex("<(?:\\w+:)?getcontentlength>(\\d+)", RegexOption.IGNORE_CASE)
+    private val RE_MOD = Regex("<(?:\\w+:)?getlastmodified>(.*?)</(?:\\w+:)?", RegexOption.IGNORE_CASE)
+
+    /** 列目录（Depth:1），只挑出属于本应用的文件：主文件 + 同前缀的历史快照 */
+    private fun propfind(dir: String, cfg: DavCfg): List<DavBackup>? {
+        val c = open(dir, cfg, "PROPFIND").apply {
+            setRequestProperty("Depth", "1")
+            setRequestProperty("Content-Type", "application/xml; charset=utf-8")
+            doOutput = true
+        }
+        c.outputStream.use { it.write(PROPFIND_BODY.toByteArray(Charsets.UTF_8)) }
+        val code = c.responseCode
+        if (code !in 200..299) {
+            c.disconnect()
+            return null
+        }
+        val xml = c.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+        c.disconnect()
+        return parseListing(xml, fileNameOf(cfg))
+    }
+
+    private fun parseListing(xml: String, primary: String): List<DavBackup> {
+        val stem = primary.substringBeforeLast('.', primary)
+        val items = RE_RESP.findAll(xml).mapNotNull { m ->
+            val block = m.value
+            val href = RE_HREF.find(block)?.groupValues?.get(1)?.trim() ?: return@mapNotNull null
+            if (href.endsWith("/")) return@mapNotNull null            // 目录自身
+            val name = runCatching {
+                java.net.URLDecoder.decode(href.substringAfterLast('/'), "UTF-8")
+            }.getOrDefault(href.substringAfterLast('/'))
+            val match = name == primary || (name.startsWith("$stem-") && name.endsWith(".json"))
+            if (!match) return@mapNotNull null
+            val size = RE_LEN.find(block)?.groupValues?.get(1)?.toLongOrNull() ?: 0L
+            val at = RE_MOD.find(block)?.groupValues?.get(1)?.let { parseDavTime(it) } ?: 0L
+            DavBackup(name, at, size, name == primary)
+        }.toList()
+        return items.sortedWith(compareByDescending<DavBackup> { it.main }.thenByDescending { it.at })
+    }
+
+    private fun parseDavTime(raw: String): Long = runCatching {
+        java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", java.util.Locale.US)
+            .parse(raw.trim())?.time ?: 0L
+    }.getOrDefault(0L)
 
     /** 409 时的可操作提示：把「建目录」换成用户自己能做的事 */
     private fun dirHint(cfg: DavCfg, dirErr: String?): String {

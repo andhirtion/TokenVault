@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.yg.tokenvault.data.DavBackup
 import com.yg.tokenvault.data.DavCfg
 import com.yg.tokenvault.data.DavStore
 import com.yg.tokenvault.data.EntryType
@@ -295,12 +296,59 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
                 done(false, "生成备份内容失败")
                 return@launch
             }
-            val (ok, msg) = when (val out = withContext(Dispatchers.IO) { WebDavClient.upload(cfg, json) }) {
-                is WebDavClient.Out.Ok -> true to out.text
-                is WebDavClient.Out.Err -> false to out.msg
+            val out = withContext(Dispatchers.IO) { WebDavClient.upload(cfg, json) }
+            val msg = when (out) {
+                is WebDavClient.Out.Ok -> out.text
+                is WebDavClient.Out.Err -> out.msg
             }
-            if (ok) DavStore.mark(getApplication(), System.currentTimeMillis(), msg)
-            done(ok, msg)
+            if (out is WebDavClient.Out.Ok) {
+                val now = System.currentTimeMillis()
+                DavStore.mark(getApplication(), now, msg)
+                DavStore.addHistory(getApplication(), DavBackup(out.savedAs, now, json.length.toLong(), out.savedAs == "backup.json"))
+            }
+            done(out is WebDavClient.Out.Ok, msg)
+        }
+    }
+
+    /** 本地记账的历史（不联网，主线程安全） */
+    fun davLocalHistory(): List<DavBackup> = DavStore.history(getApplication())
+
+    /** 列云端可恢复的备份：远端列不出来就用本地记账兜底 */
+    fun davList(cfg: DavCfg, done: (List<DavBackup>) -> Unit) {
+        viewModelScope.launch {
+            val local = DavStore.history(getApplication())
+            val remote = withContext(Dispatchers.IO) {
+                if (cfg.configured) WebDavClient.list(cfg) else emptyList()
+            }
+            // 远端列表里带真实修改时间，优先用它；再补上只在本地记过的名字
+            val merged = (remote + local.filter { l -> remote.none { it.name == l.name } })
+                .sortedWith(compareByDescending<DavBackup> { it.main }.thenByDescending { it.at })
+            done(merged)
+        }
+    }
+
+    /** 从云端恢复指定那一次（[name] 为文件名） */
+    fun davRestoreNamed(cfg: DavCfg, name: String, pin: String?, done: (Boolean, String) -> Unit) {
+        val usePin = pin?.takeIf { it.length >= 4 } ?: currentPin() ?: ""
+        if (usePin.length < 4) {
+            done(false, "备份密码至少 4 位（留空则用解锁 PIN）")
+            return
+        }
+        viewModelScope.launch {
+            val out = withContext(Dispatchers.IO) { WebDavClient.restoreNamed(cfg, name) }
+            if (out is WebDavClient.Out.Err) {
+                done(false, out.msg)
+                return@launch
+            }
+            val text = (out as WebDavClient.Out.Ok).text
+            val list = repo.importEncrypted(text, usePin.toCharArray())
+            if (list == null) {
+                done(false, "密码不对或那份备份已损坏")
+                return@launch
+            }
+            val added = repo.mergeAll(list)
+            refresh()
+            done(true, "已恢复 $name（$added 条）")
         }
     }
 
@@ -341,11 +389,16 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
             delay(8000)
             if (!isActive) return@launch
             val json = repo.exportEncrypted(pin.toCharArray()) ?: return@launch
-            val msg = when (val out = withContext(Dispatchers.IO) { WebDavClient.upload(cfg, json) }) {
+            val out = withContext(Dispatchers.IO) { WebDavClient.upload(cfg, json) }
+            val msg = when (out) {
                 is WebDavClient.Out.Ok -> out.text
                 is WebDavClient.Out.Err -> out.msg
             }
-            DavStore.mark(getApplication(), System.currentTimeMillis(), msg)
+            val now = System.currentTimeMillis()
+            DavStore.mark(getApplication(), now, msg)
+            if (out is WebDavClient.Out.Ok) {
+                DavStore.addHistory(getApplication(), DavBackup(out.savedAs, now, json.length.toLong(), out.savedAs == "backup.json"))
+            }
         }
     }
 

@@ -4,7 +4,7 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.5.2 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.5.3 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
 安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密
 
@@ -42,14 +42,14 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.5.2.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk) | 2.4 MB（2 424 304 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.5.3.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk) | 2.4 MB（2 424 909 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.3/TokenVault-1.5.3.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
@@ -377,6 +377,18 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.5.3 — 备份走文件、云备份可选版本（2026-11-05）
+
+- **导出改成文件**：设好备份密码后弹系统「保存到」，存成 `KeyCoffer-年月日-时分秒.json`。这个文件可以丢进任何网盘、发微信给自己、拷到电脑，不再只有「复制一长串密文」这一条路
+- **导入也支持选文件**：选一个 `.json` → 输密码 → 合并进库。原来的「从剪贴板导入」单独留了一行，两种都能用
+- **网页登录只留五个站点**：Google / Microsoft / GitHub / Steam / Telegram。站点少了反而好选，「其它站点」输入框仍在，任何域名都能开
+- **Telegram 拿到真图标**：蓝色底 + 白色纸飞机（1.5.0 精简平台时把它一起删了，这次从 git 历史捞回来并重画成不带圆底的单色飞机，跟着品牌块染色）
+- **云备份能选恢复哪一次**：每次上传除主文件 `backup.json` 外，同目录再留一版 `backup-<时间戳>.json`；面板里列出「当前版本 + 历史版本（时间 / 大小 / 文件名）」，点哪条恢复哪条
+  - 列表优先问服务器（`PROPFIND` + `Depth: 1` 解析 `multistatus`），服务器不让列就用手机本地记账兜底
+  - 历史最多留 40 条，超出的按时间淘汰
+- 单测 63 → **66 项**：新增 `PROPFIND` 列表解析、服务器拒绝时回落、按名字恢复快照；`WebDavTest` 的假服务器改成按路径存文件，才能区分主文件与快照
+- 为了让单测能跑通「反射改方法名」，`build.gradle.kts` 的 `testOptions` 加了 `--add-opens java.base/sun.net.www.protocol.http`（只在测试 JVM 里生效，不影响 APK）
 
 ### v1.5.2 — 修 WebDAV 连不上（2026-11-05）
 

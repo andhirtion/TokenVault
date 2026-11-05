@@ -73,17 +73,13 @@ import org.json.JSONArray
 /** 各平台「两步验证 / 应用验证器」设置页的直达地址 */
 data class LoginShortcut(val label: String, val url: String)
 
+/** 只留五个最常用的：多一个就多一层犹豫 */
 val LOGIN_SHORTCUTS = listOf(
     LoginShortcut("Google", "https://myaccount.google.com/signinoptions/twosv"),
     LoginShortcut("Microsoft", "https://account.live.com/proofs/Manage"),
     LoginShortcut("GitHub", "https://github.com/settings/security/two_factor_authentication"),
     LoginShortcut("Steam", "https://store.steampowered.com/twofactor/manage"),
-    LoginShortcut("Dropbox", "https://www.dropbox.com/account/security"),
-    LoginShortcut("Amazon", "https://www.amazon.com/a/settings/approval"),
-    LoginShortcut("Epic", "https://www.epicgames.com/account/password"),
-    LoginShortcut("Discord", "https://discord.com/settings/security"),
-    LoginShortcut("Telegram", "https://web.telegram.org/k/"),
-    LoginShortcut("X", "https://x.com/settings/security_and_login_information")
+    LoginShortcut("Telegram", "https://web.telegram.org/k/")
 )
 
 /**

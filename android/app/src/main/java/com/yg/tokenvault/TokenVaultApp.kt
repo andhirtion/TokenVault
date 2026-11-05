@@ -205,6 +205,8 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
         // WebDAV 配置：保存后 +1 触发重读
         var davRev by remember { mutableStateOf(0) }
         val davNow = remember(davRev) { vm.davCfg() }
+        // 可恢复的备份列表（远端 + 本地记账合并）
+        var davHistory by remember { mutableStateOf<List<com.yg.tokenvault.data.DavBackup>>(emptyList()) }
 
         Box(
             modifier = Modifier
@@ -335,8 +337,22 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                     davRev++
                                 },
                                 onDavTest = { cfg, done -> vm.davTest(cfg, done) },
-                                onDavUpload = { cfg, pin, done -> vm.davUpload(cfg, pin, done) },
-                                onDavRestore = { cfg, pin, done -> vm.davRestore(cfg, pin, done) }
+                                onDavUpload = { cfg, pin, done ->
+                                    vm.davUpload(cfg, pin) { ok, text ->
+                                        davHistory = vm.davLocalHistory()
+                                        done(ok, text)
+                                    }
+                                },
+                                onDavRestore = { cfg, pin, done -> vm.davRestore(cfg, pin, done) },
+                                davHistory = davHistory,
+                                onDavRefreshHistory = { cb -> vm.davList(davNow) { list -> davHistory = list; cb(list) } },
+                                onDavRestoreNamed = { cfg, name, pin, done ->
+                                    vm.davRestoreNamed(cfg, name, pin) { ok, text ->
+                                        davHistory = vm.davLocalHistory()
+                                        done(ok, text)
+                                    }
+                                },
+                                onToast = vm::toast
                             )
                         }
                     }

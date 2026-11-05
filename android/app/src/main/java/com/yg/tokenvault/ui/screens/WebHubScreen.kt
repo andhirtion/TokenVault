@@ -300,12 +300,13 @@ private fun SiteCard(
     }
 }
 
-/** 只有内置的四个平台有品牌图标，其余用首字母 */
+/** 四个内置平台 + Telegram 有品牌图标，其余用首字母 */
 private fun brandOf(label: String): Platform? = when (label.lowercase()) {
     "google" -> Platforms.of(Platforms.KEY_GOOGLE)
     "microsoft" -> Platforms.of(Platforms.KEY_MICROSOFT)
     "github" -> Platforms.of(Platforms.KEY_GITHUB)
     "steam" -> Platforms.of(Platforms.KEY_STEAM)
+    "telegram" -> Platforms.telegramBrand
     else -> null
 }
 

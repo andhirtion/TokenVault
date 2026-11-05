@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Image
@@ -101,7 +102,11 @@ fun SettingsScreen(
     onDavSave: (DavCfg) -> Unit = {},
     onDavTest: (DavCfg, (Boolean, String) -> Unit) -> Unit = { _, _ -> },
     onDavUpload: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> },
-    onDavRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> }
+    onDavRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> },
+    davHistory: List<com.yg.tokenvault.data.DavBackup> = emptyList(),
+    onDavRefreshHistory: ((List<com.yg.tokenvault.data.DavBackup>) -> Unit) -> Unit = {},
+    onDavRestoreNamed: (DavCfg, String, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _, _ -> },
+    onToast: (String) -> Unit = {}
 ) {
     val pal = LocalPalette.current
     val clipboard = LocalClipboardManager.current
@@ -110,6 +115,10 @@ fun SettingsScreen(
     var showExportDialog by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
     var showDav by remember { mutableStateOf(false) }
+
+    // 文件形式的备份：导出先攒好文本再弹系统「保存到」，导入读文件后弹密码框
+    var pendingExport by remember { mutableStateOf<String?>(null) }
+    var pendingImport by remember { mutableStateOf<String?>(null) }
 
     val pickBg = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) onPickBg(uri)
@@ -136,6 +145,36 @@ fun SettingsScreen(
                 Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
+        }
+    }
+
+    // 导出：把加密文本写进用户选的文件（SAF，不需要存储权限）
+    val saveBackup = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        val text = pendingExport
+        pendingExport = null
+        if (uri == null || text == null) return@rememberLauncherForActivityResult
+        val ok = runCatching {
+            ctx.contentResolver.openOutputStream(uri)?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
+                ?: error("打不开输出流")
+        }.isSuccess
+        onToast(if (ok) "备份已保存成文件" else "写入文件失败")
+    }
+
+    // 导入：先从文件读文本，再弹密码框
+    val loadBackup = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val text = runCatching {
+            ctx.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+        }.getOrNull()
+        if (text.isNullOrBlank()) {
+            onToast("文件里没有内容")
+        } else {
+            pendingImport = text
+            showImportDialog = true
         }
     }
 
@@ -349,16 +388,23 @@ fun SettingsScreen(
         Section {
             ActionRow(
                 title = "导出加密备份",
-                subtitle = "独立密码保护，可存到网盘或电脑",
+                subtitle = "存成 .json 文件，放网盘、发电脑都行",
                 icon = Icons.Outlined.Upload,
                 onClick = { showExportDialog = true }
             )
             Divider()
             ActionRow(
                 title = "导入加密备份",
-                subtitle = "从剪贴板读取备份内容",
+                subtitle = "选一个备份文件，输入当时设的密码",
                 icon = Icons.Outlined.Download,
-                onClick = { showImportDialog = true }
+                onClick = { loadBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+            )
+            Divider()
+            ActionRow(
+                title = "从剪贴板导入",
+                subtitle = "备份内容在剪贴板里时用这个",
+                icon = Icons.Outlined.ContentPaste,
+                onClick = { pendingImport = null; showImportDialog = true }
             )
             Divider()
             ActionRow(
@@ -438,7 +484,10 @@ fun SettingsScreen(
             onSave = onDavSave,
             onTest = onDavTest,
             onUpload = onDavUpload,
-            onRestore = onDavRestore
+            onRestore = onDavRestore,
+            history = davHistory,
+            onRefreshHistory = { onDavRefreshHistory { } },
+            onRestoreNamed = { name, pin, done -> onDavRestoreNamed(davCfg, name, pin, done) }
         )
     }
 
@@ -453,34 +502,41 @@ fun SettingsScreen(
         )
     }
 
-    // ── 导出 ────────────────────────────────────
+    // ── 导出：设密码 → 系统「保存到」 ─────────────
     if (showExportDialog) {
         SecretDialog(
             title = "设置备份密码",
             hint = "备份文件用这个密码加密，导入时需要它",
-            confirmLabel = "生成并复制",
+            confirmLabel = "生成并保存",
             onDismiss = { showExportDialog = false },
             onConfirm = { pw ->
                 val text = onExport(pw)
-                if (text != null) {
-                    clipboard.setText(AnnotatedString(text))
-                }
                 showExportDialog = false
+                if (text == null) {
+                    onToast("生成备份失败")
+                } else {
+                    pendingExport = text
+                    val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US)
+                        .format(java.util.Date())
+                    saveBackup.launch("KeyCoffer-$stamp.json")
+                }
             }
         )
     }
 
-    // ── 导入 ────────────────────────────────────
+    // ── 导入：文件里读到的文本，或剪贴板 ──────────
     if (showImportDialog) {
+        val fromFile = pendingImport != null
         SecretDialog(
             title = "输入备份密码",
-            hint = "将从剪贴板读取备份内容",
+            hint = if (fromFile) "输入导出这份备份时设的密码" else "将从剪贴板读取备份内容",
             confirmLabel = "导入",
-            onDismiss = { showImportDialog = false },
+            onDismiss = { showImportDialog = false; pendingImport = null },
             onConfirm = { pw ->
-                val clip = clipboard.getText()?.text
-                if (!clip.isNullOrBlank()) onImport(clip, pw)
+                val src = pendingImport ?: clipboard.getText()?.text
                 showImportDialog = false
+                pendingImport = null
+                if (!src.isNullOrBlank()) onImport(src, pw) else onToast("没有读到备份内容")
             }
         )
     }

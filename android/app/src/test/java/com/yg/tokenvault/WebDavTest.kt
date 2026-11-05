@@ -47,13 +47,17 @@ class WebDavTest {
     private var optCode = 200
     private var putCode = 201
     private var nested409 = false
-    private var stored: String? = null
-    private var storedPath: String? = null
+
+    /** PROPFIND 返回的 multistatus 原文，用例按需替换 */
+    private var propfindXml = ""
+
+    /** 按路径存文件：主文件与历史快照各占一个键，GET 才能一对一读回来 */
+    private val files = HashMap<String, String>()
 
     @Before
     fun start() {
         methods.clear(); paths.clear(); lastBody = ""; lastAuth = ""
-        optCode = 200; putCode = 201; nested409 = false; stored = null; storedPath = null
+        optCode = 200; putCode = 201; nested409 = false; files.clear(); propfindXml = ""
         running = true
 
         socket = ServerSocket(0)
@@ -129,13 +133,11 @@ class WebDavTest {
             "PUT" -> if (nested409 && path == "/dav/KeyCoffer/backup.json") {
                 Resp(409)
             } else {
-                if (putCode in 200..299) {
-                    stored = body
-                    storedPath = path
-                }
+                if (putCode in 200..299) files[path] = body
                 Resp(putCode)
             }
-            "GET" -> if (stored != null && path == storedPath) Resp(200, stored!!) else Resp(404)
+            "GET" -> files[path]?.let { Resp(200, it) } ?: Resp(404)
+            "PROPFIND" -> if (propfindXml.isBlank()) Resp(405) else Resp(207, propfindXml)
             else -> Resp(405)
         }
         write(s, resp)
@@ -179,6 +181,7 @@ class WebDavTest {
         404 -> "Not Found"
         405 -> "Method Not Allowed"
         409 -> "Conflict"
+        207 -> "Multi-Status"
         507 -> "Insufficient Storage"
         else -> "Status"
     }
@@ -250,8 +253,16 @@ class WebDavTest {
         assertTrue("应当成功：$out", out is WebDavClient.Out.Ok)
         assertTrue((out as WebDavClient.Out.Ok).text.startsWith("已上传"))
         assertEquals("服务端收到的 body 要一致", json, lastBody)
-        assertEquals("/dav/KeyCoffer/backup.json", paths.last())
+        // 第一个 PUT 必须是主文件（之前还会有 MKCOL）
+        val firstPut = paths[methods.indexOfFirst { it == "PUT" }]
+        assertEquals("主文件要写配置里的路径", "/dav/KeyCoffer/backup.json", firstPut)
         assertTrue("必须发出 PUT", methods.contains("PUT"))
+        // 顺手留的历史快照：同目录、带时间戳
+        assertTrue(
+            "应当留一版历史快照：$paths",
+            paths.any { it.startsWith("/dav/KeyCoffer/backup-") && it.endsWith(".json") }
+        )
+        assertEquals("主文件内容要正确落盘", json, files["/dav/KeyCoffer/backup.json"])
     }
 
     @Test
@@ -298,6 +309,61 @@ class WebDavTest {
         val out = WebDavClient.download(cfg())
         assertTrue("应当读回来：$out", out is WebDavClient.Out.Ok)
         assertEquals("""{"app":"TokenVault"}""", (out as WebDavClient.Out.Ok).text)
+    }
+
+    // ── 历史版本 ─────────────────────────────────────────────────
+
+    @Test
+    fun list_parsesPropfindMultistatus() {
+        propfindXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <d:multistatus xmlns:d="DAV:">
+              <d:response>
+                <d:href>/dav/KeyCoffer/</d:href>
+                <d:propstat><d:prop><d:getlastmodified>Wed, 05 Nov 2026 04:00:00 GMT</d:getlastmodified></d:prop></d:propstat>
+              </d:response>
+              <d:response>
+                <d:href>/dav/KeyCoffer/backup.json</d:href>
+                <d:propstat><d:prop>
+                  <d:getlastmodified>Wed, 05 Nov 2026 04:00:00 GMT</d:getlastmodified>
+                  <d:getcontentlength>384</d:getcontentlength>
+                </d:prop></d:propstat>
+              </d:response>
+              <d:response>
+                <d:href>/dav/KeyCoffer/backup-20261105-110000.json</d:href>
+                <d:propstat><d:prop>
+                  <d:getlastmodified>Wed, 05 Nov 2026 03:00:00 GMT</d:getlastmodified>
+                  <d:getcontentlength>352</d:getcontentlength>
+                </d:prop></d:propstat>
+              </d:response>
+              <d:response>
+                <d:href>/dav/KeyCoffer/readme.txt</d:href>
+              </d:response>
+            </d:multistatus>
+        """.trimIndent()
+
+        val list = WebDavClient.list(cfg())
+        assertEquals("只留主文件 + 自己的快照：$list", 2, list.size)
+        assertEquals("backup.json", list.first().name)
+        assertTrue("主文件排第一", list.first().main)
+        assertEquals(384L, list.first().size)
+        assertEquals("backup-20261105-110000.json", list.last().name)
+        assertTrue("时间要解析出来", list.last().at > 0L)
+    }
+
+    @Test
+    fun list_returnsEmptyWhenServerRefusesPropfind() {
+        // propfindXml 为空 → 405：调用方会回落到本地记账
+        assertTrue(WebDavClient.list(cfg()).isEmpty())
+    }
+
+    @Test
+    fun restoreNamed_readsTheGivenSnapshot() {
+        WebDavClient.upload(cfg(), """{"count":3}""")
+        val snap = paths.first { it.contains("backup-") }.substringAfterLast('/')
+        val out = WebDavClient.restoreNamed(cfg(), snap)
+        assertTrue("应当读到快照：$out", out is WebDavClient.Out.Ok)
+        assertEquals("""{"count":3}""", (out as WebDavClient.Out.Ok).text)
     }
 
     // ── 空配置 ───────────────────────────────────────────────────

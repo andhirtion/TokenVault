@@ -52,6 +52,14 @@ object Platforms {
     /** 编辑页展示的顺序（高频平台在前，自定义压尾） */
     val picker: List<Platform> = ALL
 
+    /**
+     * 只给「网页登录」主页用的品牌块：Telegram 不是令牌平台（它没有 TOTP 密钥口径），
+     * 但登录页要显示纸飞机图标，所以单独放一个不进 picker 的条目。
+     */
+    val telegramBrand = Platform(
+        "telegram", "Telegram", "TG", R.drawable.ic_brand_telegram, 0xFF229ED9, 0xFFFFFFFF, cat = "other"
+    )
+
     /** 平台搜索：匹配 key / label / 中文别名（平台已精简，保留接口供导入猜测用） */
     fun search(query: String?, cat: String = "all"): List<Platform> {
         val q = (query ?: "").trim().lowercase()

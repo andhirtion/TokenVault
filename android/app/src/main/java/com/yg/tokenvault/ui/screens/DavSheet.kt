@@ -30,6 +30,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yg.tokenvault.data.DavBackup
 import com.yg.tokenvault.data.DavCfg
 import com.yg.tokenvault.ui.theme.LocalPalette
 import java.text.SimpleDateFormat
@@ -63,7 +65,10 @@ fun DavSheet(
     onSave: (DavCfg) -> Unit,
     onTest: (DavCfg, (Boolean, String) -> Unit) -> Unit,
     onUpload: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit,
-    onRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit
+    onRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit,
+    history: List<DavBackup> = emptyList(),
+    onRefreshHistory: () -> Unit = {},
+    onRestoreNamed: (String, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val pal = LocalPalette.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -80,6 +85,9 @@ fun DavSheet(
     var err by remember { mutableStateOf(false) }
 
     val cur: () -> DavCfg = { DavCfg(url = url, user = user, pass = pass, path = path, auto = auto) }
+
+    // 打开面板就把历史拉一遍
+    LaunchedEffect(Unit) { onRefreshHistory() }
 
     fun finish(ok: Boolean, text: String) {
         msg = text
@@ -202,10 +210,10 @@ fun DavSheet(
                     onUpload(cur(), pwd.ifBlank { null }) { ok, text -> finish(ok, text) }
                 }
                 DavButton(
-                    text = if (busy == "down") "读取中…" else "恢复",
+                    text = if (busy == "down") "读取中…" else "恢复最新",
                     primary = false,
                     enabled = busy.isEmpty(),
-                    modifier = Modifier.weight(0.8f)
+                    modifier = Modifier.weight(0.9f)
                 ) {
                     busy = "down"
                     onSave(cur())
@@ -256,6 +264,52 @@ fun DavSheet(
                 }
             }
 
+            Spacer(Modifier.height(14.dp))
+
+            // ── 历史版本：选哪一次恢复 ──────────────────────
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "历史版本",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = pal.text,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = "刷新",
+                    fontSize = 12.sp,
+                    color = pal.accent,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .androidClickable { onRefreshHistory() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            if (history.isEmpty()) {
+                Text(
+                    text = "还没有可恢复的记录。备份一次之后，每次上传都会在同一目录留一版快照。",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 11.5.sp,
+                        lineHeight = 16.sp
+                    ),
+                    color = pal.text3
+                )
+            } else {
+                history.take(12).forEach { h ->
+                    DavHistRow(
+                        item = h,
+                        enabled = busy.isEmpty(),
+                        onPick = {
+                            busy = "down"
+                            onSave(cur())
+                            onRestoreNamed(h.name, pwd.ifBlank { null }) { ok, text -> finish(ok, text) }
+                        }
+                    )
+                    Spacer(Modifier.height(6.dp))
+                }
+            }
+
             Spacer(Modifier.height(10.dp))
             Text(
                 text = "备份内容用 AES-256-GCM 加密后才上传，云端看不到任何条目名、账号或密码。",
@@ -264,6 +318,48 @@ fun DavSheet(
                     lineHeight = 16.sp
                 ),
                 color = pal.text3
+            )
+        }
+    }
+}
+
+/** 历史版本的一行：时间 / 大小 + 恢复 */
+@Composable
+private fun DavHistRow(item: DavBackup, enabled: Boolean, onPick: () -> Unit) {
+    val pal = LocalPalette.current
+    val label = when {
+        item.main -> "当前版本"
+        item.at > 0 -> SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(item.at))
+        else -> item.name.removeSuffix(".json")
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(pal.surfaceHi)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = label, fontSize = 13.sp, color = pal.text)
+            val sub = buildString {
+                if (item.size > 0) append("%.1f KB".format(item.size / 1024.0))
+                if (item.size > 0) append(" · ")
+                append(item.name)
+            }
+            Text(text = sub, fontSize = 10.5.sp, color = pal.text3)
+        }
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(9.dp))
+                .background(pal.accent.copy(alpha = if (enabled) 0.14f else 0.06f))
+                .let { if (enabled) it.androidClickable(onPick) else it }
+                .padding(horizontal = 10.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = "恢复",
+                fontSize = 12.sp,
+                color = if (enabled) pal.accent else pal.text3
             )
         }
     }
