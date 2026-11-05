@@ -4,7 +4,7 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.5.1 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.5.2 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
 安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密
 
@@ -42,14 +42,14 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.5.1.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk) | 2.4 MB（2 424 304 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.5.2.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk) | 2.4 MB（2 424 304 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
@@ -212,15 +212,19 @@
 | 服务器地址 | 完整 WebDAV 根地址，例如坚果云 `https://dav.jianguoyun.com/dav/` |
 | 账号 | 你的账号（坚果云是注册邮箱） |
 | 应用密码 | **不是登录密码**，是服务商单独生成的「应用密码 / 授权码」 |
-| 远端路径 | 备份文件放哪，默认 `KeyCoffer/backup.json`，目录不存在会自动 MKCOL 建 |
+| 远端路径 | 备份文件放哪，默认 `KeyCoffer/backup.json`，目录不存在会尝试 MKCOL 建，建不出来就自动存到根目录 `backup.json` |
 
 三个按钮：
 
-- **测试连接**：发一次 `PROPFIND Depth: 0`，返回 207 就算通；
+- **测试连接**：发一次 `OPTIONS`，返回 2xx 就算通，并显示服务器声明的 `DAV` 版本；
 - **立即备份**：把当前保险箱加密后 `PUT` 上去；
-- **恢复**：`GET` 回来解密并合并，同 ID 的条目以云端为准。
+- **恢复**：`GET` 回来解密并合并，同 ID 的条目以云端为准（配置路径没文件时自动去根目录找）。
 
-### 坚果云（实测通过）
+> 为什么测连用 `OPTIONS` 而不是 `PROPFIND`：`HttpURLConnection` 有一份方法白名单（GET/POST/HEAD/OPTIONS/PUT/DELETE/TRACE），`PROPFIND` 会被客户端自己拦掉，报 `ProtocolException: Expected one of [OPTIONS, GET, …] but was PROPFIND` —— 请求根本没发出去。`OPTIONS` 是标准方法，WebDAV 服务器一定会答，并且带 `DAV:` 头。
+>
+> `MKCOL` 同理不在白名单里，客户端用反射改实现的 `method` 字段发出去；某些系统挡住反射时，就退回「PUT 到根目录」这条路 —— 两种情况下备份都能成功，只是落点不同，提示里会写清。
+
+### 坚果云
 
 1. 网页版坚果云 → 右上角账户 → 安全选项 → **添加应用** → 生成应用密码；
 2. 地址填 `https://dav.jianguoyun.com/dav/`，账号填注册邮箱，密码填刚生成的那串；
@@ -310,7 +314,9 @@ $env:GRADLE_USER_HOME = "$TC\gradle-home"
 & "$TC\gradle-8.11.1\bin\gradle.bat" --no-daemon -p android :app:testReleaseUnitTest
 ```
 
-共 **51 项**：`CoreLogicTest` 21（TOTP / Base32 / 平台 / 密码生成）、`OtpImportTest` 13（otpauth、migration protobuf、平台猜测）、`UpdaterTest` 17（版本比较、两种版本清单解析、镜像顺序）。
+共 **63 项**：`CoreLogicTest` 21（TOTP / Base32 / 平台 / 密码生成）、`OtpImportTest` 13（otpauth、migration protobuf、平台猜测）、`UpdaterTest` 17（版本比较、两种版本清单解析、镜像顺序）、`WebDavTest` 12（假 WebDAV 服务器上的 OPTIONS 测连、PUT 落点、409 回退根目录、404 回退恢复）。
+
+`WebDavTest` 不依赖外网、也不需要 `com.sun.net.httpserver`（Android 单测的 bootclasspath 里没有它）：直接用 `ServerSocket` 起一个只会说 HTTP/1.1 的假服务器，记录收到的方法名、路径、`Authorization` 头与 body 再断言。
 
 ### 签名
 
@@ -360,7 +366,7 @@ TokenVault/
 │   │       ├── components/            BrandTile / TokenCard / PinPad / RingProgress …
 │   │       ├── screens/               Home / Vault / Detail / Editor / Scan / Login / Tools / Settings
 │   │       └── theme/                 Color / Type / Theme
-│   ├── app/src/test/                  CoreLogicTest / OtpImportTest / UpdaterTest（51 项）
+│   ├── app/src/test/                  CoreLogicTest / OtpImportTest / UpdaterTest / WebDavTest（63 项）
 │   └── app/src/main/res/drawable/     ic_brand_{google,microsoft,steam,github,custom}.xml
 ├── docs/version.json                  版本清单（检查更新的首选源）
 ├── dist/                              打好的 APK（不入库）
@@ -371,6 +377,23 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.5.2 — 修 WebDAV 连不上（2026-11-05）
+
+真机上点「测试连接」必报：
+
+```
+网络错误：ProtocolException Expected one of [OPTIONS, GET, HEAD, POST,
+PUT, DELETE, TRACE, PATCH] but was PROPFIND
+```
+
+根因不是账号密码，是 `HttpURLConnection` 的方法白名单：`PROPFIND` 请求根本没发出去，被客户端自己拦掉了。
+
+- **测连改用 `OPTIONS`**：标准方法，WebDAV 服务器一定答，还能顺手读出 `DAV:` 头确认协议版本
+- **`MKCOL` 改用反射改 `method` 字段**发出去；反射被系统挡住时不再直接失败 —— 备份退回根目录 `backup.json`，提示里写明「已存到根目录」
+- **409 不再死路**：提示直接给出两条可操作路径（改远端路径 / 手动建文件夹）
+- **恢复双查**：配置路径没文件就自动去根目录找同名文件，云端藏在哪都能读回来
+- 新增 `WebDavTest` 12 项：`ServerSocket` 起假 WebDAV，验证 OPTIONS 测连、PUT 落点与 body、409 回退、404 回退、空配置不发请求
 
 ### v1.5.1 — 网页登录加一层主页（2026-11-05）
 

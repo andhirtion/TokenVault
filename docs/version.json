@@ -1,29 +1,29 @@
 {
   "app": "TokenVault",
   "name": "钥匣 KeyCoffer",
-  "version": "1.5.1",
-  "code": 10,
+  "version": "1.5.2",
+  "code": 11,
   "minCode": 1,
-  "publishedAt": "2026-11-05T12:30:00+08:00",
+  "publishedAt": "2026-11-05T21:10:00+08:00",
   "notes": [
-    "顶栏地球按钮改为先进「网页登录」主页：先选站点（Google / Microsoft / GitHub / Steam 等 10 个）或自己填网址，再进内置浏览器登录",
-    "网页登录主页会说明抓取流程：登录后停在「两步验证 / 身份验证器」页，密钥与二维码会被自动识别",
-    "主界面四张卡片：令牌 / 账号密码 / 工具箱 / 设置，点哪进哪",
-    "平台精简到 4 个（Google / Microsoft / Steam / GitHub）+ 自定义",
-    "自定义图标：相册传图或按邮箱域名自动抓 favicon；自定义背景：上传本地图片",
-    "WebDAV 云备份：坚果云 / Nextcloud / Alist / 自建，支持自动备份与从云端恢复"
+    "修「测试连接」一直报 ProtocolException … but was PROPFIND：测连改用 OPTIONS，坚果云等 WebDAV 服务器都能正常应答",
+    "建目录（MKCOL）改成尽力而为：服务器不让建目录时，备份自动存到根目录 backup.json，并说明存到了哪里",
+    "409 不再是死路：错误提示直接告诉你怎么改（改远端路径 / 手动建文件夹）",
+    "恢复时配置路径没文件就自动去根目录找，云端藏在哪都能读回来",
+    "新增 12 项 WebDAV 协议单测（假服务器验证 OPTIONS/PUT/409 回退/404 回退），单测总数 63 项",
+    "顶栏地球按钮仍是先进「网页登录」主页再选站点"
   ],
   "repo": "https://github.com/andhirtion/TokenVault",
-  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.5.1",
+  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.5.2",
   "apk": {
-    "name": "TokenVault-1.5.1.apk",
+    "name": "TokenVault-1.5.2.apk",
     "size": 2424304,
-    "sha256": "cf3c6ba513012afdb7133df20a238b718aab8da58308d3363ef6675690fd818a",
+    "sha256": "28a0820a687634b3e13f63abcf3060e8e09b81e2ec643a36b2766364581cee21",
     "urls": [
-      "https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk",
-      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk",
-      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk",
-      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk"
+      "https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk",
+      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk",
+      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk",
+      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.2/TokenVault-1.5.2.apk"
     ]
   }
 }
