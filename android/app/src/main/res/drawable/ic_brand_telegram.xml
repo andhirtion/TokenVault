@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 纸飞机（纯图形，不含圆底）：底色由 BrandTile 的 tileColor 提供，tint 染成白色 -->
+<!-- Telegram 官方纸飞机（不含圆底）：底色由 BrandTile 的 tileColor 提供，tint 染成白色 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
@@ -7,5 +7,5 @@
     android:viewportHeight="24">
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M22.05,2.4c0.2,-0.8 -0.35,-1.1 -0.95,-0.85L1.8,9.7c-0.95,0.35 -0.9,1 -0.15,1.25l5.15,1.6 2,6.1c0.25,0.7 0.55,0.85 1,0.55l2.6,-1.9 5.1,3.75c0.9,0.5 1.55,0.2 1.8,-0.85L22.05,2.4z" />
+        android:pathData="M9.78,18.65l0.28,-4.23l7.68,-6.92c0.34,-0.31 -0.07,-0.46 -0.52,-0.19L7.74,12.3L3.73,11.05c-0.88,-0.27 -0.88,-0.86 0.18,-1.28l16.63,-6.4c0.73,-0.27 1.37,0.18 1.13,1.26l-2.83,13.36c-0.2,0.93 -0.76,1.16 -1.54,0.72l-4.2,-3.1l-2.02,1.96c-0.23,0.23 -0.42,0.42 -0.83,0.42z" />
 </vector>

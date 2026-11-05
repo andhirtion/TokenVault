@@ -374,7 +374,10 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 },
                                 onDavRestore = { cfg, pin, done -> vm.davRestore(cfg, pin, done) },
                                 davHistory = davHistory,
-                                onDavRefreshHistory = { cb -> vm.davList(davNow) { list -> davHistory = list; cb(list) } },
+                                onDavRefreshHistory = { cfg, cb ->
+                                    // 用面板里当下的表单值去列，用户刚改完地址不用先保存也能刷出来
+                                    vm.davList(cfg) { list -> davHistory = list; cb(list) }
+                                },
                                 onDavRestoreNamed = { cfg, name, pin, done ->
                                     vm.davRestoreNamed(cfg, name, pin) { ok, text ->
                                         davHistory = vm.davLocalHistory()

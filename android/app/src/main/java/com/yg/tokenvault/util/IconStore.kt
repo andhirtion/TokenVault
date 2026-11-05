@@ -19,7 +19,8 @@ import java.net.URL
 object IconStore {
 
     private const val ICON_DIR = "icons"
-    private const val ICON_SIZE = 256
+    /** 自定义图标落盘边长：512 足够 3x 屏上 48dp 的方块，抓小图也不会被二次放大 */
+    private const val ICON_SIZE = 512
     private const val BG_FILE = "background.jpg"
     private const val BG_MAX = 1600
 
@@ -61,28 +62,6 @@ object IconStore {
     }.getOrNull()
 
     /**
-     * 从账号里猜域名：优先 `xxx@host` 的 host 部分，否则找第一个形如 `a.b` 的串。
-     * 返回小写域名，猜不到返回 null。
-     */
-    fun guessHost(account: String, name: String): String? {
-        val a = account.trim()
-        val at = a.indexOf('@')
-        if (at in 1 until a.length - 1) {
-            val host = a.substring(at + 1).trim().trimEnd('.', '/')
-            if (host.contains('.') && !host.contains(' ')) return host.lowercase()
-        }
-        val rx = Regex("([a-z0-9][a-z0-9-]*(?:\\.[a-z0-9-]+)+)", RegexOption.IGNORE_CASE)
-        for (src in listOf(a, name)) {
-            rx.find(src)?.let { m ->
-                val host = m.groupValues[1].lowercase()
-                // 排除纯数字版本号之类
-                if (host.contains('.') && host.any { it.isLetter() }) return host
-            }
-        }
-        return null
-    }
-
-    /**
      * 把用户手填的「域名 / 网址」归一化成 host。
      * 支持 `github.com`、`https://github.com/login?x=1`、`github.com:443`、`me@mail.qq.com`。
      * 认不出是域名就返回 null。
@@ -114,15 +93,28 @@ object IconStore {
     fun fetchIconFromHost(ctx: Context, host: String): String? =
         fetchIconDetailed(ctx, host).saved
 
-    /** 同上，但把失败原因带出来，便于界面上说清楚为什么没抓到 */
+    /**
+     * 联网抓站点图标，按「分辨率从高到低」试，最后留最清楚的那张。
+     *
+     * 顺序：站点自己声明的 touch-icon / manifest 图标（通常 192~512px）
+     * → 根目录 apple-touch-icon.png（180）→ Google s2（256）
+     * → DuckDuckGo（32）→ 站点根 favicon.ico（16/32，最糊）。
+     *
+     * 拿到 ≥128px 的就提前收工；都只拿到小图时会把实际像素数告诉用户。
+     */
     fun fetchIconDetailed(ctx: Context, rawHost: String): IconFetch {
         val h = parseHost(rawHost) ?: return IconFetch(null, 0, "域名格式不对")
-        val sources = listOf(
-            "https://$h/favicon.ico",
-            "https://icons.duckduckgo.com/ip3/$h.ico",
-            "https://www.google.com/s2/favicons?domain=$h&sz=128"
-        )
+        val sources = buildList {
+            addAll(pageIcons(h))
+            add("https://$h/apple-touch-icon.png")
+            add("https://www.google.com/s2/favicons?domain=$h&sz=256")
+            add("https://icons.duckduckgo.com/ip3/$h.ico")
+            add("https://$h/favicon.ico")
+        }.distinct()
+
         var tried = 0
+        var best: Bitmap? = null
+        var bestPx = 0
         var last = "没有响应"
         for (u in sources) {
             tried++
@@ -131,17 +123,131 @@ object IconStore {
                 last = err ?: "没有响应"
                 continue
             }
-            if (bmp.width < 16 || bmp.height < 16) {
+            val px = minOf(bmp.width, bmp.height)
+            if (px < 16) {
                 bmp.recycle()
-                last = "图标太小（${bmp.width}px）"
+                last = "图标太小（${px}px）"
                 continue
             }
-            val name = saveIconBitmap(ctx, bmp)
-            bmp.recycle()
-            if (name != null) return IconFetch(name, tried, "已抓取 $h")
-            last = "存盘失败"
+            if (px > bestPx) {
+                best?.recycle()
+                best = bmp
+                bestPx = px
+            } else {
+                bmp.recycle()
+            }
+            if (bestPx >= 128) break
         }
-        return IconFetch(null, tried, "试了 $tried 个源都没拿到（$last）")
+
+        val win = best ?: return IconFetch(null, tried, "试了 $tried 个源都没拿到（$last）")
+        val px = bestPx
+        val name = saveIconBitmap(ctx, win)
+        win.recycle()
+        if (name == null) return IconFetch(null, tried, "存盘失败")
+        return if (px < 96) {
+            IconFetch(name, tried, "只抓到 ${px}px，放大后会糊；想要清晰点就「上传图片」用自己的图")
+        } else {
+            IconFetch(name, tried, "已抓到 ${px}px 的图标")
+        }
+    }
+
+    /**
+     * 从站点首页里扒出它自己声明的图标地址，按超大分辨率优先排序。
+     * 只认 `<link rel="...icon...">` 与 web app manifest 里的 icons，跳过 SVG（Bitmap 解不了）。
+     */
+    private fun pageIcons(host: String): List<String> {
+        val html = httpText("https://$host/") ?: return emptyList()
+        val base = Regex("<base\\b[^>]*href=[\"']([^\"']+)", RegexOption.IGNORE_CASE)
+            .find(html)?.groupValues?.getOrNull(1) ?: "https://$host/"
+
+        val found = ArrayList<Pair<Int, String>>()
+        Regex("<link\\b[^>]*>", RegexOption.IGNORE_CASE).findAll(html).forEach { m ->
+            val tag = m.value
+            val rel = Regex("rel=[\"']([^\"']+)", RegexOption.IGNORE_CASE)
+                .find(tag)?.groupValues?.getOrNull(1)?.lowercase() ?: return@forEach
+            if (!rel.contains("icon") || rel.contains("mask-icon")) return@forEach
+            val href = Regex("href=[\"']([^\"']+)", RegexOption.IGNORE_CASE)
+                .find(tag)?.groupValues?.getOrNull(1) ?: return@forEach
+            val sizes = Regex("sizes=[\"']([^\"']+)", RegexOption.IGNORE_CASE)
+                .find(tag)?.groupValues?.getOrNull(1) ?: ""
+            val px = Regex("(\\d+)x\\d+", RegexOption.IGNORE_CASE)
+                .find(sizes)?.groupValues?.getOrNull(1)?.toIntOrNull()
+                ?: if (rel.contains("apple-touch")) 180 else 64
+            found.add(px to absUrl(base, href))
+        }
+
+        // manifest 里通常躺着 512px 的图标，比 favicon 清楚一个量级
+        Regex("<link\\b[^>]*>", RegexOption.IGNORE_CASE).findAll(html).forEach { m ->
+            val tag = m.value
+            val rel = Regex("rel=[\"']([^\"']+)", RegexOption.IGNORE_CASE)
+                .find(tag)?.groupValues?.getOrNull(1)?.lowercase() ?: return@forEach
+            if (rel != "manifest") return@forEach
+            val href = Regex("href=[\"']([^\"']+)", RegexOption.IGNORE_CASE)
+                .find(tag)?.groupValues?.getOrNull(1) ?: return@forEach
+            val json = httpText(absUrl(base, href)) ?: return@forEach
+            runCatching {
+                val icons = org.json.JSONObject(json).optJSONArray("icons") ?: return@runCatching
+                for (i in 0 until icons.length()) {
+                    val o = icons.optJSONObject(i) ?: continue
+                    val src = o.optString("src")
+                    if (src.isBlank()) continue
+                    val sizes = o.optString("sizes")
+                    val px = Regex("(\\d+)x\\d+", RegexOption.IGNORE_CASE)
+                        .find(sizes)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 192
+                    found.add(px to absUrl(base, src))
+                }
+            }
+        }
+
+        return found
+            .filterNot { it.second.endsWith(".svg", true) || it.second.startsWith("data:") }
+            .sortedByDescending { it.first }
+            .map { it.second }
+    }
+
+    /** 把页面里的相对地址补成绝对地址 */
+    private fun absUrl(base: String, href: String): String {
+        val h = href.trim()
+        if (h.startsWith("http://", true) || h.startsWith("https://", true)) return h
+        if (h.startsWith("//")) return "https:$h"
+        return try {
+            java.net.URI(base).resolve(h).toString()
+        } catch (e: Exception) {
+            base.trimEnd('/') + "/" + h.trimStart('/')
+        }
+    }
+
+    /** 读页面文本（最多 512KB），失败返回 null */
+    private fun httpText(url: String): String? = try {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 6000
+            readTimeout = 8000
+            instanceFollowRedirects = true
+            setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 KeyCoffer")
+            setRequestProperty("Accept", "text/html,application/json,*/*")
+        }
+        if (conn.responseCode !in 200..299) {
+            conn.disconnect()
+            null
+        } else {
+            val bytes = conn.inputStream.use { input ->
+                val buf = java.io.ByteArrayOutputStream()
+                val chunk = ByteArray(8 * 1024)
+                var total = 0
+                while (true) {
+                    val n = input.read(chunk)
+                    if (n <= 0) break
+                    total += n
+                    if (total > 512 * 1024) break
+                    buf.write(chunk, 0, n)
+                }
+                buf.toByteArray()
+            }
+            conn.disconnect()
+            String(bytes, Charsets.UTF_8)
+        }
+    } catch (e: Exception) {
+        null
     }
 
     private fun httpBitmap(url: String): Bitmap? = httpBitmapResult(url).first

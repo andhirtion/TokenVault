@@ -24,7 +24,14 @@ data class Platform(
     val algo: String = "SHA1",
     val charset: String = "NUM",
     /** 分组：intl 国际 / other 其他 */
-    val cat: String = "intl"
+    val cat: String = "intl",
+    /**
+     * 图标自带官方配色时置 true：不画品牌色底、不 tint，
+     * 直接把 VectorDrawable 原色画出来（Google 四色 G、Microsoft 四色方块就是这样）。
+     */
+    val colored: Boolean = false,
+    /** 图标在方块里的占比；四色 logo 通常比单色 glyph 占得大一点 */
+    val iconScale: Float = 0.56f
 )
 
 object Platforms {
@@ -39,11 +46,14 @@ object Platforms {
 
     /** 顺序即编辑器里的排列顺序，自定义固定最后一位 */
     private val ALL = listOf(
-        Platform(KEY_GOOGLE, "Google", "G", R.drawable.ic_brand_google, 0xFFFFFFFF, 0xFF3C4043),
-        Platform(KEY_MICROSOFT, "Microsoft", "M", R.drawable.ic_brand_microsoft, 0xFFF3F4F6, 0xFF1F2937),
+        Platform(KEY_GOOGLE, "Google", "G", R.drawable.ic_brand_google, 0xFFFFFFFF, 0xFF3C4043,
+            colored = true, iconScale = 0.64f),
+        Platform(KEY_MICROSOFT, "Microsoft", "M", R.drawable.ic_brand_microsoft, 0xFFF3F4F6, 0xFF1F2937,
+            colored = true, iconScale = 0.74f),
         Platform(KEY_STEAM, "Steam", "ST", R.drawable.ic_brand_steam, 0xFF16202D, 0xFFC7D5E0,
-            digits = 5, period = 30, algo = "SHA1", charset = "STEAM"),
-        Platform(KEY_GITHUB, "GitHub", "GH", R.drawable.ic_brand_github, 0xFF1B1F24, 0xFFE6EDF3),
+            digits = 5, period = 30, algo = "SHA1", charset = "STEAM", iconScale = 0.62f),
+        Platform(KEY_GITHUB, "GitHub", "GH", R.drawable.ic_brand_github, 0xFF1B1F24, 0xFFE6EDF3,
+            iconScale = 0.62f),
         Platform(KEY_CUSTOM, "自定义", "+", R.drawable.ic_brand_custom, 0xFF1A1B22, 0xFF8B5CF6, cat = "other")
     )
 
@@ -57,7 +67,8 @@ object Platforms {
      * 但登录页要显示纸飞机图标，所以单独放一个不进 picker 的条目。
      */
     val telegramBrand = Platform(
-        "telegram", "Telegram", "TG", R.drawable.ic_brand_telegram, 0xFF229ED9, 0xFFFFFFFF, cat = "other"
+        "telegram", "Telegram", "TG", R.drawable.ic_brand_telegram, 0xFF229ED9, 0xFFFFFFFF,
+        cat = "other", iconScale = 0.6f
     )
 
     /** 平台搜索：匹配 key / label / 中文别名（平台已精简，保留接口供导入猜测用） */

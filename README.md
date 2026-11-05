@@ -4,7 +4,7 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.6.1 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.7.0 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
 安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密 · 全套交互动画
 
@@ -48,18 +48,18 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.6.1.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk) | 2.4 MB（2 442 657 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.7.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk) | 2.4 MB（2 442 709 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
-> 包信息：`com.yg.tokenvault` · versionCode 14 · minSdk 26（安卓 8.0）· targetSdk 35 ·
+> 包信息：`com.yg.tokenvault` · versionCode 15 · minSdk 26（安卓 8.0）· targetSdk 35 ·
 > **不需要 INTERNET 权限也能出码**（联网只用于检查更新、内置浏览器登录、WebDAV 备份这三件事，都由你主动触发）
 
 ### 数据在哪
@@ -125,12 +125,16 @@
 
 ### 自定义图标
 
-- 添加/编辑条目时点「上传图片」→ 从相册选 → 自动居中裁成正方形存成 256×256 PNG；
-- 或者在「**图标域名**」栏里填站点（`github.com`、`https://mail.qq.com/a?x=1`、`192.168.1.10:8080` 都行）再点「联网抓取」→ 依次尝试 `站点/favicon.ico` → DuckDuckGo → Google s2，抓到就用；
-- 域名栏留空也能抓：会退一步从上面「账号 / 邮箱」里猜（`me@163.com` → `163.com`）；
-- 抓不到会说明原因（`HTTP 404` / 图标太小 / 超时 / 域名解析失败），不是只回一句「没抓到」；
-- 「重置」回到平台内置图标；
-- 图标存在 App 私有目录，填过的域名随条目一起加密保存，都不进备份明文。
+- 添加/编辑条目时点「上传图片」→ 从相册选 → 自动居中裁成正方形，存成 **512×512** PNG（3x 屏上放到 48dp 也不虚）；
+- 或者在「**图标域名**」栏里填站点（`github.com`、`https://mail.qq.com/a?x=1`、`192.168.1.10:8080` 都行）再点「联网抓取」，按**分辨率从高到低**试：
+  1. 站点自己声明的图标（`apple-touch-icon`、`<link rel="icon" sizes="512x512">`、web app manifest 里的 `icons`）
+  2. 根目录 `apple-touch-icon.png`（常见 180px）
+  3. Google s2（256px）
+  4. DuckDuckGo / 站点 `favicon.ico`（16–32px，最后兜底）
+- 拿到 ≥128px 就提前收工；只抓到小图会直接告诉你「只抓到 32px，放大后会糊，想要清晰就上传图片」；
+- 域名栏留空就是**默认图标**（上面选的平台图标，或自定义平台的钥匙），不会再去账号里猜；
+- 「重置」回到默认图标；
+- 填过的域名随条目一起加密保存，都不进备份明文。
 
 ### 自定义背景
 
@@ -196,14 +200,14 @@
 
 ## 六、支持的平台
 
-内置 4 个高频平台，其余一律用「自定义」：
+内置 4 个高频平台，其余一律用「自定义」。**新建条目默认就是「自定义」**，要哪个平台现点一下：
 
 | 平台 | 位数 | 周期 | 说明 |
 | --- | --- | --- | --- |
-| **Google** | 6 | 30s | 含 Gmail / YouTube / Workspace |
-| **Microsoft** | 6 | 30s | 含 Outlook / Office 365 / Azure / Xbox |
-| **Steam** | 5 | 30s | Steam Guard 专用字符表 |
-| **GitHub** | 6 | 30s | 标准 TOTP |
+| **Google** | 6 | 30s | 含 Gmail / YouTube / Workspace；官方四色 G |
+| **Microsoft** | 6 | 30s | 含 Outlook / Office 365 / Azure / Xbox；官方四色方块 |
+| **Steam** | 5 | 30s | Steam Guard 专用字符表；官方齿轮 |
+| **GitHub** | 6 | 30s | 标准 TOTP；官方 Octocat 轮廓 |
 | **自定义** | 6/8 | 30s | 任何其它服务，可传自己的图标 |
 
 为什么要精简：之前的 60 个平台列表选起来要翻半天，而且大部分人是拿它存自己的几个常用账号。
@@ -385,6 +389,18 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.7.0 — 图标更清楚、官方配色、默认自定义（2026-11-05）
+
+- **抓的图标不再糊**：先去站点首页扒它自己声明的高清图标 —— `apple-touch-icon`、`<link rel="icon" sizes="512x512">`、web app manifest 里 `icons`（常见 192~512px），再退根目录 `apple-touch-icon.png`（180），再退 Google s2（256），最后才轮到 DuckDuckGo 与 `favicon.ico`（16–32px）
+- **按分辨率选优**：所有源都试一遍取最大的一张，拿到 ≥128px 提前收工；落盘从 256 **提到 512**，3x 屏放到 48dp 也不虚
+- **小图会说实话**：只抓到 32px 时提示「放大后会糊，想要清晰就上传图片」，不再默默给你一张糊图
+- **Google / Microsoft 用官方配色**：Google 的四色 G、Microsoft 的四色方块原样输出，不再被 tint 染成单色（`Platform.colored` + 不铺底）
+- **Steam / GitHub / Telegram 换官方轮廓**：Steam 齿轮、GitHub Octocat、Telegram 纸飞机都按官方 path 重画，图标占比从 0.56 调到 0.60~0.62
+- **新建条目默认「自定义」**：不再默认 Google；平台选择器仍是 4 个内置 + 自定义压尾
+- **修「历史版本 → 刷新」没反应**：原来刷新用的是打开面板时缓存的配置，面板里改了地址不先保存就查不到；现在直接用面板里的当前值去列，点下去显示「刷新中…」，列表回来就收掉
+- **留空不再猜域名**：图标域名留空就是默认图标，不拿账号邮箱去猜（少一层猜错的机会）
+- 单测 **74 项**全过；签名与 1.3.0 起同一把，可直接覆盖安装
 
 ### v1.6.1 — 图标抓取加了域名栏（2026-11-05）
 

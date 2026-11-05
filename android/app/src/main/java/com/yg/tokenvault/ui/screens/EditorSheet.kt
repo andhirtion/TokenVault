@@ -103,7 +103,7 @@ fun EditorSheet(
     val clipboard = LocalClipboardManager.current
 
     var type by remember { mutableStateOf(existing?.type ?: EntryType.CODE) }
-    var platformKey by remember { mutableStateOf(existing?.platformKey ?: "google") }
+    var platformKey by remember { mutableStateOf(existing?.platformKey ?: Platforms.KEY_CUSTOM) }
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var account by remember { mutableStateOf(existing?.account ?: "") }
     var secret by remember { mutableStateOf(existing?.secret ?: "") }
@@ -394,9 +394,8 @@ fun EditorSheet(
                         }
                         MiniAction(if (iconBusy) "处理中…" else "联网抓取") {
                             if (!iconBusy) {
-                                // 优先用这个显式填的域名；没填才从「账号」里的邮箱猜
+                                // 只用显式填的域名；没填就保持默认图标，不再从账号里猜
                                 val host = IconStore.parseHost(iconHost)
-                                    ?: IconStore.guessHost(account, name)
                                 if (host.isNullOrBlank()) {
                                     iconMsg = "先在下面「图标域名」里填一个，例如 github.com"
                                 } else {
@@ -440,7 +439,7 @@ fun EditorSheet(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = "填站点域名即可联网取它的图标：github.com、https://mail.qq.com 都能直接粘。" +
-                    "留空时点「联网抓取」会从上面的账号邮箱里猜。",
+                    "留空则用默认图标（上面选的平台图标，或自定义的默认钥匙）。",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp),
                 color = pal.text3
             )

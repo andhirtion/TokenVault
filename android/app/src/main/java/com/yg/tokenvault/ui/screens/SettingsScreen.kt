@@ -106,7 +106,7 @@ fun SettingsScreen(
     onDavUpload: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> },
     onDavRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> },
     davHistory: List<com.yg.tokenvault.data.DavBackup> = emptyList(),
-    onDavRefreshHistory: ((List<com.yg.tokenvault.data.DavBackup>) -> Unit) -> Unit = {},
+    onDavRefreshHistory: (DavCfg, (List<com.yg.tokenvault.data.DavBackup>) -> Unit) -> Unit = { _, _ -> },
     onDavRestoreNamed: (DavCfg, String, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _, _ -> },
     onToast: (String) -> Unit = {}
 ) {
@@ -488,7 +488,7 @@ fun SettingsScreen(
             onUpload = onDavUpload,
             onRestore = onDavRestore,
             history = davHistory,
-            onRefreshHistory = { onDavRefreshHistory { } },
+            onRefreshHistory = { c -> onDavRefreshHistory(c) { } },
             onRestoreNamed = { name, pin, done -> onDavRestoreNamed(davCfg, name, pin, done) }
         )
     }

@@ -25,8 +25,10 @@ import com.yg.tokenvault.data.Platform
 import com.yg.tokenvault.util.IconStore
 
 /**
- * 品牌方块：品牌色调的圆角底 + 单色图标。
- * 比直接贴彩色 logo 在深色界面上更整齐，也更接近现代认证器的观感。
+ * 品牌方块。
+ *
+ * 默认是「品牌色圆角底 + 单色 glyph」；[Platform.colored] 为 true 的平台
+ * （Google 四色 G、Microsoft 四色方块）改画官方配色：不铺底色、不 tint，原样输出。
  *
  * [iconName] 非空时用条目自己的图标（相册上传或联网抓取），铺满整个方块；
  * 否则退回平台内置 glyph。
@@ -55,7 +57,8 @@ fun BrandTile(
         modifier = modifier
             .size(size)
             .clip(shape)
-            .background(brush),
+            // 官方配色图标自带形状，铺底色反而会在四角露出色边
+            .then(if (platform.colored) Modifier else Modifier.background(brush)),
         contentAlignment = Alignment.Center
     ) {
         if (bitmap != null) {
@@ -69,8 +72,8 @@ fun BrandTile(
             Icon(
                 painter = painterResource(platform.icon),
                 contentDescription = platform.label,
-                tint = fg,
-                modifier = Modifier.size(size * 0.56f)
+                tint = if (platform.colored) Color.Unspecified else fg,
+                modifier = Modifier.size(size * platform.iconScale)
             )
         }
     }

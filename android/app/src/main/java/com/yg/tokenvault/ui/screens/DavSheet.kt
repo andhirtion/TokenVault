@@ -67,7 +67,7 @@ fun DavSheet(
     onUpload: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit,
     onRestore: (DavCfg, String?, (Boolean, String) -> Unit) -> Unit,
     history: List<DavBackup> = emptyList(),
-    onRefreshHistory: () -> Unit = {},
+    onRefreshHistory: (DavCfg) -> Unit = {},
     onRestoreNamed: (String, String?, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val pal = LocalPalette.current
@@ -86,8 +86,11 @@ fun DavSheet(
 
     val cur: () -> DavCfg = { DavCfg(url = url, user = user, pass = pass, path = path, auto = auto) }
 
-    // 打开面板就把历史拉一遍
-    LaunchedEffect(Unit) { onRefreshHistory() }
+    // 打开面板就把历史拉一遍（用表单里的当前值，用户刚改地址也能立刻生效）
+    LaunchedEffect(Unit) { onRefreshHistory(cur()) }
+
+    // 列表回来了就收掉「刷新中」
+    LaunchedEffect(history) { if (busy == "hist") busy = "" }
 
     fun finish(ok: Boolean, text: String) {
         msg = text
@@ -276,19 +279,24 @@ fun DavSheet(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "刷新",
+                    text = if (busy == "hist") "刷新中…" else "刷新",
                     fontSize = 12.sp,
-                    color = pal.accent,
+                    color = if (busy == "hist") pal.text3 else pal.accent,
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .androidClickable { onRefreshHistory() }
+                        .androidClickable {
+                            if (busy.isEmpty()) {
+                                busy = "hist"
+                                onRefreshHistory(cur())
+                            }
+                        }
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
             Spacer(Modifier.height(6.dp))
             if (history.isEmpty()) {
                 Text(
-                    text = "还没有可恢复的记录。备份一次之后，每次上传都会在同一目录留一版快照。",
+                    text = "云端和本地都没有备份记录。先点「立即备份」，之后每次上传都会在同一目录留一版快照（最多保留 40 条）。",
                     style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 11.5.sp,
                         lineHeight = 16.sp

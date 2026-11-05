@@ -1,29 +1,30 @@
 {
   "app": "TokenVault",
   "name": "钥匣 KeyCoffer",
-  "version": "1.6.1",
-  "code": 14,
+  "version": "1.7.0",
+  "code": 15,
   "minCode": 1,
-  "publishedAt": "2026-11-05T13:45:00+08:00",
+  "publishedAt": "2026-11-05T14:05:00+08:00",
   "notes": [
-    "修「联网抓取图标」：编辑器「图标」区新增「图标域名」输入栏，填 github.com 就能取到它的图标",
-    "域名写法很宽松：github.com、https://mail.qq.com/a?x=1、192.168.1.10:8080 都能直接粘，会自动归一化",
-    "留空也能用：不填域名时点「联网抓取」，仍会从上面的账号邮箱里猜（例：me@163.com → 163.com）",
-    "抓取失败会说清原因：域名格式不对、HTTP 404、图标太小、超时、域名解析失败，不再只有一句「没抓到」",
-    "填过的域名会跟着条目一起保存，下次编辑还在，备份导出也带上",
-    "单测 74 项全过（新增 8 项域名归一化用例）；签名与前几版同一把，可直接覆盖安装"
+    "抓的图标更清楚了：先扒站点自己声明的高清图标（apple-touch-icon、manifest 里的 512px），再退到 Google 256px，最后才用 favicon",
+    "落盘尺寸从 256 提到 512；只抓到小图时会直接告诉你「只抓到 32px，会糊」，要清晰就「上传图片」用自己的图",
+    "Google / Microsoft 换成官方配色图标（四色 G、四色方块），不再被染成单色；Steam / GitHub / Telegram 换成官方轮廓，占比也调大了一点",
+    "新增条目默认选「自定义」，不再默认 Google；要哪个平台现点一下即可",
+    "修云备份「历史版本 → 刷新」点了没反应：现在用面板里的当前地址去列，点下去会显示「刷新中…」，回来就收",
+    "图标域名留空不再拿账号邮箱去猜，留空就是默认图标（平台图标或自定义钥匙）",
+    "单测 74 项全过；签名与前几版同一把，可直接覆盖安装"
   ],
   "repo": "https://github.com/andhirtion/TokenVault",
-  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.6.1",
+  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.7.0",
   "apk": {
-    "name": "TokenVault-1.6.1.apk",
-    "size": 2442657,
-    "sha256": "0c7c258131c91621c8710111805307c02830cbd1ca910d0ecdd720663a571773",
+    "name": "TokenVault-1.7.0.apk",
+    "size": 2442709,
+    "sha256": "76c5cd35d75d67a3075261542995938c345932e9c118ac26bfc583f43190c878",
     "urls": [
-      "https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk",
-      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk",
-      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk",
-      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.6.1/TokenVault-1.6.1.apk"
+      "https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk",
+      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk",
+      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk",
+      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.0/TokenVault-1.7.0.apk"
     ]
   }
 }
