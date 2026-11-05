@@ -368,7 +368,8 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 onDavTest = { cfg, done -> vm.davTest(cfg, done) },
                                 onDavUpload = { cfg, pin, done ->
                                     vm.davUpload(cfg, pin) { ok, text ->
-                                        davHistory = vm.davLocalHistory()
+                                        // 上传完重新从云端拉一次，列表口径始终是「云端有什么」
+                                        if (ok) vm.davList(cfg) { davHistory = it }
                                         done(ok, text)
                                     }
                                 },
@@ -380,7 +381,7 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 },
                                 onDavRestoreNamed = { cfg, name, pin, done ->
                                     vm.davRestoreNamed(cfg, name, pin) { ok, text ->
-                                        davHistory = vm.davLocalHistory()
+                                        if (ok) vm.davList(cfg) { davHistory = it }
                                         done(ok, text)
                                     }
                                 },

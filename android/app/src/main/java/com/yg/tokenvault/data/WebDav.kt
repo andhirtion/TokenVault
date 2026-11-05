@@ -33,9 +33,7 @@ data class DavBackup(
     val name: String,
     val at: Long = 0L,
     val size: Long = 0L,
-    val main: Boolean = false,
-    /** 只在本机记过账、云端查不到：界面上单独标注，不能当成云端文件 */
-    val local: Boolean = false
+    val main: Boolean = false
 )
 
 /** WebDAV 配置的本地存取（app 私有目录，卸载即消失） */

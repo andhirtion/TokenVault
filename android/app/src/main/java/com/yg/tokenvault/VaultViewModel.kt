@@ -317,9 +317,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * 列云端可恢复的备份。
      *
-     * 以云端为准：PROPFIND 或 index.json 能列出时，**只显示云端真实存在的那些**，
-     * 不再把本机记账混进来（否则云端 5 条会显示成 7 条）。
-     * 只有云端完全查不到时才退回本机记录，并标上 [DavBackup.local] 让界面说明来源。
+     * **只返回云端真实存在的文件**：查不到就是空表，绝不拿本机记账去凑数。
      */
     fun davList(cfg: DavCfg, done: (List<DavBackup>) -> Unit) {
         viewModelScope.launch {
@@ -330,12 +328,7 @@ class VaultViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Exception) {
                 emptyList()
             }
-            val shown = if (remote.isNotEmpty()) {
-                remote
-            } else {
-                DavStore.history(getApplication()).map { it.copy(local = true) }
-            }
-            done(shown)
+            done(remote)
         }
     }
 

@@ -293,7 +293,7 @@ fun DavSheet(
             Spacer(Modifier.height(6.dp))
             if (history.isEmpty()) {
                 Text(
-                    text = "云端和本地都没有备份记录。先点「立即备份」，之后每次上传都会在同一目录留一版快照（最多保留 40 条）。",
+                    text = "云端没有备份记录。先点「立即备份」，之后每次上传都会在同一目录留一版快照（最多保留 40 条）。",
                     style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 11.5.sp,
                         lineHeight = 16.sp
@@ -348,12 +348,11 @@ private fun DavHistRow(item: DavBackup, enabled: Boolean, onPick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = label, fontSize = 13.sp, color = pal.text)
             val sub = buildString {
-                if (item.local) append("本机记录（云端没查到） · ")
                 if (item.size > 0) append("%.1f KB".format(item.size / 1024.0))
                 if (item.size > 0) append(" · ")
                 append(item.name)
             }
-            Text(text = sub, fontSize = 10.5.sp, color = if (item.local) pal.warning else pal.text3)
+            Text(text = sub, fontSize = 10.5.sp, color = pal.text3)
         }
         Box(
             modifier = Modifier

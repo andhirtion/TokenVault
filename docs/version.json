@@ -1,28 +1,27 @@
 {
   "app": "TokenVault",
   "name": "钥匣 KeyCoffer",
-  "version": "1.7.2",
-  "code": 17,
+  "version": "1.7.3",
+  "code": 18,
   "minCode": 1,
-  "publishedAt": "2026-11-05T14:45:00+08:00",
+  "publishedAt": "2026-11-05T14:40:00+08:00",
   "notes": [
-    "历史版本只显示云端真实存在的文件：原来会把本机记账也混进来，云端 5 条会显示成 7 条",
-    "PROPFIND 拿不到时改读清单 index.json，并逐个 HEAD 核对文件还在不在，云端删掉的不会残留",
-    "云端完全查不到时才退回本机记录，并且每行明确标「本机记录（云端没查到）」",
-    "标题改成「历史版本 · 只列云端现有的」，一眼知道这一栏的口径",
+    "云备份历史彻底只认云端：查不到就是空表，不再用本机记账凑数，也不会出现「本机记录」字样",
+    "上传和恢复之后自动重新拉一次云端列表，看到的就是云端此刻真实存在的文件",
+    "云端为空时的提示改成「云端没有备份记录」，不再提本地",
     "单测 74 项全过；签名与前几版同一把，可直接覆盖安装"
   ],
   "repo": "https://github.com/andhirtion/TokenVault",
-  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.7.2",
+  "release": "https://github.com/andhirtion/TokenVault/releases/tag/v1.7.3",
   "apk": {
-    "name": "TokenVault-1.7.2.apk",
+    "name": "TokenVault-1.7.3.apk",
     "size": 2459097,
-    "sha256": "6d82e8093d4b3ea8f9fbdc57ac24b26bbe7011348bec70bae7a48c4387196fb9",
+    "sha256": "6d49b2a14442360a9e0a63b14be232da829f45cb149ef1c85c4894b580b8d098",
     "urls": [
-      "https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk",
-      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk",
-      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk",
-      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.2/TokenVault-1.7.2.apk"
+      "https://github.com/andhirtion/TokenVault/releases/download/v1.7.3/TokenVault-1.7.3.apk",
+      "https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.7.3/TokenVault-1.7.3.apk",
+      "https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.7.3/TokenVault-1.7.3.apk",
+      "https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.7.3/TokenVault-1.7.3.apk"
     ]
   }
 }
