@@ -65,6 +65,7 @@ import com.yg.tokenvault.ui.screens.HomeScreen
 import com.yg.tokenvault.ui.screens.ImportSheet
 import com.yg.tokenvault.ui.screens.LockScreen
 import com.yg.tokenvault.ui.screens.LoginScreen
+import com.yg.tokenvault.ui.screens.WebHubScreen
 import com.yg.tokenvault.security.BiometricVault
 import com.yg.tokenvault.ui.screens.ScanScreen
 import com.yg.tokenvault.ui.screens.SettingsScreen
@@ -96,6 +97,9 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
     // 获取密钥链路
     var showImport by remember { mutableStateOf(false) }
     var showScan by remember { mutableStateOf(false) }
+    // 地球按钮先落到「网页登录」主页，选站点后再进内置浏览器
+    var showWebHub by remember { mutableStateOf(false) }
+    var webUrl by remember { mutableStateOf<String?>(null) }
     var showLogin by remember { mutableStateOf(false) }
 
     // 从相册选二维码图片（免权限）
@@ -273,7 +277,7 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
                                 onToggleFav = vm::toggleFavorite,
                                 onAdd = { editorId = NEW_ENTRY },
                                 onImport = { showImport = true },
-                                onWebLogin = { showLogin = true }
+                                onWebLogin = { showWebHub = true }
                             )
 
                             VaultViewModel.Tab.TOOLS -> ToolsScreen(
@@ -391,9 +395,20 @@ fun TokenVaultApp(vm: VaultViewModel = viewModel()) {
             )
         }
 
+        if (showWebHub) {
+            WebHubScreen(
+                onBack = { showWebHub = false },
+                onOpen = { url ->
+                    webUrl = url
+                    showWebHub = false
+                    showLogin = true
+                }
+            )
+        }
+
         if (showLogin) {
             LoginScreen(
-                startUrl = null,
+                startUrl = webUrl,
                 onDismiss = { showLogin = false },
                 onFound = { items ->
                     showLogin = false

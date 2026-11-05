@@ -4,7 +4,7 @@
 
 **一个本地加密的小保险箱：动态验证码 + 账号密码 + 密钥笔记，全放在一个列表里**
 
-### 👉 [下载 App（v1.5.0 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
+### 👉 [下载 App（v1.5.1 · 2.4 MB）](https://github.com/andhirtion/TokenVault/releases/latest) 👈
 
 安卓 8.0+ · 4 个常用平台 + 自定义 · 主界面先选后进 · 自定义图标与背景 · 指纹解锁 · WebDAV 云备份 · 应用内更新 · AES-256-GCM 本地加密
 
@@ -42,18 +42,18 @@
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| [TokenVault-1.5.0.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.5.0/TokenVault-1.5.0.apk) | 2.4 MB（2 407 920 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
+| [TokenVault-1.5.1.apk](https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk) | 2.4 MB（2 424 304 字节） | **正式包**，已用固定签名，可直接覆盖安装旧版 |
 
 装不上的话按这个顺序换：
 
 1. **直连慢/失败** → 换镜像：
-   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.0/TokenVault-1.5.0.apk`
-   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.0/TokenVault-1.5.0.apk`
-   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.0/TokenVault-1.5.0.apk`
+   - `https://gh-proxy.com/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk`
+   - `https://ghfast.top/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk`
+   - `https://ghproxy.net/https://github.com/andhirtion/TokenVault/releases/download/v1.5.1/TokenVault-1.5.1.apk`
 2. **提示「签名不一致」** → 说明装的是 1.3.0 之前的老包。先设置里导出备份，再卸载重装，然后导入备份。
 3. **提示「未安装应用」/被拦截** → 系统设置里允许「安装未知来源应用」，或先用手机上的文件管理器打开一次。
 
-> 包信息：`com.yg.tokenvault` · versionCode 9 · minSdk 26（安卓 8.0）· targetSdk 35 ·
+> 包信息：`com.yg.tokenvault` · versionCode 10 · minSdk 26（安卓 8.0）· targetSdk 35 ·
 > **不需要 INTERNET 权限也能出码**（联网只用于检查更新、内置浏览器登录、WebDAV 备份这三件事，都由你主动触发）
 
 ### 数据在哪
@@ -112,7 +112,7 @@
 | **扫二维码** | 工具箱 → 扫码，对着电脑屏幕上的二维码 | `otpauth://` 链接、Google Authenticator 迁移码 |
 | **从相册选图** | 扫码页底部「从相册选择」，或工具箱 → 从图片识别 | 同上（截图里的二维码也能认） |
 | **粘贴 / 剪贴板** | 工具箱 → 粘贴导入，或直接粘一大段文本 | 链接、裸 Base32、混合文本（能一次抓出多条） |
-| **内置浏览器登录** | 列表右上角地球图标 → 打开目标网站登录 | 页面上出现的 `otpauth://` 或 Base32 密钥会被自动抓出来 |
+| **内置浏览器登录** | 列表右上角地球图标 → **先到「网页登录」主页**选站点 → 打开目标网站登录 | 页面上出现的 `otpauth://` 或 Base32 密钥会被自动抓出来 |
 
 > Google Authenticator 的「导出账号」生成的是 `otpauth-migration://offline?data=...`，
 > 本 App 手写了 protobuf 解析，能一次导入整批账号（HOTP 会跳过）。
@@ -371,6 +371,13 @@ TokenVault/
 ---
 
 ## 更新日志
+
+### v1.5.1 — 网页登录加一层主页（2026-11-05）
+
+- 顶栏地球按钮不再直接开浏览器：先落到**「网页登录」主页**
+- 主页里是 10 个常用站点（Google / Microsoft / GitHub / Steam / Dropbox / Amazon / Epic / Discord / Telegram / X）+ 「其它站点」自己填网址
+- 主页顶部说明抓取流程：登录后停在「两步验证 / 身份验证器」页，密钥与二维码会被自动识别
+- 自定义网址会自动补 `https://`，键盘用 URI 类型
 
 ### v1.5.0 — 专精 App 的大改版（2026-11-04）
 
